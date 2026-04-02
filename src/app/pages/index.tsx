@@ -1,4 +1,5 @@
-import { router, type Href } from 'expo-router';
+import type { Href } from 'expo-router';
+import { router } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -9,7 +10,6 @@ type PageItem = {
 
 const pageItems: PageItem[] = [
   { label: 'Chat', href: '/pages/chat' },
-  { label: 'AI Tabs', href: '/pages/ai-tabs' },
   { label: 'Quick Login', href: '/pages/quick-login' },
   { label: 'Session List', href: '/pages/session-list' },
   { label: 'Conversation Detail', href: '/pages/conversation-detail' },
@@ -35,7 +35,7 @@ export default function PagesHubScreen() {
       <Text style={styles.subtitle}>Tap any button to open a page</Text>
 
       <View style={styles.buttonList}>
-        {pageItems.map((item) => (
+        {pageItems.map(item => (
           <TouchableOpacity key={item.href} style={styles.button} activeOpacity={0.85} onPress={() => router.push(item.href)}>
             <Text style={styles.buttonText}>{item.label}</Text>
             <Text style={styles.pathText}>{item.href}</Text>
@@ -89,5 +89,3 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 });
-
-
