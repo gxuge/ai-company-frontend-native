@@ -1,4 +1,4 @@
-﻿import { router, type Href } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -9,15 +9,14 @@ type PageItem = {
 
 const pageItems: PageItem[] = [
   { label: 'Chat', href: '/pages/chat' },
-  { label: 'Quick Login 1', href: '/pages/quick-login' },
-  { label: 'Quick Login 2', href: '/pages/quick-login2' },
+  { label: 'AI Tabs', href: '/pages/ai-tabs' },
+  { label: 'Quick Login', href: '/pages/quick-login' },
   { label: 'Session List', href: '/pages/session-list' },
   { label: 'Conversation Detail', href: '/pages/conversation-detail' },
   { label: 'Browse Images', href: '/pages/browse-images-list' },
   { label: 'Create Role', href: '/pages/create-role' },
-  { label: 'Verification Code Login', href: '/pages/verification-code-login' },
-  { label: 'Create Role Advanced', href: '/pages/create-role-advanced' },
   { label: 'Create Character', href: '/pages/create-character' },
+  { label: 'Verification Code Login', href: '/pages/verification-code-login' },
   { label: 'Select Role', href: '/pages/select-role' },
   { label: 'Role Detail', href: '/pages/role-detail' },
   { label: 'Create Story', href: '/pages/create-story' },

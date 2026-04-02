@@ -12,6 +12,7 @@ module.exports = function (api) {
           alias: {
             '@': './src',
             '@env': './src/lib/env.js',
+            'lucide-react-native': './src/lib/lucide-react-native',
           },
           extensions: [
             '.ios.ts',

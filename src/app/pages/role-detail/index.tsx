@@ -1,6 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, router } from 'expo-router';
 import React, { useState } from 'react';
+import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
+import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
 import { Dimensions, Image, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { styles } from './components/role-detail.styles';
 
@@ -29,18 +32,17 @@ export default function RoleDetail() {
                     {/* Top Navigation */}
                     <SafeAreaView style={{ flex: 1 }}>
                         <View style={styles.topNav}>
-                            <Pressable style={styles.navButton} onPress={() => router.back()}>
-                                <Image
-                                    source={require('../../../assets/images/role-detail/close.svg')}
-                                    style={styles.navIcon}
-                                />
-                            </Pressable>
-                            <Pressable style={styles.navButton}>
-                                <Image
-                                    source={require('../../../assets/images/role-detail/more.svg')}
-                                    style={styles.navIcon}
-                                />
-                            </Pressable>
+                            <AiCloseBtn
+                                iconSource={require('../../../assets/images/role-detail/close.svg')}
+                                onPress={() => router.back()}
+                            />
+                            <AiMoreBtn
+                                iconSource={require('../../../assets/images/role-detail/more.svg')}
+                                customWidth="w-[40px]"
+                                customHeight="h-[40px]"
+                                iconWidth={20}
+                                iconHeight={20}
+                            />
                         </View>
                     </SafeAreaView>
 
@@ -96,37 +98,14 @@ export default function RoleDetail() {
                         </View>
 
                         {/* Tabs */}
-                        <View style={styles.tabsRow}>
-                            <Pressable style={styles.tabItem} onPress={() => setActiveTab('about')}>
-                                <Text
-                                    style={
-                                        activeTab === 'about'
-                                            ? styles.tabTextActive
-                                            : styles.tabTextInactive
-                                    }
-                                >
-                                    关于 TA
-                                </Text>
-                                {activeTab === 'about' && (
-                                    <View style={styles.tabIndicatorActive} />
-                                )}
-                            </Pressable>
-
-                            <Pressable style={styles.tabItem} onPress={() => setActiveTab('story')}>
-                                <Text
-                                    style={
-                                        activeTab === 'story'
-                                            ? styles.tabTextActive
-                                            : styles.tabTextInactive
-                                    }
-                                >
-                                    故事
-                                </Text>
-                                {activeTab === 'story' && (
-                                    <View style={styles.tabIndicatorActive} />
-                                )}
-                            </Pressable>
-                        </View>
+                        <AiNavigateTabs 
+                            options={[
+                                { label: '关于 TA', value: 'about' },
+                                { label: '故事', value: 'story' }
+                            ]}
+                            activeValue={activeTab}
+                            onChange={(val) => setActiveTab(val as 'about' | 'story')}
+                        />
                     </View>
                 </LinearGradient>
             </View>

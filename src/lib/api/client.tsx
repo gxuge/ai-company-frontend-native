@@ -3,4 +3,8 @@ import Env from 'env';
 
 export const client = axios.create({
   baseURL: Env.EXPO_PUBLIC_API_URL,
+  timeout: 10_000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });

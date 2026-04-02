@@ -1,5 +1,8 @@
 import React from 'react';
 import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
+import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
+import StoryDetailModal from './components/StoryDetailModal';
 
 const imgGrandAtmosphericPalaceInteriorWithChandelier = require("../../../assets/images/conversation-detail/imgGrandAtmosphericPalaceInteriorWithChandelier.png");
 const imgCreatorAvatar = require("../../../assets/images/conversation-detail/imgCreatorAvatar.png");
@@ -8,7 +11,7 @@ const imgCharacter2 = require("../../../assets/images/conversation-detail/imgCha
 const imgCharacter3 = require("../../../assets/images/conversation-detail/imgCharacter3.png");
 const imgCharacter4 = require("../../../assets/images/conversation-detail/imgCharacter4.png");
 const imgCharacter5 = require("../../../assets/images/conversation-detail/imgCharacter5.png");
-const imgGroup = require("../../../assets/images/conversation-detail/imgGroup.svg");
+const imgCloseIcon = require("../../../assets/images/conversation-detail/imgCloseIcon.svg");
 const imgMoreSquare41 = require("../../../assets/images/conversation-detail/imgMoreSquare41.svg");
 const imgFluentAdd12Filled = require("../../../assets/images/conversation-detail/imgFluentAdd12Filled.svg");
 const imgIcon = require("../../../assets/images/conversation-detail/imgIcon.svg");
@@ -16,6 +19,8 @@ const imgGroup1 = require("../../../assets/images/conversation-detail/imgGroup1.
 const imgContainer = require("../../../assets/images/conversation-detail/imgContainer.svg");
 
 export default function Body() {
+    const [storyDetailVisible, setStoryDetailVisible] = React.useState(false);
+
     return (
         <View style={styles.container}>
             <ImageBackground
@@ -27,12 +32,15 @@ export default function Body() {
 
             <SafeAreaView style={styles.safeArea}>
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Image source={imgGroup} style={styles.closeIcon} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Image source={imgMoreSquare41} style={styles.moreIcon} />
-                    </TouchableOpacity>
+                    <AiCloseBtn
+                        iconSource={imgCloseIcon}
+                        customWidth="w-[44px]"
+                        customHeight="h-[44px]"
+                        radius="rounded-[22px]"
+                        iconWidth={20}
+                        iconHeight={20}
+                    />
+                    <AiMoreBtn iconSource={imgMoreSquare41} />
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -44,7 +52,7 @@ export default function Body() {
                                 <Image source={imgCreatorAvatar} style={styles.avatar} />
                                 <Text style={styles.creatorName}>kerwin亮亮</Text>
                             </View>
-                            <TouchableOpacity style={styles.followButton}>
+                            <TouchableOpacity style={styles.followButton} activeOpacity={1}>
                                 <Image source={imgFluentAdd12Filled} style={styles.addIcon} />
                                 <Text style={styles.followText}>关注</Text>
                             </TouchableOpacity>
@@ -56,7 +64,7 @@ export default function Body() {
                             </Text>
                         </View>
 
-                        <TouchableOpacity style={styles.storyDetailButton}>
+                        <TouchableOpacity style={styles.storyDetailButton} activeOpacity={1} onPress={() => setStoryDetailVisible(true)}>
                             <Text style={styles.storyDetailText}>故事详情</Text>
                             <Image source={imgIcon} style={styles.chevronIcon} />
                         </TouchableOpacity>
@@ -82,7 +90,7 @@ export default function Body() {
                         </ScrollView>
                     </View>
 
-                    <TouchableOpacity style={styles.impressionCard}>
+                    <TouchableOpacity style={styles.impressionCard} activeOpacity={1}>
                         <View style={styles.impressionLeft}>
                             <View style={styles.impressionIconContainer}>
                                 <Image source={imgGroup1} style={styles.impressionIcon} />
@@ -94,6 +102,10 @@ export default function Body() {
 
                     <View style={styles.bottomSpacer} />
                 </ScrollView>
+
+                {storyDetailVisible && (
+                    <StoryDetailModal onClose={() => setStoryDetailVisible(false)} />
+                )}
             </SafeAreaView>
         </View>
     );
@@ -224,7 +236,7 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         borderWidth: 1,
         borderColor: 'rgba(155, 254, 3, 0.8)',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: 'transparent',
     },
     storyDetailText: {
         fontSize: 16,

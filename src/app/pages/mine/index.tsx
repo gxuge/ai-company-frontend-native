@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 
 const { width } = Dimensions.get('window');
 const GRID_GAP = 8;
@@ -37,7 +38,10 @@ const GRID_ITEMS = Array.from({ length: 6 }, (_, i) => ({
     authorAvatar: imgUserAvatar,
 }));
 
-const TABS = ['作品', '话题'];
+const TABS = [
+    { label: '故事', value: 0 },
+    { label: '角色', value: 1 },
+];
 
 // ─── Sub-components ────────────────────────────────────────────────────────
 
@@ -137,18 +141,14 @@ export default function Mine() {
 
                     {/* ── Tab Bar ── */}
                     <View style={styles.tabBar}>
-                        {TABS.map((tab, index) => (
-                            <TouchableOpacity
-                                key={tab}
-                                style={styles.tabItem}
-                                onPress={() => setActiveTab(index)}
-                            >
-                                <Text style={[styles.tabText, activeTab === index && styles.tabTextActive]}>
-                                    {tab}
-                                </Text>
-                                {activeTab === index && <View style={styles.tabIndicator} />}
-                            </TouchableOpacity>
-                        ))}
+                        <AiNavigateTabs
+                            options={TABS}
+                            activeValue={activeTab}
+                            onChange={setActiveTab}
+                            activeTextClassName="text-[rgba(155,254,3,0.9)] text-[18px] font-bold pb-[10px]"
+                            inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
+                            indicatorClassName="absolute bottom-[-1px] h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+                        />
                     </View>
 
                     {/* ── Grid ── */}
@@ -346,26 +346,6 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#1a1a1a',
         marginBottom: 10,
-    },
-    tabItem: {
-        marginRight: 30,
-        paddingBottom: 10,
-        alignItems: 'center',
-    },
-    tabText: {
-        fontSize: 18,
-        color: '#e7e7e7',
-    },
-    tabTextActive: {
-        color: ACCENT,
-        fontWeight: 'bold',
-    },
-    tabIndicator: {
-        height: 4,
-        width: '100%',
-        backgroundColor: ACCENT,
-        borderRadius: 2,
-        marginTop: 4,
     },
     // ── Grid ──
     gridContainer: {

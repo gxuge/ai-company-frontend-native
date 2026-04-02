@@ -29,8 +29,8 @@ export function AiCloseBtn({
   customWidth = 'w-[44px]',
   customHeight = 'h-[44px]',
   radius = 'rounded-full',
-  iconWidth = 20,
-  iconHeight = 20,
+  iconWidth = 10,
+  iconHeight = 10,
   iconTintColor = '#ffffff',
   className,
   ...props

@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@env": ["env.ts"]
+      "@env": ["env.ts"],
+      "lucide-react-native": ["./src/lib/lucide-react-native"]
     },
     "checkJs": true,
     "strict": true,

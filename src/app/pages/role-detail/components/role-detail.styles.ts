@@ -130,29 +130,4 @@ export const styles = StyleSheet.create({
         color: '#e7e7e7',
         fontSize: 12,
     },
-    tabsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 30,
-    },
-    tabItem: {
-        alignItems: 'center',
-    },
-    tabTextActive: {
-        color: 'rgba(155,254,3,0.9)',
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    tabIndicatorActive: {
-        width: '100%',
-        height: 4,
-        backgroundColor: 'rgba(155,254,3,0.9)',
-        borderRadius: 2,
-    },
-    tabTextInactive: {
-        color: '#e7e7e7',
-        fontSize: 20,
-        marginBottom: 8, // matching the alignment without indicator
-    },
 });
