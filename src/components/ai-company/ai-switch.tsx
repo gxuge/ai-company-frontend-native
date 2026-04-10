@@ -2,10 +2,15 @@ import * as React from 'react';
 import * as SwitchPrimitives from '@rn-primitives/switch';
 import { Platform } from 'react-native';
 
+export interface AiSwitchProps extends SwitchPrimitives.RootProps, React.RefAttributes<SwitchPrimitives.RootRef> {
+  checkedColorClassName?: string;
+}
+
 export function AiSwitch({
   className,
+  checkedColorClassName = 'bg-[rgba(155,254,3,0.9)]',
   ...props
-}: SwitchPrimitives.RootProps & React.RefAttributes<SwitchPrimitives.RootRef>) {
+}: AiSwitchProps) {
   return (
     <SwitchPrimitives.Root
       className={[
@@ -13,7 +18,7 @@ export function AiSwitch({
         Platform.select({
           web: 'focus-visible:outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed peer inline-flex',
         }),
-        props.checked ? 'bg-[rgba(155,254,3,0.9)]' : 'bg-[#4b5563]',
+        props.checked ? checkedColorClassName : 'bg-[#4b5563]',
         props.disabled ? 'opacity-50' : '',
         className
       ].filter(Boolean).join(' ')}

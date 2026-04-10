@@ -21,7 +21,6 @@ const pageItems: PageItem[] = [
   { label: 'Role Detail', href: '/pages/role-detail' },
   { label: 'Create Story', href: '/pages/create-story' },
   { label: 'Create Page', href: '/pages/create-page' },
-  { label: 'Story Detail', href: '/pages/story-detail' },
   { label: 'Sound Edit', href: '/pages/sound-edit' },
   { label: 'General Setting', href: '/pages/general-setting' },
   { label: 'User Setting', href: '/pages/user-setting' },

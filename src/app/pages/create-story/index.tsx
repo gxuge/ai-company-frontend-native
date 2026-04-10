@@ -4,7 +4,8 @@ import { router } from "expo-router";
 import { AiHeader } from "../../../components/ai-company/ai-header";
 import { AiTopTabs } from "../../../components/ai-company/ai-top-tabs";
 import { AiLoginBtn } from "../../../components/ai-company/ai-login-btn";
-const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/sparkle.svg"));
+import { AiFormTextarea } from "../../../components/ai-company/ai-form-textarea";
+import { AiGenerateBtn } from "../../../components/ai-company/ai-generate-btn";
 const imgChevronRightGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/chevron_right_gray.svg"));
 const imgChevronRightWhite = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/chevron_right_white.svg"));
 const imgChevronRightDarkGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/chevron_right_darkgray.svg"));
@@ -13,25 +14,7 @@ const imgUserEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../as
 const imgAddRoleGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/add_role_gray.svg"));
 const imgAddChapterGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-story/add_chapter_green.svg"));
 
-/* ── Reusable: Generate Button ── */
-function GenerateButton() {
-  return (
-    <button className="flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(155,254,3,0.2)] shadow-[0px_0px_5px_0px_rgba(155,254,3,0.2),0px_0px_10px_0px_rgba(155,254,3,0.1)] bg-transparent cursor-pointer shrink-0">
-      <img src={imgSparkle} alt="" className="shrink-0 w-[14px] h-[14px] object-contain" />
-      <span
-        className="text-[rgba(155,254,3,0.9)] whitespace-nowrap"
-        style={{
-          fontFamily: "'Noto Sans SC', sans-serif",
-          fontSize: "14px",
-          fontWeight: 500,
-        }}
-      >
-        一键生成
-      </span>
-    </button>
-  );
-}
-
+/* ── Reusable: Chevron Right Icon ── */
 /* ── Reusable: Chevron Right Icon ── */
 function ChevronRight({ color = "#9CA3AF" }: { color?: string }) {
   const src =
@@ -133,7 +116,7 @@ function SectionHeader({
           </span>
         )}
       </div>
-      {showGenerate && <GenerateButton />}
+      {showGenerate && <AiGenerateBtn />}
     </div>
   );
 }
@@ -143,26 +126,17 @@ function StorySettingsSection() {
   const [text, setText] = useState("");
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="故事设定" />
-      <div className="bg-black rounded-[16px] border-[1px] border-[#494949] overflow-hidden">
-        <textarea
-          className="w-full min-h-[144px] bg-transparent border-0 outline-none resize-none p-[17px] text-white placeholder-[#6b7280]"
-          style={{
-            fontFamily: "'Noto Sans SC', sans-serif",
-            fontSize: "14px",
-            fontWeight: 400,
-            lineHeight: "20px",
-          }}
-          placeholder="输入故事整体想法和背景设定，可辅助生成剧情。"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-      </div>
+      <SectionHeader title="故事设定" required />
+      <AiFormTextarea
+        placeholder="输入故事整体想法和背景设定，可辅助生成剧情。"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
     </div>
   );
 }
 
-/* ── Character List Section ── */
+/* ── CharacterList Section ── */
 function CharacterListSection() {
   return (
     <div className="flex flex-col gap-[12px]">
@@ -172,7 +146,7 @@ function CharacterListSection() {
           {/* User avatar */}
           <div className="flex flex-col items-center shrink-0">
             <div className="relative">
-              <div className="w-[64px] h-[64px] rounded-full bg-[#111] border-[1px] border-[rgba(255,255,255,0.1)] flex items-center justify-center shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
+              <div className="w-[61px] h-[61px] rounded-full bg-[#111] border-[1px] border-[rgba(255,255,255,0.1)] flex items-center justify-center shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
                 <img src={imgUserDefault} alt="" className="w-[27px] h-[34px] object-contain" />
               </div>
               <div className="absolute -bottom-[2px] -right-[2px] w-[24px] h-[24px] rounded-full bg-black border-[1px] border-[rgba(255,255,255,0.2)] flex items-center justify-center">
@@ -195,7 +169,7 @@ function CharacterListSection() {
           <div className="flex flex-col items-center shrink-0">
             <button 
               onClick={() => router.push('/pages/select-role')}
-              className="w-[64px] h-[64px] rounded-full border-[1px] border-dashed border-[#737373] flex items-center justify-center cursor-pointer bg-transparent p-0"
+              className="w-[61px] h-[61px] rounded-full border-[1px] border-dashed border-[#737373] flex items-center justify-center cursor-pointer bg-transparent p-0"
             >
               <img src={imgAddRoleGray} alt="" className="w-[22px] h-[23px] object-contain" />
             </button>
@@ -208,22 +182,15 @@ function CharacterListSection() {
 
 /* ── Location Section ── */
 function LocationSection() {
+  const [text, setText] = useState("");
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="场所设定" optional showGenerate={false} />
-      <button className="bg-black rounded-[16px] border-[1px] border-[#494949] px-[17px] py-[17px] flex items-center justify-between cursor-pointer w-full">
-        <span
-          className="text-[#9ca3af]"
-          style={{
-            fontFamily: "'Noto Sans SC', sans-serif",
-            fontSize: "14px",
-            fontWeight: 400,
-          }}
-        >
-          选择实体店融合剧情
-        </span>
-        <ChevronRight />
-      </button>
+      <SectionHeader title="场所设定" required showGenerate={true} />
+      <AiFormTextarea
+        placeholder="输入场所设定，生成人物所在场所"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      />
     </div>
   );
 }
@@ -310,20 +277,15 @@ function ChapterCard() {
               <ChevronRight color="white" />
             </button>
           </div>
-          <div className="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden">
-            <textarea
-              className="w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[13px] text-white placeholder-[#4b5563]"
-              style={{
-                fontFamily: "'Noto Sans SC', sans-serif",
-                fontSize: "14px",
-                fontWeight: 400,
-                lineHeight: "20px",
-              }}
-              placeholder=">> 输入开场白内容，开启本故事..."
-              value={openingText}
-              onChange={(e) => setOpeningText(e.target.value)}
-            />
-          </div>
+          <AiFormTextarea
+            skeletonLines={3}
+            skeletonPaddingClassName="p-[13px]"
+            containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
+            className="w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[13px] text-white placeholder-[#4b5563]"
+            placeholder=">> 输入开场白内容，开启本故事..."
+            value={openingText}
+            onChange={(e) => setOpeningText(e.target.value)}
+          />
         </div>
 
         {/* Task goals section */}
@@ -343,20 +305,15 @@ function ChapterCard() {
               任务目标
             </span>
           </div>
-          <div className="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden">
-            <textarea
-              className="w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[13px] text-white placeholder-[#4b5563]"
-              style={{
-                fontFamily: "'Noto Sans SC', sans-serif",
-                fontSize: "14px",
-                fontWeight: 400,
-                lineHeight: "20px",
-              }}
-              placeholder=">> 请输入任务目标..."
-              value={taskText}
-              onChange={(e) => setTaskText(e.target.value)}
-            />
-          </div>
+          <AiFormTextarea
+            skeletonLines={3}
+            skeletonPaddingClassName="p-[13px]"
+            containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
+            className="w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[13px] text-white placeholder-[#4b5563]"
+            placeholder=">> 请输入任务目标..."
+            value={taskText}
+            onChange={(e) => setTaskText(e.target.value)}
+          />
         </div>
 
         {/* Banned characters */}
@@ -392,7 +349,22 @@ function ChapterCard() {
 }
 
 /* ── Plot Outline Section ── */
-function PlotOutlineSection() {
+function PlotOutlineSection({ activeTab }: { activeTab: string }) {
+  const [outlineText, setOutlineText] = useState("");
+
+  if (activeTab === "normal") {
+    return (
+      <div className="flex flex-col gap-[12px]">
+        <SectionHeader title="剧情大纲" large />
+        <AiFormTextarea
+          placeholder="输入剧情大纲..."
+          value={outlineText}
+          onChange={(e) => setOutlineText(e.target.value)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-[10px] w-full">
       <SectionHeader title="剧情大纲" large />
@@ -433,7 +405,7 @@ function BottomButton() {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("chapter");
+  const [activeTab, setActiveTab] = useState("normal");
 
   return (
     <div className="min-h-full bg-[#0a0a0a] flex justify-center">
@@ -445,7 +417,7 @@ export default function App() {
             <StorySettingsSection />
             <CharacterListSection />
             <LocationSection />
-            <PlotOutlineSection />
+            <PlotOutlineSection activeTab={activeTab} />
             {/* spacer for bottom button */}
             <div className="h-[20px] shrink-0" />
           </div>

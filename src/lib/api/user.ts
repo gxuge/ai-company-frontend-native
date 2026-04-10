@@ -14,6 +14,22 @@ export type PhoneLoginResult = {
   multi_depart?: number;
 };
 
+export type UserSettingData = {
+  id: string;
+  username?: string;
+  realname?: string;
+  avatar?: string;
+  birthday?: string;
+  sex?: number | string;
+};
+
+export type UserSettingUpdatePayload = {
+  id: string;
+  realname?: string;
+  sex?: number;
+  birthday?: string;
+};
+
 const LOCAL_PHONE_LOGIN_MODE = false;
 
 function buildLocalPhoneLoginResult(mobile: string): PhoneLoginResult {
@@ -57,6 +73,19 @@ export const userApi = {
   async getUserInfo() {
     return defHttp.get<{ userInfo: Record<string, any> }>({
       url: '/sys/user/getUserInfo',
+    });
+  },
+
+  async getUserSettingData() {
+    return defHttp.get<UserSettingData>({
+      url: '/sys/user/login/setting/getUserData',
+    });
+  },
+
+  async updateUserSetting(payload: UserSettingUpdatePayload) {
+    return defHttp.post<string>({
+      url: '/sys/user/login/setting/userEdit',
+      data: payload,
     });
   },
 };

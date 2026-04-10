@@ -117,7 +117,7 @@ export function SettingsPage() {
       {/* Content */}
       <div className="relative z-10 max-w-md mx-auto">
         {/* Header */}
-        <div style={{ paddingTop: 12, paddingBottom: 12 }}>
+        <div className="px-5" style={{ paddingTop: 12, paddingBottom: 12 }}>
           <AiHeader title="通用设置" />
         </div>
 

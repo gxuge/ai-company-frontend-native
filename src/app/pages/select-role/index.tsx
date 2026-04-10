@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AiHeader } from "../../../components/ai-company/ai-header";
+import { AiSearch } from "../../../components/ai-company/ai-search";
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/select-role/bfc3c41d1a6b570e1b0987aedf706c872d00b6d5.png"));
 const imgSearchIcon = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/select-role/search_icon.svg"));
 const imgSelectedCheck = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/select-role/selected_check.svg"));
@@ -26,15 +27,10 @@ export default function App() {
 
       {/* Search */}
       <div className="w-full max-w-[750px] px-4 py-2 shrink-0">
-        <div className="bg-[#202020] rounded-full h-12 flex items-center px-4 gap-2 border border-white/20">
-          <img src={imgSearchIcon} alt="" className="shrink-0 w-[20px] h-[20px] object-contain" />
-          <input
-            className="bg-transparent text-white text-sm outline-none w-full placeholder-[#909090]"
-            placeholder="搜索角色"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <AiSearch
+          value={search}
+          onChangeText={setSearch}
+        />
       </div>
 
       {/* Character List */}

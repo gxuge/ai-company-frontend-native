@@ -1,44 +1,57 @@
-import { useState } from "react";
-import { AiGenerateBtn } from "@/components/ai-company/ai-generate-btn";
+import { useState } from 'react';
+import { AiGenerateBtn } from '@/components/ai-company/ai-generate-btn';
 
-export default function App() {
-  const [text, setText] = useState(
-    "大家好，我是李明。今天非常荣幸能向大家介绍我们最新的市场分析报告。在过去的一个季度里，我们看到了显著的增长趋�?.."
-  );
+type EditSoundTextProps = {
+  initialText: string;
+  onCancel: () => void;
+  onConfirm: (nextText: string) => void;
+};
+
+export default function EditSoundText(props: EditSoundTextProps) {
+  const { initialText, onCancel, onConfirm } = props;
+  const [text, setText] = useState(initialText);
   const maxLen = 500;
 
   return (
-    <div className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm font-['Noto_Sans_SC',sans-serif]">
-      {/* Modal */}
-      <div className="bg-[#161616] w-full sm:max-w-[420px] rounded-t-[24px] sm:rounded-[24px] p-5 sm:p-6 flex flex-col gap-5 border border-white/10">
-        {/* Header */}
+    <div className="fixed inset-0 flex items-end justify-center bg-black/80 font-['Noto_Sans_SC',sans-serif] backdrop-blur-sm sm:items-center">
+      <div className="flex w-full flex-col gap-5 rounded-t-[24px] border border-white/10 bg-[#161616] p-5 sm:max-w-[420px] sm:rounded-[24px] sm:p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-xl">编辑试听文本</h2>
+          <h2 className="text-xl text-white">编辑试听文本</h2>
           <AiGenerateBtn />
         </div>
 
-        {/* Textarea */}
-        <div className="bg-[#222] rounded-[10px] border border-white/10 flex flex-col gap-[2.5px] items-center pt-[11px] pb-[6px] px-[11px]">
+        <div className="flex flex-col items-center gap-[2.5px] rounded-[10px] border border-white/10 bg-[#222] px-[11px] pt-[11px] pb-[6px]">
           <textarea
-            className="w-full bg-transparent text-white text-[14px] leading-[22.75px] resize-none outline-none min-h-[68px] placeholder-gray-500"
+            className="min-h-[68px] w-full resize-none bg-transparent text-[14px] leading-[22.75px] text-white placeholder-gray-500 outline-none"
             value={text}
             onChange={(e) => {
-              if (e.target.value.length <= maxLen) setText(e.target.value);
+              if (e.target.value.length <= maxLen) {
+                setText(e.target.value);
+              }
             }}
             maxLength={maxLen}
           />
-          <div className="w-full h-px bg-gradient-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
-          <div className="w-full text-right text-[#6b7280] text-[12px]">
-            {text.length}/{maxLen}
+          <div className="h-px w-full bg-linear-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
+          <div className="w-full text-right text-[12px] text-[#6b7280]">
+            {text.length}
+            /
+            {maxLen}
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex gap-3 h-[50px]">
-          <button className="flex-1 rounded-2xl border border-white/10 text-gray-300 text-base bg-transparent">
+        <div className="flex h-[50px] gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-2xl border border-white/10 bg-transparent text-base text-gray-300"
+          >
             取消
           </button>
-          <button className="flex-1 rounded-2xl bg-[rgba(155,254,3,0.9)] text-[#3b3f34] text-base">
+          <button
+            type="button"
+            onClick={() => onConfirm(text)}
+            className="flex-1 rounded-2xl bg-[rgba(155,254,3,0.9)] text-base text-[#3b3f34]"
+          >
             确认
           </button>
         </div>

@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingTop: 50, // safe area approx
+        paddingTop: 10,
     },
     navButton: {
         width: 40,
