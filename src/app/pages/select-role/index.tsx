@@ -28,6 +28,7 @@ export default function App() {
       {/* Search */}
       <div className="w-full max-w-[750px] px-4 py-2 shrink-0">
         <AiSearch
+          size="small"
           value={search}
           onChangeText={setSearch}
         />

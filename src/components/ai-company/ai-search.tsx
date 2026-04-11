@@ -6,6 +6,7 @@ const imgSearch2 = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../assets
 
 export interface AiSearchProps extends TextInputProps {
   containerClassName?: string;
+  size?: 'large' | 'small';
 }
 
 export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
@@ -14,6 +15,7 @@ export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
       containerClassName = "",
       className = "",
       placeholderTextColor = "#909090",
+      size = 'large',
       style,
       ...props
     },
@@ -22,13 +24,21 @@ export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
     // Mimic Web DOM focus style stripping
     const webFocusStyle = Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {};
 
+    const isSmall = size === 'small';
+    const containerClasses = isSmall
+      ? 'h-[40px] px-[16px] rounded-full'
+      : 'h-[74px] px-[28px] rounded-[40px]';
+    
+    const iconSizeClasses = isSmall ? 'w-[20px] h-[20px]' : 'w-[37px] h-[37px]';
+    const textSizeClasses = isSmall ? 'text-[13px] pl-[6px]' : 'text-[25px] pl-[10px]';
+
     return (
       <View 
-        className={`flex-row items-center bg-[#202020] border-[1px] border-white rounded-[40px] px-[28px] h-[74px] overflow-hidden ${containerClassName}`}
+        className={`flex-row items-center bg-[#202020] border-[1px] border-white/80 overflow-hidden ${containerClasses} ${containerClassName}`}
       >
         <View className="flex-row items-center gap-[6px]">
           {/* Search Magnifying Glass Icon Composite */}
-          <View className="relative shrink-0 w-[37px] h-[37px] overflow-hidden">
+          <View className={`relative shrink-0 overflow-hidden ${iconSizeClasses}`}>
              <View className="absolute" style={{ top: '12.5%', bottom: '20.83%', left: '12.5%', right: '20.83%' }}>
                 <img 
                   alt="" 
@@ -51,7 +61,7 @@ export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
           placeholder="搜索角色"
           placeholderTextColor={placeholderTextColor}
           selectionColor="rgba(155,254,3,0.5)"
-          className={`flex-1 bg-transparent text-[#909090] text-[25px] border-0 outline-none pl-[10px] ${className}`}
+          className={`flex-1 bg-transparent text-[#909090] border-0 outline-none ${textSizeClasses} ${className}`}
           style={[
             webFocusStyle, 
             style, 
