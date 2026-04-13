@@ -120,6 +120,15 @@
   }
 }
 
+/* AI generating-page theme variables */
+:root {
+  --ai-purple: #8B5CF6;
+  --ai-blue: #3B82F6;
+  --ai-cyan: #06B6D4;
+  --ai-bg-start: #0F0A2E;
+  --ai-bg-end: #0A1628;
+}
+
 /* Custom utilities (if needed) */
 @layer utilities {
   .text-balance {

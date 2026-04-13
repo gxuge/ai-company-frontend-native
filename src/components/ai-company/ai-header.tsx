@@ -9,9 +9,10 @@ interface AiHeaderProps {
   title: string;
   className?: string;
   onBack?: () => void;
+  rightElement?: React.ReactNode;
 }
 
-export function AiHeader({ title, className = '', onBack }: AiHeaderProps) {
+export function AiHeader({ title, className = '', onBack, rightElement }: AiHeaderProps) {
   const handleBack = () => {
     if (onBack) {
       onBack();
@@ -42,8 +43,8 @@ export function AiHeader({ title, className = '', onBack }: AiHeaderProps) {
           {title}
         </Text>
       </View>
-      {/* Right spacer for flex justify-between symmetry */}
-      <View className="w-10 h-10 shrink-0" />
+      {/* Right slot: custom element or symmetry spacer */}
+      {rightElement ?? <View className="w-10 h-10 shrink-0" />}
     </View>
   );
 }
