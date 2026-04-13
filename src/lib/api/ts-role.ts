@@ -163,6 +163,20 @@ export type TsRoleGenerateRoleResult = {
   snapshotKey?: string;
 };
 
+export type TsRoleGenerateTextByTemplatePayload = {
+  promptCode?: string;
+  promptVersion?: string;
+  variables?: Record<string, string | number | boolean | null | undefined>;
+};
+
+export type TsRoleGenerateTextByTemplateResult = {
+  generatedText?: string;
+  promptCode?: string;
+  promptVersion?: string;
+  renderedPrompt?: string;
+  snapshotKey?: string;
+};
+
 export const tsRoleApi = {
   async getRoleList(params: TsRoleQuery) {
     return defHttp.get<TsRolePage>({
@@ -226,6 +240,13 @@ export const tsRoleApi = {
   async generateRole(payload: TsRoleGenerateRolePayload) {
     return defHttp.post<TsRoleGenerateRoleResult>({
       url: '/sys/ts-roles/generate-role',
+      data: payload,
+    });
+  },
+
+  async generateTextByTemplate(payload: TsRoleGenerateTextByTemplatePayload) {
+    return defHttp.post<TsRoleGenerateTextByTemplateResult>({
+      url: '/sys/ts-roles/generate-text-by-template',
       data: payload,
     });
   },

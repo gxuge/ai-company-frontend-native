@@ -1,6 +1,8 @@
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { AiHeader } from '@/components/ai-company/ai-header';
-import { tsRoleImageApi } from '@/lib/api';
+import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
+import { tsRoleApi, tsRoleImageApi } from '@/lib/api';
 
 const asset = m => m?.default ?? m?.uri ?? m;
 const imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1 = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
@@ -26,9 +28,7 @@ const STYLE_OPTIONS = [
 const PROFILE_NAME_MAX_LENGTH = 24;
 
 function showMessage(message) {
-  if (!message) {
-    return;
-  }
+  if (!message) return;
   console.warn(message);
 }
 
@@ -39,29 +39,79 @@ function extractErrorMessage(error, fallback) {
   return fallback;
 }
 
-function MyGalleryButton({ onClick, loading = false }) {
+/** 图片预览弹层 */
+function ImagePreviewModal({ src, onClose }) {
+  if (!src) return null;
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: 'rgba(0,0,0,0.88)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+      onClick={onClose}
+    >
+      <img
+        src={src}
+        alt="预览"
+        style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 12 }}
+        onClick={e => e.stopPropagation()}
+      />
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: 20,
+          right: 20,
+          background: 'rgba(255,255,255,0.15)',
+          border: 'none',
+          borderRadius: '50%',
+          width: 36,
+          height: 36,
+          cursor: 'pointer',
+          color: '#fff',
+          fontSize: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+/** 顶部"我的图库"按钮 */
+function MyGalleryButton() {
   return (
     <div className="mb-4 flex justify-end px-4">
       <button
-        onClick={onClick}
-        disabled={loading}
-        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#b2b2b2] bg-[rgba(22,22,30,0.6)] px-4 py-2 backdrop-blur-sm transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => router.push('/pages/my-gallery')}
+        className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#b2b2b2] bg-[rgba(22,22,30,0.6)] px-4 py-2 backdrop-blur-sm transition-transform active:scale-95"
       >
         <svg className="size-5" fill="none" viewBox="0 0 33 33">
           <path d={svgPaths.p498d400} fill="#6B7280" />
         </svg>
         <span className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
-          {loading ? '加载中...' : '我的图库'}
+          我的图库
         </span>
       </button>
     </div>
   );
 }
 
+/** 主输入卡�?*/
 function InputCard({
   value,
   onChange,
-  onUseGalleryImage,
+  onPickRefImage,
+  referenceImageUrl,
+  onPreviewRefImage,
   onGenerate,
   generating = false,
   backgroundImage,
@@ -114,29 +164,39 @@ function InputCard({
                     onChange={e => onChange(e.target.value)}
                     onFocus={() => setFocused(true)}
                     onBlur={() => {
-                      if (value.trim() === '') {
-                        setFocused(false);
-                      }
+                      if (value.trim() === '') setFocused(false);
                     }}
                   />
                 </div>
               )}
 
           <div className="flex items-center justify-center gap-5 pt-1 pb-2">
+            {/* 参考图按钮：已选图片则显示缩略图，可点击预览；未选则显示图标 */}
             <button
-              onClick={onUseGalleryImage}
-              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.45)] bg-[rgba(22,22,30,0.6)] px-5 py-3 backdrop-blur-sm transition-transform active:scale-95"
+              onClick={referenceImageUrl ? onPreviewRefImage : onPickRefImage}
+              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.45)] bg-[rgba(22,22,30,0.6)] px-5 py-3 backdrop-blur-sm transition-transform active:scale-95 overflow-hidden"
+              title={referenceImageUrl ? '点击预览参考图' : '选择参考图'}
             >
-              <svg className="size-5 shrink-0" fill="none" viewBox="0 0 37 35">
-                <g clipPath="url(#clip0_1_153)">
-                  <path d={svgPaths.p22801e00} fill="#6B7280" />
-                </g>
-                <defs>
-                  <clipPath id="clip0_1_153">
-                    <rect fill="white" height="35" width="37" />
-                  </clipPath>
-                </defs>
-              </svg>
+              {referenceImageUrl
+                ? (
+                    <img
+                      src={referenceImageUrl}
+                      alt="参考图"
+                      style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: 4 }}
+                    />
+                  )
+                : (
+                    <svg className="size-5 shrink-0" fill="none" viewBox="0 0 37 35">
+                      <g clipPath="url(#clip0_1_153)">
+                        <path d={svgPaths.p22801e00} fill="#6B7280" />
+                      </g>
+                      <defs>
+                        <clipPath id="clip0_1_153">
+                          <rect fill="white" height="35" width="37" />
+                        </clipPath>
+                      </defs>
+                    </svg>
+                  )}
               <span className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
                 参考图
               </span>
@@ -151,7 +211,7 @@ function InputCard({
                 <path d={svgPaths.p6e49400} fill="rgba(155,254,3,0.9)" fillOpacity="0.9" />
               </svg>
               <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(155,254,3,0.9)]">
-                {generating ? '生成中...' : 'AI 生成'}
+                {generating ? '生成�?..' : 'AI 生成'}
               </span>
             </button>
           </div>
@@ -239,60 +299,79 @@ function Container() {
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [referenceImageUrl, setReferenceImageUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoadingGallery, setIsLoadingGallery] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [previewSrc, setPreviewSrc] = useState('');
+  const fileInputRef = useRef(null);
 
-  const pickLatestGalleryImage = async (silent = false) => {
-    setIsLoadingGallery(true);
-    try {
-      const page = await tsRoleImageApi.getUserImageAssets({
-        pageNo: 1,
-        pageSize: 20,
-        status: 1,
-      });
-      const latest = page?.records?.find(item => item?.thumbnailUrl || item?.fileUrl);
-      if (!latest) {
-        if (!silent) {
-          showMessage('我的图库暂无可用图片');
-        }
-        return null;
-      }
-      const imageUrl = latest.thumbnailUrl || latest.fileUrl || '';
-      setGeneratedImageUrl(imageUrl);
-      setReferenceImageUrl(imageUrl);
-      if (!silent) {
-        showMessage('已使用图库最新图片作为参考图');
-      }
-      return imageUrl;
-    }
-    catch (error) {
-      if (!silent) {
-        showMessage(extractErrorMessage(error, '加载图库失败，请稍后重试'));
-      }
-      return null;
-    }
-    finally {
-      setIsLoadingGallery(false);
-    }
+  /** 调起文件系统选单张图�?*/
+  const handlePickRefImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const objectUrl = URL.createObjectURL(file);
+    setReferenceImageUrl(objectUrl);
+    // reset file input so same file can be selected again
+    e.target.value = '';
   };
 
   const handleGenerate = async () => {
     const promptTextTrimmed = promptText.trim();
-    if (!promptTextTrimmed) {
-      showMessage('请先输入形象描述');
+    if (!promptTextTrimmed && !referenceImageUrl) {
+      showMessage('Please enter description or select a reference image');
       return;
     }
 
     setIsGenerating(true);
     try {
+      const generated = await tsRoleApi.generateTextByTemplate({
+        promptCode: 'role_ai_generate_text',
+        promptVersion: 'v1',
+        variables: {
+          idea_input: promptTextTrimmed || null,
+          style_hint: selectedStyle || null,
+          keywords: selectedStyle || null,
+          reference_image_url: referenceImageUrl || null,
+          role_name: null,
+          gender: null,
+          occupation: null,
+          background_story: null,
+        },
+      });
+      const generatedText = generated?.generatedText?.trim();
+      if (!generatedText) {
+        throw new Error('AI did not return usable text');
+      }
+      setPromptText(generatedText);
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, 'AI generation failed, please retry'));
+    }
+    finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    const promptTextTrimmed = promptText.trim();
+    if (!referenceImageUrl && promptTextTrimmed.length < 15) {
+      showMessage('Please upload a reference image or enter at least 15 characters');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
       const generated = await tsRoleImageApi.generateRoleImage({
-        backgroundStory: promptTextTrimmed,
+        backgroundStory: promptTextTrimmed || undefined,
         styleName: selectedStyle || undefined,
         referenceImageUrl: referenceImageUrl || undefined,
       });
 
       const imageUrl = generated?.imageUrl?.trim();
       if (!imageUrl) {
-        throw new Error('生成失败，未返回图片地址');
+        throw new Error('Create failed: image URL not returned');
       }
       setGeneratedImageUrl(imageUrl);
 
@@ -304,49 +383,72 @@ function Container() {
         imagePrompt: generated.imagePrompt,
       });
 
-      try {
-        await tsRoleImageApi.createRoleImageProfile({
-          profileName: promptTextTrimmed.slice(0, PROFILE_NAME_MAX_LENGTH),
-          promptText: promptTextTrimmed,
-          styleName: selectedStyle || undefined,
-          selectedImageAssetId: generated.imageAssetId,
-          selectedImageUrl: imageUrl,
-          sourceType: 'ai_generate',
-          isPublic: 1,
-          status: 1,
-          extJson,
-        });
-      }
-      catch (saveError) {
-        showMessage(extractErrorMessage(saveError, '图片已生成，但保存形象配置失败'));
-      }
+      await tsRoleImageApi.createRoleImageProfile({
+        profileName: (promptTextTrimmed || 'new-profile').slice(0, PROFILE_NAME_MAX_LENGTH),
+        promptText: promptTextTrimmed || generated.imagePrompt || '',
+        styleName: selectedStyle || undefined,
+        selectedImageAssetId: generated.imageAssetId,
+        selectedImageUrl: imageUrl,
+        sourceType: 'ai_generate',
+        isPublic: 1,
+        status: 1,
+        extJson,
+      });
+      showMessage('Create character success');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, 'AI 生成失败，请稍后重试'));
+      showMessage(extractErrorMessage(error, 'Create character failed, please retry'));
     }
     finally {
-      setIsGenerating(false);
+      setIsCreating(false);
     }
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
       <AiHeader title="创建人物" className="h-16 bg-[#0a0a0a] px-4" />
-      <MyGalleryButton onClick={() => pickLatestGalleryImage(false)} loading={isLoadingGallery} />
+      <MyGalleryButton />
       <InputCard
         value={promptText}
         onChange={setPromptText}
-        onUseGalleryImage={() => pickLatestGalleryImage(false)}
+        onPickRefImage={handlePickRefImage}
+        referenceImageUrl={referenceImageUrl}
+        onPreviewRefImage={() => setPreviewSrc(referenceImageUrl)}
         onGenerate={handleGenerate}
         generating={isGenerating}
         backgroundImage={generatedImageUrl}
       />
-      <div className="mt-4 mb-6">
+      <div className="mt-4 mb-4">
         <StyleSelector
           selectedStyle={selectedStyle}
           onSelectStyle={setSelectedStyle}
         />
       </div>
+
+      {/* 创建形象按钮 */}
+      <div className="px-4 pb-8">
+        <AiLoginBtn
+          label="创建形象"
+          onPress={handleCreate}
+          disabled={isCreating}
+          customWidth="w-full"
+          customHeight="h-14"
+          radius="rounded-2xl"
+          textClassName="text-base font-bold text-black"
+        />
+      </div>
+
+      {/* 隐藏的文件选择�?*/}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+
+      {/* 图片预览弹层 */}
+      <ImagePreviewModal src={previewSrc} onClose={() => setPreviewSrc('')} />
     </div>
   );
 }

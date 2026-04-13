@@ -149,3 +149,15 @@
   - 详细入参与回退策略已写入：
     - `docs/fe-be-integration/任务-语音与麦克风模块-前后端对接计划-20260410-1021.md`
 
+
+## 2026-04-13 更新（会话分流 + 历史回填）
+- 后端：`/sys/ts-chat-sessions` 出参新增 `isSystemSession`（用于前端系统会话分流）。
+- 会话列表：点击会话按 `isSystemSession` 分流。
+  - `true` -> `/pages/admin-chat?sessionId=...`
+  - `false` -> `/pages/chat?sessionId=...`
+- 系统聊天页：按 `sessionId` 从 `/sys/ts-chat-messages` 回填历史消息。
+- 普通聊天页：按 `sessionId` 从 `/sys/ts-chat-messages` 回填历史消息。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-会话列表页-系统分流对接-20260413-1945.md`
+  - `docs/fe-be-integration/任务-系统聊天页-历史消息回填-20260413-1945.md`
+  - `docs/fe-be-integration/任务-普通聊天页-历史消息回填-20260413-1945.md`

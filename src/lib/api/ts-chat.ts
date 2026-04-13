@@ -6,6 +6,7 @@ export type TsChatSession = {
   storyId?: number;
   roleId?: number;
   sessionType?: string;
+  isSystemSession?: boolean;
   sessionTitle?: string;
   coverUrl?: string;
   lastMessageId?: number;
@@ -39,12 +40,15 @@ export type TsChatMessage = {
   id: number;
   sessionId: number;
   senderType?: string;
-  senderId?: string;
+  senderId?: number;
+  senderName?: string;
   roleId?: number;
+  messageType?: string;
   contentType?: string;
   contentText?: string;
-  contentUrl?: string;
+  contentJson?: string;
   extJson?: string;
+  generateStatus?: string;
   status?: number;
   createdAt?: string;
   updatedAt?: string;

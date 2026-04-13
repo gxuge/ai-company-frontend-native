@@ -212,3 +212,30 @@
 | 2026-04-10 | T2 | 已完成 | 页面标题/描述/作者名改为真实故事数据 | `src/app/pages/conversation-detail/index.tsx` |
 | 2026-04-10 | T3 | 已完成 | 角色列表改为 role 详情映射，弹层章节改真实数据 | `src/app/pages/conversation-detail/index.tsx`、`src/app/pages/conversation-detail/components/StoryDetailModal.jsx` |
 | 2026-04-10 | T4 | 已完成 | 定向 eslint 校验通过并回填记录 | `pnpm exec eslint src/app/pages/conversation-detail/index.tsx src/app/pages/conversation-detail/components/StoryDetailModal.jsx src/lib/api/ts-story.ts --rule "unicorn/filename-case: off" --rule "max-lines-per-function: off" --rule "better-tailwindcss/enforce-canonical-classes: off" --rule "better-tailwindcss/enforce-consistent-class-order: off" --rule "better-tailwindcss/enforce-shorthand-classes: off" --rule "perfectionist/sort-imports: off"` |
+
+## 11. 任务背景（会话分流 + 历史消息回填，2026-04-13）
+- 目标：按“推荐方案 1”落地，后端补 `isSystemSession`，前端实现会话列表分流到系统/普通聊天页并回填历史消息。
+- 边界：不修改页面布局与视觉结构，仅改 API 字段映射、路由参数与数据加载逻辑。
+- 非目标：本轮不处理消息发送落库与流式回包。
+
+### 11.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 后端会话出参增强 | 已完成 | `TsChatSessionVo` 增加 `isSystemSession` 并在 converter 回填 | `/sys/ts-chat-sessions` 可返回系统会话标记 | `TsChatSessionVo*.java`、`mvn compile` |
+| T2 会话列表点击分流 | 已完成 | `session-list` 按 `isSystemSession` 跳转 `admin-chat/chat` 并传 `sessionId` | 点击会话可进入正确页面 | `src/app/pages/session-list/index.tsx` |
+| T3 系统聊天页历史回填 | 已完成 | `admin-chat` 根据 `sessionId` 拉取历史消息并渲染 | 进入系统会话可看到历史记录 | `src/app/pages/admin-chat/index.tsx` |
+| T4 普通聊天页历史回填 | 已完成 | `chat` 根据 `sessionId` 拉取历史消息并映射 `ChatAi/ChatUser` | 进入普通会话可看到历史记录 | `src/app/pages/chat/index.tsx` |
+| T5 文档回填 | 已完成 | 新增 3 份任务文件并更新计划/日志 | 记录文件齐全 | `docs/fe-be-integration/任务-*.md`、`docs/plan/plan.md`、`docs/changelog/changelog.md` |
+
+### 11.2 风险与回退
+- 风险：`admin-chat` 页面存在历史遗留 lint 规则告警，非本轮新增。
+- 回退：接口失败时保留默认消息，不阻断页面渲染。
+
+### 11.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-13 | T1 | 已完成 | 后端会话 VO 新增 `isSystemSession` | `jeecg-module-system/.../TsChatSessionVo.java`、`TsChatSessionVoConverter.java` |
+| 2026-04-13 | T2 | 已完成 | 会话列表分流跳转与 `sessionId` 透传完成 | `src/app/pages/session-list/index.tsx` |
+| 2026-04-13 | T3 | 已完成 | 系统聊天页接入历史消息加载 | `src/app/pages/admin-chat/index.tsx` |
+| 2026-04-13 | T4 | 已完成 | 普通聊天页接入历史消息加载 | `src/app/pages/chat/index.tsx` |
+| 2026-04-13 | T5 | 已完成 | 对接文档与计划日志回填完成 | `docs/fe-be-integration/任务-会话列表页-系统分流对接-20260413-1945.md` 等 |

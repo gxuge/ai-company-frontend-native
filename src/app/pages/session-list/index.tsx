@@ -1,4 +1,5 @@
 import type { TsChatSession } from '@/lib/api';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { tsChatApi } from '@/lib/api';
@@ -52,6 +53,7 @@ type Conversation = {
   message: string;
   time: string;
   badge: number;
+  isSystemSession: boolean;
 };
 
 type SessionListState = {
@@ -117,6 +119,7 @@ async function buildConversationRows(sessions: TsChatSession[]) {
     message: messageMap.get(session.id) || '暂无消息',
     time: formatConversationTime(session.lastMessageAt || session.updatedAt || session.createdAt),
     badge: normalizeBadge(session.unreadCount),
+    isSystemSession: session.isSystemSession === true,
   }));
 }
 
@@ -207,9 +210,21 @@ function Badge({ count }: { count: number }) {
   );
 }
 
-function ConversationItem({ name, message, time, badge }: { name: string; message: string; time: string; badge: number }) {
+function ConversationItem({
+  name,
+  message,
+  time,
+  badge,
+  onPress,
+}: {
+  name: string;
+  message: string;
+  time: string;
+  badge: number;
+  onPress?: () => void;
+}) {
   return (
-    <div className="flex items-center border-t border-[#5d5d5d] px-4 py-3">
+    <div className="flex items-center border-t border-[#5d5d5d] px-4 py-3" onClick={onPress}>
       <div className="relative mr-3 size-[56px] shrink-0">
         <img
           src={imgAvatar}
@@ -241,6 +256,13 @@ function ConversationItem({ name, message, time, badge }: { name: string; messag
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('关注');
   const { conversations, loading, loadError } = useSessionListData();
+  const handleOpenConversation = (conversation: Conversation) => {
+    const pathname = conversation.isSystemSession ? '/pages/admin-chat' : '/pages/chat';
+    router.push({
+      pathname,
+      params: { sessionId: String(conversation.id) },
+    });
+  };
 
   return (
     <div className="flex min-h-screen w-full justify-center bg-[#111]">
@@ -285,6 +307,7 @@ export default function App() {
               message={conv.message}
               time={conv.time}
               badge={conv.badge}
+              onPress={() => handleOpenConversation(conv)}
             />
           ))}
         </div>

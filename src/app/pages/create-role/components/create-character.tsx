@@ -8,6 +8,7 @@ import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
 import { tsRoleApi } from '@/lib/api';
 import { BasicInfoSection } from './basic-info';
+import { SoundGenerating } from './sound-generating';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
 const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/plus_gray.svg'));
@@ -511,23 +512,30 @@ export function CreateCharacter() {
                 </>
               )
             : (
-                <BasicInfoSection
-                  name={name}
-                  gender={gender}
-                  job={job}
-                  background={background}
-                  voiceName={voiceName}
-                  onNameChange={setName}
-                  onGenderChange={setGender}
-                  onJobChange={setJob}
-                  onBackgroundChange={setBackground}
-                  onGenerateSetting={handleGenerateSetting}
-                  onGenerateImage={handleGenerateImage}
-                  onGenerateVoice={handleGenerateVoice}
-                  generatingSetting={generatingSetting}
-                  generatingImage={generatingImage}
-                  generatingVoice={generatingVoice}
-                />
+                <div className="relative">
+                  <BasicInfoSection
+                    name={name}
+                    gender={gender}
+                    job={job}
+                    background={background}
+                    voiceName={voiceName}
+                    onNameChange={setName}
+                    onGenderChange={setGender}
+                    onJobChange={setJob}
+                    onBackgroundChange={setBackground}
+                    onGenerateSetting={handleGenerateSetting}
+                    onGenerateImage={handleGenerateImage}
+                    onGenerateVoice={handleGenerateVoice}
+                    generatingSetting={generatingSetting}
+                    generatingImage={generatingImage}
+                    generatingVoice={generatingVoice}
+                  />
+                  {generatingVoice && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl px-4">
+                      <SoundGenerating />
+                    </div>
+                  )}
+                </div>
               )}
         </div>
       </ScrollView>

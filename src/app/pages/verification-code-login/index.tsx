@@ -7,11 +7,7 @@ import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
 import { signIn } from '@/features/auth/use-auth-store';
 import { userApi } from '@/lib/api';
 
-const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/2dfbef3493ddaae489166e016e1a4a78aa729aac.png'));
-const imgImage1 = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/4a0515f093f505d671ec2d74d4010daa50d88b96.png'));
-const imgImage2 = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/b3da50266386b29a46ab5c05f2530974789cc419.png'));
 const imgBackground = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/5002ae40133251c579d54d15ebcf7a815a0bc048.png'));
-const imgAgreementCircle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/agreement_circle.svg'));
 const imgClose = require('../../../assets/images/quick-login/svg/p62a9900.svg');
 
 const PHONE_REGEX = /^1\d{10}$/;
@@ -27,8 +23,20 @@ export default function VerificationCodeLoginPage() {
   const [agreed, setAgreed] = useState(true);
   const [countdown, setCountdown] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const showNativeAlert = (message: string) => {
-    Alert.alert('提示', message);
+  const [phoneError, setPhoneError] = useState('');
+  const [agreementError, setAgreementError] = useState('');
+
+  const isPhoneValid = PHONE_REGEX.test(phone);
+  const isCodeValid = CODE_REGEX.test(code);
+  const canConfirmLogin = isPhoneValid && isCodeValid && !submitting;
+
+  const showNativeAlert = (message: string, onConfirm?: () => void) => {
+    if (typeof window !== 'undefined') {
+      window.alert(message);
+      onConfirm?.();
+    } else {
+      Alert.alert('提示', message, [{ text: '确定', onPress: () => onConfirm?.() }]);
+    }
   };
 
   useEffect(() => {
@@ -48,13 +56,14 @@ export default function VerificationCodeLoginPage() {
 
   const handleSendCode = () => {
     if (!PHONE_REGEX.test(phone)) {
-      showNativeAlert('请输入正确的11位手机号码');
+      setPhoneError('请输入正确的11位手机号码');
       return;
     }
     if (phone === QUICK_LOGIN_BYPASS_PHONE) {
       showNativeAlert('该手机号已开通快捷登录，可直接点击确认登录');
       return;
     }
+    setPhoneError('');
     if (countdown === 0) {
       setCountdown(60);
     }
@@ -65,13 +74,15 @@ export default function VerificationCodeLoginPage() {
       return;
     }
     if (!agreed) {
-      showNativeAlert('请先阅读并同意用户协议和隐私政策');
+      setAgreementError('登录前请先勾选同意《用户协议》与《隐私政策》，我们会保护您的个人信息安全 🔒');
       return;
     }
+    setAgreementError('');
     if (!PHONE_REGEX.test(phone)) {
-      showNativeAlert('请输入正确的11位手机号码');
+      setPhoneError('请输入正确的11位手机号码');
       return;
     }
+    setPhoneError('');
     const isBypassPhone = phone === QUICK_LOGIN_BYPASS_PHONE;
     if (!isBypassPhone && !CODE_REGEX.test(code)) {
       showNativeAlert('验证码必须为6位数字');
@@ -85,7 +96,9 @@ export default function VerificationCodeLoginPage() {
         captcha: isBypassPhone ? (code || '000000') : code,
       });
       signIn({ token: loginResult.token, refreshToken: loginResult.refreshToken });
-      router.replace('/pages/chat');
+      showNativeAlert('登录成功', () => {
+        router.replace('/pages/chat');
+      });
     }
     catch (error) {
       const message = error instanceof Error ? error.message : '登录失败，请稍后重试';
@@ -170,50 +183,71 @@ export default function VerificationCodeLoginPage() {
 
           <div style={{ height: 12 }} />
 
-          <AiInput
-            value={phone}
-            onChangeText={(text: string) => setPhone(text.replace(/\D/g, '').slice(0, 11))}
-            placeholder="输入手机号码"
-            placeholderTextColor="#666668"
-            inputStyle={{
-              flex: 1,
-              borderWidth: 0,
-              backgroundColor: 'transparent',
-              color: '#ffffff',
-              fontSize: 30,
-              fontFamily: 'Microsoft YaHei, sans-serif',
-            }}
-            containerStyle={{
+          {/* 手机号输入框 + 行内错误提示 */}
+          <div
+            style={{
+              position: 'relative',
               width: 634,
               height: 84,
-              backgroundColor: '#1e1f21',
-              borderRadius: 37,
-              display: 'flex',
-              paddingLeft: 36,
-              paddingRight: 36,
-              flexShrink: 0,
+              marginBottom: phoneError ? 16 : 0,
+              transition: 'margin-bottom 0.2s ease-in-out',
             }}
-            leftNode={
-              <>
-                <span
-                  style={{
-                    color: '#e7e7e7',
-                    fontSize: 29,
-                    fontFamily: 'Inter, sans-serif',
-                    fontWeight: 600,
-                    marginRight: 20,
-                  }}
-                >
-                  +86
-                </span>
-                <img
-                  src={imgBackground}
-                  alt=""
-                  style={{ width: 1.1, height: 24, objectFit: 'cover', marginRight: 20, opacity: 0.6 }}
-                />
-              </>
-            }
-          />
+          >
+            <AiInput
+              value={phone}
+              onChangeText={(text: string) => {
+                setPhone(text.replace(/\D/g, '').slice(0, 11));
+                if (phoneError) setPhoneError('');
+              }}
+              placeholder="输入手机号码"
+              placeholderTextColor="#666668"
+              inputStyle={{
+                flex: 1,
+                borderWidth: 0,
+                backgroundColor: 'transparent',
+                color: '#ffffff',
+                fontSize: 30,
+                fontFamily: 'Microsoft YaHei, sans-serif',
+              }}
+              containerStyle={{
+                width: 634,
+                height: 84,
+                backgroundColor: '#1e1f21',
+                borderRadius: 37,
+                display: 'flex',
+                paddingLeft: 36,
+                paddingRight: 36,
+                flexShrink: 0,
+              }}
+              leftNode={
+                <>
+                  <span
+                    style={{
+                      color: '#e7e7e7',
+                      fontSize: 29,
+                      fontFamily: 'Inter, sans-serif',
+                      fontWeight: 600,
+                      marginRight: 20,
+                    }}
+                  >
+                    +86
+                  </span>
+                  <img
+                    src={imgBackground}
+                    alt=""
+                    style={{ width: 1.1, height: 24, objectFit: 'cover', marginRight: 20, opacity: 0.6 }}
+                  />
+                </>
+              }
+            />
+            {phoneError
+              ? (
+                  <div style={{ position: 'absolute', top: 90, left: 36, color: '#f56c6c', fontSize: 16, fontFamily: 'sans-serif' }}>
+                    {phoneError}
+                  </div>
+                )
+              : null}
+          </div>
 
           <AiInput
             value={code}
@@ -268,12 +302,12 @@ export default function VerificationCodeLoginPage() {
             customWidth=""
             customHeight=""
             radius=""
-            className={submitting ? 'opacity-75' : ''}
+            className={canConfirmLogin ? '' : 'opacity-65'}
             style={{
               width: 627,
               height: 85,
-              backgroundColor: '#528700',
-              borderColor: '#4f4736',
+              backgroundColor: canConfirmLogin ? '#9BFE03' : '#528700',
+              borderColor: canConfirmLogin ? '#9BFE03' : '#4f4736',
               borderWidth: 1.1,
               borderRadius: 44,
               flexShrink: 0,
@@ -282,56 +316,60 @@ export default function VerificationCodeLoginPage() {
           />
         </div>
 
-        <div
-          style={{
-            position: 'absolute',
-            top: 849,
-            left: 79,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 17,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => setAgreed(value => !value)}
-            style={{ border: 'none', background: 'transparent', padding: 0, margin: 0, cursor: 'pointer' }}
-          >
-            <img
-              src={imgAgreementCircle}
-              alt=""
-              style={{ width: 34, height: 34, objectFit: 'contain', opacity: agreed ? 1 : 0.35 }}
-            />
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-            <span
-              style={{
-                color: '#646466',
-                fontSize: 22,
-                fontFamily: 'Microsoft YaHei, sans-serif',
-              }}
+        {/* 协议勾选区域 */}
+        <div style={{ position: 'absolute', top: 849, left: 79 }}>
+          {agreementError
+            ? (
+                <div style={{ color: '#f56c6c', fontSize: 18, fontFamily: 'sans-serif', marginBottom: 6, paddingLeft: 2 }}>
+                  {agreementError}
+                </div>
+              )
+            : null}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 17 }}>
+            <button
+              type="button"
+              onClick={() => { setAgreed(value => !value); setAgreementError(''); }}
+              style={{ border: 'none', background: 'transparent', padding: 0, margin: 0, cursor: 'pointer' }}
             >
-              已阅读并同意
-            </span>
-            <span
-              style={{
-                color: '#ffffff',
-                fontSize: 22,
-                fontFamily: 'sans-serif',
-              }}
-            >
-              《用户协议》
-            </span>
-            <span
-              style={{
-                color: '#ffffff',
-                fontSize: 22,
-                fontFamily: 'sans-serif',
-              }}
-            >
-              《隐私政策》
-            </span>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  borderStyle: 'solid',
+                  borderWidth: 2,
+                  borderColor: agreed ? '#9bfe03' : '#646466',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  backgroundColor: 'transparent',
+                }}
+              >
+                <div
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 8,
+                    backgroundColor: '#9bfe03',
+                    opacity: agreed ? 1 : 0,
+                    transform: agreed ? 'scale(1)' : 'scale(0.5)',
+                    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  }}
+                />
+              </div>
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+              <span style={{ color: '#646466', fontSize: 22, fontFamily: 'Microsoft YaHei, sans-serif' }}>
+                已阅读并同意
+              </span>
+              <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
+                《用户协议》
+              </span>
+              <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
+                《隐私政策》
+              </span>
+            </div>
           </div>
         </div>
       </div>

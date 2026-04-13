@@ -1,6 +1,9 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import type { TsChatMessage } from "@/lib/api";
+import { tsChatApi } from "@/lib/api";
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const imgImage = require("@/assets/images/admin-chat/ecb7a353c6950598ee6e686ed5e5d05068e56c7f.png");
@@ -50,6 +53,36 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     content: "当然！您还可以使用AI创作功能生成图片、文本等内容，也可以通过相机、图片等功能分享素材给我。",
   },
 ];
+
+function firstParam(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+}
+
+function parseSessionId(value?: string | string[]) {
+  const raw = firstParam(value);
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return Math.trunc(parsed);
+}
+
+function toChatMessages(records: TsChatMessage[] | undefined) {
+  const source = Array.isArray(records) ? [...records].reverse() : [];
+  return source.map((item, index) => ({
+    id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
+    role: item.senderType === "user" ? "user" as const : "ai" as const,
+    content: typeof item.contentText === "string" && item.contentText.trim()
+      ? item.contentText.trim()
+      : " ",
+  }));
+}
 
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
 function AIBubble({ content }: { content: string }) {
@@ -312,13 +345,42 @@ function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void
 
 /* ─── App ────────────────────────────────────────────────────────────────── */
 export default function App() {
+  const params = useLocalSearchParams<{ sessionId?: string | string[] }>();
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
   const scrollViewRef = useRef<ScrollView>(null);
   const scale = useViewportScale();
+  const sessionId = parseSessionId(params.sessionId);
 
   const { height } = useWindowDimensions();
   const innerHeight = height / scale;
+
+  useEffect(() => {
+    let alive = true;
+    if (!sessionId) {
+      return () => {
+        alive = false;
+      };
+    }
+    tsChatApi.getMessageList({
+      sessionId,
+      pageNo: 1,
+      pageSize: 100,
+    }).then((page) => {
+      if (!alive) {
+        return;
+      }
+      const mapped = toChatMessages(page?.records);
+      if (mapped.length > 0) {
+        setMessages(mapped);
+      }
+    }).catch(() => {
+      // 保留当前页面默认消息，避免布局抖动
+    });
+    return () => {
+      alive = false;
+    };
+  }, [sessionId]);
 
   /** 发送消息（用户） */
   const handleSend = () => {
