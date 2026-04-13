@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 const imgFes5 = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/ccea1aa2c0a290c2a877e1aa8cb2442ad7ddffc6.png"));
 const imgN4Yr = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/1292df4b4fcdb338c5b00f0f75a95168864a6fba.png"));
 const imgAddUser = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/add_user.svg"));
@@ -296,10 +297,29 @@ function Main() {
           <HeaderContainer />
           {/* 23px spacer */}
           <div className="h-[23px] shrink-0 w-[682px]" />
-          <Card1 />
+
+          {/* Card1 — 淡入 + 上移，延迟 0.1s */}
+          <motion.div
+            className="w-full"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 120, damping: 22, delay: 0.15 }}
+          >
+            <Card1 />
+          </motion.div>
+
           {/* 43px spacer */}
           <div className="h-[43px] shrink-0 w-[682px]" />
-          <Card2 />
+
+          {/* Card2 — 淡入 + 上移，延迟 0.25s（错开产生层叠感） */}
+          <motion.div
+            className="w-full"
+            initial={{ opacity: 0, y: 60 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.4 }}
+          >
+            <Card2 />
+          </motion.div>
         </div>
       </div>
     </div>

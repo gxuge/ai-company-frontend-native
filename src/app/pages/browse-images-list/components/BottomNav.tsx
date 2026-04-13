@@ -1,47 +1,68 @@
-import { useState } from "react";
-const imgBottomNavHome = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-home.svg"));
-const imgBottomNavSearch = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-search.svg"));
-const imgBottomNavCreate = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-create.svg"));
-const imgBottomNavCreateBadge = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-create-badge.svg"));
-const imgBottomNavChat = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-chat.svg"));
-const imgBottomNavProfile = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/browse-images-list/bottom-nav-profile.svg"));
+import { useState } from 'react';
+import { View, Pressable, Image } from 'react-native';
+
+const imgHome    = require('../../../../assets/images/browse-images-list/bottom-nav-home.svg');
+const imgSearch  = require('../../../../assets/images/browse-images-list/bottom-nav-search.svg');
+const imgCreate  = require('../../../../assets/images/browse-images-list/bottom-nav-create.svg');
+const imgBadge   = require('../../../../assets/images/browse-images-list/bottom-nav-create-badge.svg');
+const imgChat    = require('../../../../assets/images/browse-images-list/bottom-nav-chat.svg');
+const imgProfile = require('../../../../assets/images/browse-images-list/bottom-nav-profile.svg');
+
+const NAV_ITEMS = [
+  { icon: imgHome,    badge: null },
+  { icon: imgSearch,  badge: null },
+  { icon: imgCreate,  badge: imgBadge },
+  { icon: imgChat,    badge: null },
+  { icon: imgProfile, badge: null },
+];
 
 export function BottomNav() {
   const [active, setActive] = useState(0);
 
-  const iconOpacity = (i: number) => (i === active ? 1 : 0.5);
-
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black border-t border-black z-50">
-      <div className="max-w-[430px] mx-auto flex items-center justify-around h-[56px] px-2">
-        {/* Home */}
-        <button onClick={() => setActive(0)} className="flex flex-col items-center justify-center w-12 h-12">
-          <img src={imgBottomNavHome} alt="" className="w-[24px] h-[24px] object-contain" style={{ opacity: iconOpacity(0) }} />
-        </button>
-
-        {/* Search */}
-        <button onClick={() => setActive(1)} className="flex flex-col items-center justify-center w-12 h-12">
-          <img src={imgBottomNavSearch} alt="" className="w-[24px] h-[24px] object-contain" style={{ opacity: iconOpacity(1) }} />
-        </button>
-
-        {/* Create (center, larger) */}
-        <button onClick={() => setActive(2)} className="flex flex-col items-center justify-center w-14 h-14 -mt-2">
-          <img src={imgBottomNavCreate} alt="" className="w-[30px] h-[30px] object-contain" style={{ opacity: iconOpacity(2) }} />
-          <img src={imgBottomNavCreateBadge} alt="" className="absolute mt-6 w-[14px] h-[14px] object-contain" style={{ opacity: iconOpacity(2) }} />
-        </button>
-
-        {/* Chat */}
-        <button onClick={() => setActive(3)} className="flex flex-col items-center justify-center w-12 h-12">
-          <img src={imgBottomNavChat} alt="" className="w-[24px] h-[24px] object-contain" style={{ opacity: iconOpacity(3) }} />
-        </button>
-
-        {/* Profile */}
-        <button onClick={() => setActive(4)} className="flex flex-col items-center justify-center w-12 h-12">
-          <img src={imgBottomNavProfile} alt="" className="w-[24px] h-[24px] object-contain" style={{ opacity: iconOpacity(4) }} />
-        </button>
-      </div>
-      {/* Safe area bottom */}
-      <div className="h-[env(safe-area-inset-bottom,0px)] bg-black" />
-    </div>
+    <View
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#000',
+        borderTopWidth: 1,
+        borderTopColor: '#111',
+      }}
+    >
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          height: 56,
+          paddingHorizontal: 8,
+        }}
+      >
+        {NAV_ITEMS.map((item, i) => (
+          <Pressable
+            key={i}
+            onPress={() => setActive(i)}
+            style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <View style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+              <Image
+                source={item.icon}
+                style={{ width: i === 2 ? 30 : 24, height: i === 2 ? 30 : 24, opacity: i === active ? 1 : 0.5 }}
+                resizeMode="contain"
+              />
+              {item.badge && (
+                <Image
+                  source={item.badge}
+                  style={{ position: 'absolute', bottom: -8, width: 14, height: 14, opacity: i === active ? 1 : 0.5 }}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
+          </Pressable>
+        ))}
+      </View>
+    </View>
   );
 }

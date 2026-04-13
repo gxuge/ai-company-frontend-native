@@ -1,8 +1,13 @@
 import { useState } from 'react';
 import { View, Text, Image, ScrollView, Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
-import Svg, { Path, Circle } from 'react-native-svg';
 import { AiHeader } from '@/components/ai-company/ai-header';
+
+const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
+const imgCheckBlack = resolveAsset(require('@/assets/images/my-gallery/check_black.svg'));
+const imgCheckWhite = resolveAsset(require('@/assets/images/my-gallery/check_white.svg'));
+const imgTrashWhite = resolveAsset(require('@/assets/images/my-gallery/trash_white.svg'));
+const imgImagePlaceholder = resolveAsset(require('@/assets/images/my-gallery/image_placeholder.svg'));
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 const initialImages = [
@@ -17,33 +22,6 @@ const initialImages = [
 type ImageItem = typeof initialImages[number];
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-function CheckIcon({ color = 'black', size = 16 }: { color?: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M20 6L9 17l-5-5" stroke={color} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-function TrashIcon({ color = 'white', size = 20 }: { color?: string; size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-function ImagePlaceholderIcon() {
-  return (
-    <Svg width={36} height={36} viewBox="0 0 24 24" fill="none">
-      <Path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7" stroke="#52525b" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M16 5h6M19 2v6" stroke="#52525b" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      <Path d="M21 15l-5-5L5 21" stroke="#52525b" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      <Circle cx="9" cy="9" r="2" stroke="#52525b" strokeWidth={1.5} />
-    </Svg>
-  );
-}
-
 // ─── ImageCard ────────────────────────────────────────────────────────────────
 type ImageCardProps = {
   image: ImageItem;
@@ -82,7 +60,7 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
                 width: 28, height: 28, borderRadius: 14,
                 backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center',
               }}>
-                <CheckIcon color="black" size={15} />
+                <Image source={imgCheckBlack} style={{ width: 15, height: 15 }} resizeMode="contain" />
               </View>
             </Animated.View>
           )}
@@ -96,7 +74,7 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
                 backgroundColor: isSelectedForDelete ? '#ef4444' : 'rgba(0,0,0,0.4)',
                 borderColor: isSelectedForDelete ? '#ef4444' : '#71717a',
               }}>
-                {isSelectedForDelete && <CheckIcon color="white" size={14} />}
+                {isSelectedForDelete && <Image source={imgCheckWhite} style={{ width: 14, height: 14 }} resizeMode="contain" />}
               </View>
             </Animated.View>
           )}
@@ -182,7 +160,7 @@ export default function MyGallery() {
               backgroundColor: '#18181b', borderWidth: 1, borderColor: 'rgba(39,39,42,0.5)',
               alignItems: 'center', justifyContent: 'center', marginBottom: 24,
             }}>
-              <ImagePlaceholderIcon />
+              <Image source={imgImagePlaceholder} style={{ width: 36, height: 36 }} resizeMode="contain" />
             </View>
             <Text style={{ color: '#e4e4e7', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>
               你还没有图片
@@ -261,7 +239,7 @@ export default function MyGallery() {
               flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            <TrashIcon color="white" size={20} />
+            <Image source={imgTrashWhite} style={{ width: 20, height: 20 }} resizeMode="contain" />
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
               删除 {selectedForDelete.length} 张图片
             </Text>

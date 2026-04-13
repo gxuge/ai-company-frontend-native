@@ -1,11 +1,21 @@
 import { useState, useRef } from "react";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
-import Svg, { Path, G } from "react-native-svg";
-import svgPaths from "@/assets/images/admin-chat/svg-stdnzgn42m";
 
+const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const imgImage = require("@/assets/images/admin-chat/ecb7a353c6950598ee6e686ed5e5d05068e56c7f.png");
 const imgImage1 = require("@/assets/images/admin-chat/a5ca4172116f94768b6109da1c02910fc74f649b.png");
+const imgAiSpark = resolveAsset(require("@/assets/images/admin-chat/ai_spark.svg"));
+const imgMenuWhite = resolveAsset(require("@/assets/images/admin-chat/menu_white.svg"));
+const imgMenuActive = resolveAsset(require("@/assets/images/admin-chat/menu_active.svg"));
+const imgVoiceWhite = resolveAsset(require("@/assets/images/admin-chat/voice_white.svg"));
+const imgVoiceActive = resolveAsset(require("@/assets/images/admin-chat/voice_active.svg"));
+const imgSendWhite = resolveAsset(require("@/assets/images/admin-chat/send_white.svg"));
+const imgSendActive = resolveAsset(require("@/assets/images/admin-chat/send_active.svg"));
+const imgFeatureCamera = resolveAsset(require("@/assets/images/admin-chat/feature_camera.svg"));
+const imgFeatureImage = resolveAsset(require("@/assets/images/admin-chat/feature_image.svg"));
+const imgFeatureFile = resolveAsset(require("@/assets/images/admin-chat/feature_file.svg"));
+const imgFeatureCall = resolveAsset(require("@/assets/images/admin-chat/feature_call.svg"));
 
 /** 原始设计稿宽度（2× Figma 导出） */
 const DESIGN_WIDTH = 750;
@@ -229,9 +239,7 @@ function AIButton() {
         {/* AI spark icon */}
         <View style={{ width: 35, height: 35, position: "relative", marginRight: 5 }}>
           <View style={{ position: "absolute", top: '8%', bottom: '8%', left: '4%', right: '12%' }}>
-            <Svg style={{ width: "100%", height: "100%" }} viewBox="0 0 29.0306 29.029">
-              <Path d={svgPaths.p1ad98500} fill="white" />
-            </Svg>
+            <Image source={imgAiSpark} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
           </View>
         </View>
 
@@ -399,13 +407,7 @@ export default function App() {
           <Pressable style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}>
             {({ hovered }) => (
               <View style={{ width: "80%", height: "80%" }}>
-                <Svg viewBox="0 0 49 37" width="100%" height="100%">
-                  <G stroke={hovered ? "#fbbf24" : "rgba(255,255,255,0.6)"}>
-                    <Path d={svgPaths.p104f6100} strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" />
-                    <Path d={svgPaths.p320ddf80} strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" />
-                    <Path d={svgPaths.p32073300} strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.5" />
-                  </G>
-                </Svg>
+                <Image source={hovered ? imgMenuActive : imgMenuWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
               </View>
             )}
           </Pressable>
@@ -459,13 +461,7 @@ export default function App() {
             <Pressable style={{ width: 50, height: 50, marginRight: 20 }}>
               {({ hovered }) => (
                 <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                  <Svg viewBox="0 0 45.8 45.8" width="100%" height="100%">
-                    <G stroke={hovered ? "#fbbf24" : "rgba(255,255,255,0.6)"}>
-                      <Path d={svgPaths.p1d182000} strokeLinejoin="round" strokeWidth="4.17" />
-                      <Path d={svgPaths.p1a121b80} strokeLinecap="round" strokeLinejoin="round" strokeWidth="4.17" />
-                    </G>
-                    <Path d={svgPaths.p3f782180} fill={hovered ? "#fbbf24" : "rgba(255,255,255,0.6)"} />
-                  </Svg>
+                  <Image source={hovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
                 </View>
               )}
             </Pressable>
@@ -491,13 +487,7 @@ export default function App() {
             <Pressable style={{ width: 45.7, height: 47.2, marginLeft: 15 }} onPress={handleSend}>
               {({ hovered }) => (
                 <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                  <Svg viewBox="0 0 46.7 48.2" width="100%" height="100%">
-                    <G fill={hovered ? "#fbbf24" : "rgba(255,255,255,0.6)"} stroke={hovered ? "#fbbf24" : "rgba(255,255,255,0.6)"}>
-                      <Path d={svgPaths.p16246900} />
-                      <Path d={svgPaths.pd31ba70} />
-                      <Path d={svgPaths.pddf3000} />
-                    </G>
-                  </Svg>
+                  <Image source={hovered ? imgSendActive : imgSendWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
                 </View>
               )}
             </Pressable>
@@ -519,37 +509,28 @@ export default function App() {
           <FeatureCard
             label="相机"
             icon={
-              <Svg style={{ width: 37.5, height: 33.75 }} viewBox="0 0 37.5 33.75">
-                <Path d={svgPaths.p2c2b5a71} fill="rgba(255,255,255,0.9)" />
-              </Svg>
+              <Image source={imgFeatureCamera} style={{ width: 37.5, height: 33.75 }} resizeMode="contain" />
             }
           />
 
           <FeatureCard
             label="图片"
             icon={
-              <Svg style={{ width: 42.3, height: 42.3 }} viewBox="0 0 42.3529 42.3529">
-                <Path d={svgPaths.p3fc05300} fill="rgba(255,255,255,0.9)" />
-              </Svg>
+              <Image source={imgFeatureImage} style={{ width: 42.3, height: 42.3 }} resizeMode="contain" />
             }
           />
 
           <FeatureCard
             label="文件"
             icon={
-              <Svg style={{ width: 38.8, height: 38.8 }} viewBox="0 0 38.8052 38.7539">
-                <Path d={svgPaths.p3efb1e80} stroke="rgba(255,255,255,0.9)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.8" />
-                <Path d="M10.3742 24.306H28.362" stroke="rgba(255,255,255,0.9)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
-              </Svg>
+              <Image source={imgFeatureFile} style={{ width: 38.8, height: 38.8 }} resizeMode="contain" />
             }
           />
 
           <FeatureCard
             label="通话"
             icon={
-              <Svg style={{ width: 48, height: 48 }} viewBox="0 0 48 48">
-                <Path d={svgPaths.p10927680} fill="rgba(255,255,255,0.9)" />
-              </Svg>
+              <Image source={imgFeatureCall} style={{ width: 48, height: 48 }} resizeMode="contain" />
             }
           />
         </View>

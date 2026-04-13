@@ -1,49 +1,77 @@
-import { SearchBar } from "./components/SearchBar";
-import { CategoryTabs } from "./components/CategoryTabs";
-import { ImageCard } from "./components/ImageCard";
-import { BottomNav } from "./components/BottomNav";
+import { useState } from 'react';
+import { View, ScrollView, SafeAreaView } from 'react-native';
+import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import { SearchBar } from './components/SearchBar';
+import { CategoryTabs } from './components/CategoryTabs';
+import { StoryGrid } from './components/StoryGrid';
+import { ImageCard } from './components/ImageCard';
+import { BottomNav } from './components/BottomNav';
 
-const cards = Array.from({ length: 8 }, (_, i) => ({
+type TabValue = 'story' | 'character';
+
+const CHARACTER_CARDS = Array.from({ length: 8 }, (_, i) => ({
   id: i,
-  username: "@每个ai为..",
-  author: "kerwin壳壳",
-  views: "76.4万",
+  username: '@每个ai为..',
+  author: 'kerwin壳壳',
+  views: '76.4万',
 }));
 
-export default function App() {
+const TAB_OPTIONS = [
+  { label: '故事', value: 'story' as TabValue },
+  { label: '角色', value: 'character' as TabValue },
+];
+
+export default function BrowseImagesList() {
+  const [activeTab, setActiveTab] = useState<TabValue>('story');
+  const [activeCategory, setActiveCategory] = useState(0);
+
   return (
-    <div className="bg-black min-h-screen max-w-[430px] mx-auto flex flex-col pb-[72px]">
-      {/* Status bar spacer */}
-      <div className="h-[env(safe-area-inset-top,20px)] bg-black shrink-0" />
+    <View style={{ flex: 1, backgroundColor: '#000' }}>
+      <SafeAreaView style={{ backgroundColor: '#000' }} />
 
-      {/* Search bar */}
-      <div className="py-2 shrink-0">
-        <SearchBar />
-      </div>
+      {/* ── 顶部主 Tab（故事 / 角色），复用 AiNavigateTabs ── */}
+      <View style={{ paddingHorizontal: 12, paddingTop: 16, paddingBottom: 12 }}>
+        <AiNavigateTabs
+          options={TAB_OPTIONS}
+          activeValue={activeTab}
+          onChange={setActiveTab}
+        />
+      </View>
 
-      {/* Category tabs */}
-      <div className="py-1.5 shrink-0">
-        <CategoryTabs />
-      </div>
+      {/* ── 搜索框 ── */}
+      <SearchBar placeholder={activeTab === 'story' ? '搜索故事' : '搜索角色'} />
 
-      {/* Image grid */}
-      <div className="flex-1 overflow-y-auto px-3 pt-1">
-        <div className="grid grid-cols-2 gap-2">
-          {cards.map((card) => (
-            <ImageCard
-              key={card.id}
-              username={card.username}
-              author={card.author}
-              views={card.views}
-            />
-          ))}
-        </div>
-        {/* Bottom padding for scroll */}
-        <div className="h-4" />
-      </div>
+      {/* ── 分类 Pill（横向可滑动）── */}
+      <View style={{ paddingVertical: 6 }}>
+        <CategoryTabs active={activeCategory} onChange={setActiveCategory} />
+      </View>
 
-      {/* Bottom navigation */}
+      {/* ── 内容区 ── */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {activeTab === 'story' ? (
+          <StoryGrid />
+        ) : (
+          /* 角色列表：2 列网格，严格还原 343x518 比例并在左右边缘对齐 SearchBar */
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+            {CHARACTER_CARDS.map((card) => (
+              <View key={card.id} style={{ width: '47.4%', marginBottom: 18 }}>
+                <ImageCard
+                  username={card.username}
+                  author={card.author}
+                  views={card.views}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      {/* ── 底部导航 ── */}
       <BottomNav />
-    </div>
+    </View>
   );
 }

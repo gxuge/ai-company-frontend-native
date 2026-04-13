@@ -321,8 +321,8 @@ export default function SoundEditPage() {
 
   return (
     <div className="flex min-h-screen justify-center bg-background font-['Noto_Sans_SC',sans-serif]">
-      <div className="flex w-full max-w-[390px] flex-col items-stretch gap-0 py-[8px]">
-        <div className="mx-[6px] flex flex-col gap-[12px] rounded-[21px] border border-[#4c4c4c] bg-[#161616] p-[16px] shadow-[0_0_20px_rgba(155,254,3,0.05)]">
+      <div className="flex w-full flex-col items-stretch gap-0 py-[8px] px-[12.5px]">
+        <div className="flex flex-col gap-[12px] rounded-[21px] border border-[#4c4c4c] bg-[#161616] p-[16px] shadow-[0_0_20px_rgba(155,254,3,0.05)]">
           <div className="flex items-center justify-between pb-[4px]">
             <div className="flex items-center gap-[8px]">
               <div className="flex size-[28px] items-center justify-center rounded-full text-[12px]" style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}>
@@ -390,7 +390,7 @@ export default function SoundEditPage() {
           </div>
         </div>
 
-        <div className="mx-[6px] flex flex-col gap-[16px] pt-[20px] pb-[96px]">
+        <div className="flex flex-col gap-[16px] pt-[20px] pb-[96px]">
           <h2 className="pl-[4px] text-[14px] tracking-[0.7px] text-[#9ca3af] uppercase" style={{ fontWeight: 700 }}>{`\u63A8\u8350\u97F3\u8272\u5E93`}</h2>
 
           <div className="flex items-center justify-between px-[4px]">

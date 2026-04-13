@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { AiAlert, AiAlertDescription } from '@/components/ai-company/ai-alert';
+import { Alert } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiInput } from '@/components/ai-company/ai-input';
 import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
@@ -27,7 +27,9 @@ export default function VerificationCodeLoginPage() {
   const [agreed, setAgreed] = useState(true);
   const [countdown, setCountdown] = useState(0);
   const [submitting, setSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const showNativeAlert = (message: string) => {
+    Alert.alert('提示', message);
+  };
 
   useEffect(() => {
     const update = () => setScale(window.innerWidth / DESIGN_W);
@@ -46,14 +48,13 @@ export default function VerificationCodeLoginPage() {
 
   const handleSendCode = () => {
     if (!PHONE_REGEX.test(phone)) {
-      setErrorMsg('请输入正确的11位手机号码');
+      showNativeAlert('请输入正确的11位手机号码');
       return;
     }
     if (phone === QUICK_LOGIN_BYPASS_PHONE) {
-      setErrorMsg('该手机号已开通快捷登录，可直接点击确认登录');
+      showNativeAlert('该手机号已开通快捷登录，可直接点击确认登录');
       return;
     }
-    setErrorMsg(null);
     if (countdown === 0) {
       setCountdown(60);
     }
@@ -64,19 +65,18 @@ export default function VerificationCodeLoginPage() {
       return;
     }
     if (!agreed) {
-      setErrorMsg('请先阅读并同意用户协议和隐私政策');
+      showNativeAlert('请先阅读并同意用户协议和隐私政策');
       return;
     }
     if (!PHONE_REGEX.test(phone)) {
-      setErrorMsg('请输入正确的11位手机号码');
+      showNativeAlert('请输入正确的11位手机号码');
       return;
     }
     const isBypassPhone = phone === QUICK_LOGIN_BYPASS_PHONE;
     if (!isBypassPhone && !CODE_REGEX.test(code)) {
-      setErrorMsg('验证码必须为6位数字');
+      showNativeAlert('验证码必须为6位数字');
       return;
     }
-    setErrorMsg(null);
 
     setSubmitting(true);
     try {
@@ -89,7 +89,7 @@ export default function VerificationCodeLoginPage() {
     }
     catch (error) {
       const message = error instanceof Error ? error.message : '登录失败，请稍后重试';
-      setErrorMsg(message);
+      showNativeAlert(message);
     }
     finally {
       setSubmitting(false);
@@ -154,17 +154,19 @@ export default function VerificationCodeLoginPage() {
             欢迎登录 探拾
           </div>
 
-          {errorMsg ? (
-            <AiAlert variant="error" style={{ width: 632 }}>
-              <AiAlertDescription>{errorMsg}</AiAlertDescription>
-            </AiAlert>
-          ) : (
-            <AiAlert variant="info" style={{ width: 632 }}>
-              <AiAlertDescription style={{ color: '#666668', textAlign: 'center', width: '100%' }}>
-                未注册的手机号验证通过后将自动注册
-              </AiAlertDescription>
-            </AiAlert>
-          )}
+          <div
+            style={{
+              width: 632,
+              minHeight: 58,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ color: '#666668', textAlign: 'center', width: '100%' }}>
+              未注册的手机号验证通过后将自动注册
+            </span>
+          </div>
 
           <div style={{ height: 12 }} />
 

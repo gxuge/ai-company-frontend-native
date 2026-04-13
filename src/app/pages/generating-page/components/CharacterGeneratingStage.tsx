@@ -3,6 +3,8 @@ import { User, Sparkles } from "lucide-react";
 import { FloatingParticles } from "./FloatingParticles";
 import { useEffect, useState } from "react";
 
+const imgCharacterRings = ((m: any) => m?.default ?? m?.uri ?? m)(require("@/assets/images/generating-page/character-rings.svg"));
+
 const statusMessages = [
   "生成人物基础信息中",
   "补充性格标签中",
@@ -76,36 +78,7 @@ export function CharacterGeneratingStage() {
             }}
           />
           <div className="relative w-full h-full rounded-full flex items-center justify-center">
-            <svg className="w-full h-full" viewBox="0 0 200 200">
-              <defs>
-                <linearGradient id="charGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="var(--ai-purple)" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="var(--ai-blue)" stopOpacity="0.6" />
-                </linearGradient>
-              </defs>
-
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <motion.circle
-                  key={i}
-                  cx="100"
-                  cy="100"
-                  r={80 - i * 12}
-                  fill="none"
-                  stroke="url(#charGrad)"
-                  strokeWidth="1.5"
-                  strokeDasharray={`${(80 - i * 12) * 2 * Math.PI}`}
-                  initial={{ strokeDashoffset: (80 - i * 12) * 2 * Math.PI }}
-                  animate={{ strokeDashoffset: 0 }}
-                  transition={{
-                    duration: 2,
-                    delay: i * 0.2,
-                    repeat: Infinity,
-                    repeatDelay: 1,
-                    ease: "easeInOut",
-                  }}
-                />
-              ))}
-            </svg>
+            <img src={imgCharacterRings} className="w-full h-full" alt="" />
 
             <motion.div
               className="absolute"
