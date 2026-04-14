@@ -297,7 +297,7 @@ export default function VerificationCodeLoginPage() {
 
           <AiLoginBtn
             onPress={handleLogin}
-            disabled={submitting}
+            disabled={!canConfirmLogin}
             label={submitting ? '登录中...' : '确认登录'}
             customWidth=""
             customHeight=""

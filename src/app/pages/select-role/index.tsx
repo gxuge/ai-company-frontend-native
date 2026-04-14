@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Search, UserPlus, Check } from "lucide-react"
+import { Search, UserPlus, Check, Inbox } from "lucide-react"
 import { AiHeader } from "../../../components/ai-company/ai-header";
 import { router } from 'expo-router';
 
@@ -111,8 +111,11 @@ export default function App() {
               )
             })
           ) : (
-            <div className="text-center text-[#707070] text-[20px] sm:text-[24px] py-[60px]">
-              未找到匹配的角色
+            <div className="flex flex-col items-center justify-center text-[#707070] py-[60px] gap-4">
+              <Inbox className="w-16 h-16 opacity-50" strokeWidth={1} />
+              <div className="text-[20px] sm:text-[24px]">
+                暂无数据
+              </div>
             </div>
           )}
         </div>

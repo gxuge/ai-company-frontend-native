@@ -8,7 +8,6 @@ import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
 import { tsRoleApi } from '@/lib/api';
 import { BasicInfoSection } from './basic-info';
-import { SoundGenerating } from './sound-generating';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
 const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/plus_gray.svg'));
