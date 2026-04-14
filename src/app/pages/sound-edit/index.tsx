@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { tsVoiceApi } from '@/lib/api';
 import EditSoundText from './components/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
-import { Check } from 'lucide-react';
+import { Check, Play, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 
 const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/play.svg'));
 const imgCheckCircle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/check_circle.svg'));
@@ -139,23 +139,30 @@ type VoiceCardProps = {
   isMyVoice?: boolean;
 };
 
-function VoiceCard({ voice, selected, onSelect }: VoiceCardProps) {
+function VoiceCard({ voice, selected, onSelect, isMyVoice }: VoiceCardProps) {
   const tags = resolveVoiceTags(voice);
+  const [showMenu, setShowMenu] = useState(false);
 
   return (
     <div
       onClick={onSelect}
-      className={`group flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${
+      className={`group relative flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${
         selected
           ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-[#9BFE03] shadow-[0_0_30px_rgba(155,254,3,0.35)]'
           : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
       }`}
     >
       <div className="flex items-center gap-[12px]">
-        <div className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300" style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}>
+        <div className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden" style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}>
           <div className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
             🎙️
           </div>
+          {/* Figma node 150:3037 Play Button Overlay */}
+          {selected && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
+              <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
+            </div>
+          )}
         </div>
         <div className="flex flex-col gap-[6px]">
           <span className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</span>
@@ -166,19 +173,66 @@ function VoiceCard({ voice, selected, onSelect }: VoiceCardProps) {
           </div>
         </div>
       </div>
-      <div
-        className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
-          selected
-            ? "bg-[#9BFE03] scale-100"
-            : "bg-white/5 scale-0 group-hover:scale-100"
-        }`}
-      >
-        <Check
-          className={`w-3.5 h-3.5 ${
-            selected ? "text-black" : "text-[#9BFE03]"
+
+      <div className="ml-auto flex items-center gap-6">
+        <div
+          className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
+            selected
+              ? "bg-[#9BFE03] scale-100"
+              : "bg-white/5 scale-0 group-hover:scale-100"
           }`}
-          strokeWidth={3.5}
-        />
+        >
+          <Check
+            className={`w-3.5 h-3.5 ${
+              selected ? "text-black" : "text-[#9BFE03]"
+            }`}
+            strokeWidth={3.5}
+          />
+        </div>
+
+        {/* My Voice More Menu - Figma 517:1105 */}
+        {isMyVoice && (
+          <div className="relative flex items-center justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="flex size-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            >
+              <MoreVertical className="size-5 text-[#9CA3AF] group-hover:text-white" />
+            </button>
+            
+            {showMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-[100]" 
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); }} 
+                />
+                <div className="absolute right-0 top-10 z-[110] w-28 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl">
+                  <div className="flex flex-col">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowMenu(false); console.log("Rename", voice.id); }}
+                      className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
+                    >
+                      <Pencil className="size-3 text-white/70" />
+                      <span>重命名</span>
+                    </button>
+                    <div className="h-px w-full bg-white/5" />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowMenu(false); console.log("Delete", voice.id); }}
+                      className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500/90 hover:bg-red-500/5 active:bg-red-500/10 transition-colors"
+                    >
+                      <Trash2 className="size-3 text-red-500/70" />
+                      <span>删除</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
