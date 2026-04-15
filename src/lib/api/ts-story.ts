@@ -46,12 +46,40 @@ export type TsStoryPage = {
   pages?: number;
 };
 
+export type TsStoryPublic = {
+  id: number;
+  title?: string;
+  storyIntro?: string;
+  storyMode?: string;
+  coverUrl?: string;
+  followerCount?: number;
+  dialogueCount?: number;
+  authorName?: string;
+  authorAvatar?: string;
+  updatedAt?: string;
+};
+
+export type TsStoryPublicPage = {
+  records?: TsStoryPublic[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+};
+
 export type TsStoryQuery = {
   pageNo?: number;
   pageSize?: number;
   keyword?: string;
   status?: number;
   isPublic?: number;
+  storyMode?: string;
+};
+
+export type TsStoryPublicQuery = {
+  pageNo?: number;
+  pageSize?: number;
+  keyword?: string;
   storyMode?: string;
 };
 
@@ -100,6 +128,14 @@ export const tsStoryApi = {
     return defHttp.get<TsStory>({
       url: '/sys/ts-stories/detail',
       params: { id: storyId },
+    });
+  },
+
+  async getPublicStoryList(params: TsStoryPublicQuery) {
+    return defHttp.get<TsStoryPublicPage>({
+      url: '/sys/ts-stories/public',
+      params,
+      withToken: false,
     });
   },
 

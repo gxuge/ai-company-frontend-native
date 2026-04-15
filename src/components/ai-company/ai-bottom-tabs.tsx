@@ -1,4 +1,5 @@
-﻿import { useState } from 'react';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 
@@ -10,11 +11,11 @@ const imgChat = resolveAsset(require('../../assets/images/ai-tabs/svg/chat.svg')
 const imgProfile = resolveAsset(require('../../assets/images/ai-tabs/svg/profile.svg'));
 
 const tabs = [
-  { id: 'home', label: '首页' },
-  { id: 'search', label: '搜索' },
-  { id: 'create', label: '创建' },
-  { id: 'chat', label: '消息' },
-  { id: 'profile', label: '我的' },
+  { id: 'home', label: '首页', path: '/pages/select-role' },
+  { id: 'search', label: '搜索', path: '/pages/browse-images-list' },
+  { id: 'create', label: '创建', path: '/pages/create-page' },
+  { id: 'chat', label: '消息', path: '/pages/session-list' },
+  { id: 'profile', label: '我的', path: '/pages/mine' },
 ];
 
 function HomeIcon({ active }: { active: boolean }) {
@@ -60,28 +61,30 @@ function ProfileIcon({ active }: { active: boolean }) {
 
 const iconComponents = [HomeIcon, SearchIcon, CreateIcon, ChatIcon, ProfileIcon];
 
-export default function AiBottomTabs() {
-  const [activeTab, setActiveTab] = useState('home');
+export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
+  const insets = useSafeAreaInsets();
 
   return (
-    <div className="size-full bg-black flex flex-col justify-end">
-      <nav className="w-full bg-black border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around h-16">
-          {tabs.map((tab, i) => {
-            const Icon = iconComponents[i];
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex items-center justify-center flex-1 h-full"
-              >
-                <Icon active={isActive} />
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-    </div>
+    <nav 
+      className="w-full bg-black border-t border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-[1000]"
+      style={{ paddingBottom: Math.max(insets.bottom, 15) }}
+    >
+      <div className="flex items-center justify-around h-[64px]">
+        {tabs.map((tab, i) => {
+          const Icon = iconComponents[i];
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => router.replace(tab.path as any)}
+              className="flex items-center justify-center flex-1 h-full transition-all active:scale-95"
+            >
+              <Icon active={isActive} />
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
+

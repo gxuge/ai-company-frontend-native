@@ -2,7 +2,52 @@
  * SoundGenerating — 声音生成中的覆盖组件
  * 合并自 pages/sound-generating 页面及其 VoiceLoadingInput 子组件
  */
-export function SoundGenerating() {
+export function SoundGenerating({ mini = false }: { mini?: boolean }) {
+  if (mini) {
+    return (
+      <div className="flex h-full w-full items-center gap-3 bg-black px-4">
+        {/* Left: Shrunk Sound Wave Icon */}
+        <div className="relative size-8 shrink-0 flex items-center justify-center">
+          <div
+            className="absolute inset-0 rounded-full border-2 border-[rgba(155,254,3,0.3)]"
+            style={{ animation: 'pulse-ring 2s ease-in-out infinite' }}
+          />
+          <div className="relative size-6 rounded-full bg-[rgba(155,254,3,0.15)] flex items-center justify-center">
+            <div className="flex items-center gap-[2px]">
+              {[0, 150, 300].map((delay, i) => (
+                <div
+                  key={i}
+                  className="w-[2px] rounded-full bg-[rgba(155,254,3,0.9)]"
+                  style={{
+                    animation: 'wave-bar-mini 0.8s ease-in-out infinite',
+                    animationDelay: `${delay}ms`,
+                    height: '6px',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Text Content */}
+        <span className="text-[14px] font-medium text-[rgba(155,254,3,0.9)] font-['Noto_Sans_SC',sans-serif]">
+          正在生成声音...
+        </span>
+
+        <style>{`
+          @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.2; }
+          }
+          @keyframes wave-bar-mini {
+            0%, 100% { height: 6px; }
+            50% { height: 12px; }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full rounded-[30px] bg-black border-[1.923px] border-solid border-[#494949] px-8 py-6">
       <div className="flex items-center gap-4">

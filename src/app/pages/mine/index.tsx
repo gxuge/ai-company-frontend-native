@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { router } from 'expo-router';
 import { tsRoleApi, tsStoryApi, userApi } from '@/lib/api';
 
@@ -381,7 +382,7 @@ export default function Mine() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           <MineHeaderSection
             avatarSource={viewModel.avatarSource}
             displayName={viewModel.displayName}
@@ -398,6 +399,9 @@ export default function Mine() {
             onTabChange={setActiveTab}
           />
         </ScrollView>
+        <View style={styles.tabContainer}>
+          <AiBottomTabs activeTab="profile" />
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -652,5 +656,12 @@ const styles = StyleSheet.create({
   gridViewText: {
     fontSize: 10,
     color: '#bfbcbd',
+  },
+  tabContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
 });

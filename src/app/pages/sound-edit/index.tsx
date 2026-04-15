@@ -6,12 +6,9 @@ import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { Check, Play, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 
 const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/play.svg'));
-const imgCheckCircle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/check_circle.svg'));
-const imgCircle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/circle.svg'));
 const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/edit.svg'));
 const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/chevron_down.svg'));
 const imgListenHeadphone = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/listen_headphone.svg'));
-const imgDots = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/dots.svg'));
 
 const DEFAULT_PREVIEW_TEXT = '\u8FD9\u662F\u8BD5\u542C\u6587\u672C\uFF0C\u8BF7\u6839\u636E\u97F3\u8272\u53C2\u6570\u64AD\u653E\u3002';
 const GENDERS = ['\u5168\u90E8', '\u7537', '\u5973'] as const;
@@ -137,23 +134,54 @@ type VoiceCardProps = {
   selected: boolean;
   onSelect: () => void;
   isMyVoice?: boolean;
+  onRename?: (id: number) => void;
+  onDelete?: (id: number) => void;
 };
 
-function VoiceCard({ voice, selected, onSelect, isMyVoice }: VoiceCardProps) {
+function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete }: VoiceCardProps) {
   const tags = resolveVoiceTags(voice);
   const [showMenu, setShowMenu] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('[data-no-select="true"]')) {
+      return;
+    }
+    onSelect();
+  };
 
   return (
     <div
-      onClick={onSelect}
-      className={`group relative flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] active:scale-[0.98] ${
+      onClick={handleCardClick}
+      onMouseDown={(e) => {
+        if ((e.target as HTMLElement).closest('[data-no-select="true"]')) return;
+        setIsPressed(true);
+      }}
+      onMouseUp={() => setIsPressed(false)}
+      onMouseLeave={() => setIsPressed(false)}
+      onTouchStart={(e) => {
+        if ((e.target as HTMLElement).closest('[data-no-select="true"]')) return;
+        setIsPressed(true);
+      }}
+      onTouchEnd={() => setIsPressed(false)}
+      className={`group relative flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] ${isPressed ? 'scale-[0.98]' : ''} ${
         selected
           ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-[#9BFE03] shadow-[0_0_30px_rgba(155,254,3,0.35)]'
           : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
       }`}
     >
       <div className="flex items-center gap-[12px]">
-        <div className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden" style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}>
+        <div
+          data-no-select={selected ? 'true' : undefined}
+          onClick={(e) => {
+            if (selected) {
+              e.stopPropagation();
+            }
+          }}
+          className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden"
+          style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
+        >
           <div className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
             🎙️
           </div>
@@ -192,13 +220,14 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice }: VoiceCardProps) {
 
         {/* My Voice More Menu - Figma 517:1105 */}
         {isMyVoice && (
-          <div className="relative flex items-center justify-center">
+          <div className="relative flex items-center justify-center" data-no-select="true">
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
+              data-no-select="true"
               className="flex size-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
             >
               <MoreVertical className="size-5 text-[#9CA3AF] group-hover:text-white" />
@@ -207,13 +236,18 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice }: VoiceCardProps) {
             {showMenu && (
               <>
                 <div 
+                  data-no-select="true"
                   className="fixed inset-0 z-[100]" 
                   onClick={(e) => { e.stopPropagation(); setShowMenu(false); }} 
                 />
-                <div className="absolute right-0 top-10 z-[110] w-28 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl">
+                <div data-no-select="true" className="absolute right-0 top-10 z-[110] w-28 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl">
                   <div className="flex flex-col">
                     <button
-                      onClick={(e) => { e.stopPropagation(); setShowMenu(false); console.log("Rename", voice.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onRename?.(voice.id);
+                      }}
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
                     >
                       <Pencil className="size-3 text-white/70" />
@@ -221,7 +255,11 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice }: VoiceCardProps) {
                     </button>
                     <div className="h-px w-full bg-white/5" />
                     <button
-                      onClick={(e) => { e.stopPropagation(); setShowMenu(false); console.log("Delete", voice.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowMenu(false);
+                        onDelete?.(voice.id);
+                      }}
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500/90 hover:bg-red-500/5 active:bg-red-500/10 transition-colors"
                     >
                       <Trash2 className="size-3 text-red-500/70" />
@@ -244,7 +282,7 @@ export default function SoundEditPage() {
   const [pitch, setPitch] = useState(20);
   const [speed, setSpeed] = useState(1.2);
   const [voices, setVoices] = useState<TsVoiceProfile[]>(VOICE_FALLBACK_LIST);
-  const [myVoices, setMyVoices] = useState<TsVoiceProfile[]>(MY_VOICES_FALLBACK_LIST);
+  const [myVoices] = useState<TsVoiceProfile[]>(MY_VOICES_FALLBACK_LIST);
   const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(VOICE_FALLBACK_LIST[0]?.id ?? null);
   const [preferredVoiceId, setPreferredVoiceId] = useState<number | null>(null);
   const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('\u5168\u90E8');
@@ -255,10 +293,15 @@ export default function SoundEditPage() {
   const [isListening, setIsListening] = useState(false);
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
 
-  const selectedVoice = useMemo(
+  const selectedVoiceFromRecommend = useMemo(
     () => voices.find(item => item.id === selectedVoiceId) || null,
     [selectedVoiceId, voices],
   );
+  const selectedVoiceFromMyLibrary = useMemo(
+    () => myVoices.find(item => item.id === selectedVoiceId) || null,
+    [myVoices, selectedVoiceId],
+  );
+  const selectedVoice = selectedVoiceFromRecommend || selectedVoiceFromMyLibrary;
 
   useEffect(() => {
     let alive = true;
@@ -359,17 +402,21 @@ export default function SoundEditPage() {
       notifyMessage('\u8BF7\u5148\u9009\u62E9\u97F3\u8272');
       return;
     }
+    if (!selectedVoiceFromRecommend) {
+      notifyMessage('\u5F53\u524D\u201C\u6211\u7684\u97F3\u8272\u5E93\u201D\u6682\u672A\u5B8C\u6210\u670D\u52A1\u7AEF\u63A5\u53E3\u5BF9\u63A5\uFF0C\u6682\u4EC5\u652F\u6301\u63A8\u8350\u97F3\u8272\u8BD5\u542C');
+      return;
+    }
 
     setIsListening(true);
     try {
       await tsVoiceApi.saveCurrentVoiceConfig({
-        selectedVoiceProfileId: selectedVoice.id,
+        selectedVoiceProfileId: selectedVoiceFromRecommend.id,
         pitchPercent: Number(pitch.toFixed(2)),
         speedRate: Number(speed.toFixed(2)),
       });
 
       const preview = await tsVoiceApi.previewVoiceProfile({
-        voiceProfileId: selectedVoice.id,
+        voiceProfileId: selectedVoiceFromRecommend.id,
         previewText,
       });
 
@@ -388,6 +435,31 @@ export default function SoundEditPage() {
     }
     finally {
       setIsListening(false);
+    }
+  };
+
+  const handleMyVoiceRename = (voiceId: number) => {
+    notifyMessage(`\u97F3\u8272ID ${voiceId}\uFF1A\u91CD\u547D\u540D\u80FD\u529B\u5F85\u540E\u7AEF\u63A5\u53E3\u8865\u5145`);
+  };
+
+  const handleMyVoiceDelete = (voiceId: number) => {
+    notifyMessage(`\u97F3\u8272ID ${voiceId}\uFF1A\u5220\u9664\u80FD\u529B\u5F85\u540E\u7AEF\u63A5\u53E3\u8865\u5145`);
+  };
+
+  const handleDone = async () => {
+    try {
+      if (selectedVoiceId) {
+        await tsVoiceApi.saveCurrentVoiceConfig({
+          selectedVoiceProfileId: selectedVoiceId,
+          pitchPercent: Number(pitch.toFixed(2)),
+          speedRate: Number(speed.toFixed(2)),
+        });
+      }
+      router.back();
+    }
+    catch (error) {
+      console.warn('save voice config failed', error);
+      router.back();
     }
   };
 
@@ -512,7 +584,7 @@ export default function SoundEditPage() {
             </div>
           </div>
 
-        <div className="flex flex-col gap-[16px] pt-[20px] pb-[96px]">
+        <div className="flex flex-col gap-[16px] pt-[20px] pb-[140px]">
           <div className="flex flex-row justify-center border-b border-[#1a1a1a] mb-[16px]">
             <AiNavigateTabs 
               options={[
@@ -604,6 +676,8 @@ export default function SoundEditPage() {
                   isMyVoice
                   selected={selectedVoiceId === voice.id}
                   onSelect={() => setSelectedVoiceId(voice.id)}
+                  onRename={handleMyVoiceRename}
+                  onDelete={handleMyVoiceDelete}
                 />
               ))}
             </div>
@@ -621,6 +695,17 @@ export default function SoundEditPage() {
           }}
         />
       )}
+
+      {/* Done Button Group */}
+      <div className="fixed bottom-0 left-0 right-0 z-[50] p-[20px] pb-[34px] bg-background/60 backdrop-blur-xl border-t border-white/5">
+        <button
+          type="button"
+          onClick={handleDone}
+          className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#9BFE03] shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 transition-all outline-none"
+        >
+          <span className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</span>
+        </button>
+      </div>
     </div>
   );
 }

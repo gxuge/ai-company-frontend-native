@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
+import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
 import type { TsChatMessage } from "@/lib/api";
 import { tsChatApi } from "@/lib/api";
 
@@ -53,6 +53,10 @@ const INITIAL_MESSAGES: ChatMessage[] = [
     content: "当然！您还可以使用AI创作功能生成图片、文本等内容，也可以通过相机、图片等功能分享素材给我。",
   },
 ];
+const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
+const SESSION_INVALID_TEXT = "会话不存在，请返回会话列表重试。";
+const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
+const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
 
 function firstParam(value?: string | string[]) {
   if (Array.isArray(value)) {
@@ -348,12 +352,22 @@ export default function App() {
   const params = useLocalSearchParams<{ sessionId?: string | string[] }>();
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [sending, setSending] = useState(false);
+  const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const scale = useViewportScale();
   const sessionId = parseSessionId(params.sessionId);
+  const plusRotate = useSharedValue(0);
+  const featureExpandProgress = useSharedValue(0);
 
   const { height } = useWindowDimensions();
   const innerHeight = height / scale;
+
+  useEffect(() => {
+    const target = isFeatureExpanded ? 1 : 0;
+    plusRotate.value = withTiming(target * 45, { duration: 220 });
+    featureExpandProgress.value = withTiming(target, { duration: 260 });
+  }, [featureExpandProgress, isFeatureExpanded, plusRotate]);
 
   useEffect(() => {
     let alive = true;
@@ -371,52 +385,81 @@ export default function App() {
         return;
       }
       const mapped = toChatMessages(page?.records);
-      if (mapped.length > 0) {
-        setMessages(mapped);
-      }
+      setMessages(mapped);
     }).catch(() => {
-      // 保留当前页面默认消息，避免布局抖动
+      if (!alive) {
+        return;
+      }
+      setMessages([]);
     });
     return () => {
       alive = false;
     };
   }, [sessionId]);
 
+  const appendMessage = (next: ChatMessage) => {
+    setMessages(prev => [...prev, next]);
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const sendMessage = async (rawText: string) => {
+    const text = rawText.trim();
+    if (!text || sending) {
+      return;
+    }
+    if (!sessionId) {
+      appendMessage({ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT });
+      return;
+    }
+
+    const userMessageId = Date.now();
+    appendMessage({ id: userMessageId, role: "user", content: text });
+    setInputValue("");
+    setSending(true);
+    try {
+      const reply = await tsChatApi.createAiReply({
+        sessionId,
+        userContent: text,
+        historyCount: 12,
+        generateVoice: false,
+      });
+      const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
+        ? reply.contentText.trim()
+        : DEFAULT_AI_REPLY_TEXT;
+      const aiId = typeof reply?.assistantMessageId === "number" && Number.isFinite(reply.assistantMessageId)
+        ? reply.assistantMessageId
+        : Date.now() + 1;
+      appendMessage({ id: aiId, role: "ai", content: aiText });
+    } catch {
+      appendMessage({ id: Date.now() + 1, role: "ai", content: SEND_ERROR_TEXT });
+    } finally {
+      setSending(false);
+    }
+  };
+
   /** 发送消息（用户） */
   const handleSend = () => {
-    const text = inputValue.trim();
-    if (!text) return;
-
-    const userMsg: ChatMessage = { id: Date.now(), role: "user", content: text };
-    setMessages(prev => [...prev, userMsg]);
-    setInputValue("");
-
-    // 模拟 AI 回复
-    setTimeout(() => {
-      const aiMsg: ChatMessage = {
-        id: Date.now() + 1,
-        role: "ai",
-        content: "我收到了您的消息，正在为您处理...",
-      };
-      setMessages(prev => [...prev, aiMsg]);
-      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-    }, 600);
+    void sendMessage(inputValue);
   };
 
   /** 点击推荐问题快速发送 */
   const handleSuggestedMessage = (text: string) => {
-    const userMsg: ChatMessage = { id: Date.now(), role: "user", content: text };
-    setMessages(prev => [...prev, userMsg]);
-    setTimeout(() => {
-      const aiMsg: ChatMessage = {
-        id: Date.now() + 1,
-        role: "ai",
-        content: "您可以点击右上角菜单，选择\"清空对话\"即可快速清空当前的对话记录。",
-      };
-      setMessages(prev => [...prev, aiMsg]);
-      setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
-    }, 600);
+    void sendMessage(text);
   };
+
+  const toggleFeatureExpanded = () => {
+    setIsFeatureExpanded(prev => !prev);
+  };
+
+  const plusIconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${plusRotate.value}deg` }],
+  }));
+
+  const featureCardsAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: featureExpandProgress.value,
+    height: interpolate(featureExpandProgress.value, [0, 1], [0, FEATURE_CARDS_EXPANDED_HEIGHT]),
+    transform: [{ translateY: interpolate(featureExpandProgress.value, [0, 1], [12, 0]) }],
+  }));
 
   return (
     <View style={{ flex: 1, backgroundColor: "#1c1613", overflow: "hidden" }}>
@@ -545,57 +588,83 @@ export default function App() {
               }}
             />
 
-            {/* send icon */}
-            <Pressable style={{ width: 45.7, height: 47.2, marginLeft: 15 }} onPress={handleSend}>
-              {({ hovered }) => (
-                <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                  <Image source={hovered ? imgSendActive : imgSendWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-                </View>
-              )}
-            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15 }}>
+              <Pressable
+                style={{
+                  width: 45.7,
+                  height: 47.2,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginRight: 12,
+                }}
+                onPress={toggleFeatureExpanded}
+              >
+                <Animated.View style={plusIconAnimatedStyle}>
+                  <Image source={imgSendWhite} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                </Animated.View>
+              </Pressable>
+
+              {/* send icon */}
+              <Pressable style={{ width: 45.7, height: 47.2 }} onPress={handleSend}>
+                {({ hovered }) => (
+                  <View style={{ width: "100%", height: "100%", padding: 4 }}>
+                    <Image source={hovered ? imgSendActive : imgSendWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+                  </View>
+                )}
+              </Pressable>
+            </View>
           </View>
         </View>
 
         {/* FEATURE CARDS */}
-        <View
+        <Animated.View
           style={{
-            paddingTop: 31,
-            paddingLeft: 17,
-            paddingRight: 20.3,
-            paddingBottom: 60,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between"
+            overflow: "hidden",
           }}
         >
-          <FeatureCard
-            label="相机"
-            icon={
-              <Image source={imgFeatureCamera} style={{ width: 37.5, height: 33.75 }} resizeMode="contain" />
-            }
-          />
+          <Animated.View style={featureCardsAnimatedStyle}>
+            <View
+              style={{
+                paddingTop: 31,
+                paddingLeft: 17,
+                paddingRight: 20.3,
+                paddingBottom: 60,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+            >
+              <FeatureCard
+                label="相机"
+                icon={
+                  <Image source={imgFeatureCamera} style={{ width: 37.5, height: 33.75 }} resizeMode="contain" />
+                }
+              />
 
-          <FeatureCard
-            label="图片"
-            icon={
-              <Image source={imgFeatureImage} style={{ width: 42.3, height: 42.3 }} resizeMode="contain" />
-            }
-          />
+              <FeatureCard
+                label="图片"
+                icon={
+                  <Image source={imgFeatureImage} style={{ width: 42.3, height: 42.3 }} resizeMode="contain" />
+                }
+              />
 
-          <FeatureCard
-            label="文件"
-            icon={
-              <Image source={imgFeatureFile} style={{ width: 38.8, height: 38.8 }} resizeMode="contain" />
-            }
-          />
+              <FeatureCard
+                label="文件"
+                icon={
+                  <Image source={imgFeatureFile} style={{ width: 38.8, height: 38.8 }} resizeMode="contain" />
+                }
+              />
 
-          <FeatureCard
-            label="通话"
-            icon={
-              <Image source={imgFeatureCall} style={{ width: 48, height: 48 }} resizeMode="contain" />
-            }
-          />
-        </View>
+              <FeatureCard
+                label="通话"
+                icon={
+                  <Image source={imgFeatureCall} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                }
+              />
+            </View>
+          </Animated.View>
+        </Animated.View>
       </View>
     </View>
   );

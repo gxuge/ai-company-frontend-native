@@ -66,6 +66,53 @@ export type TsRoleImageProfile = {
   updatedAt?: string;
 };
 
+export type TsRoleImageProfilePage = {
+  records?: TsRoleImageProfile[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+};
+
+export type TsRoleImageProfileQuery = {
+  pageNo?: number;
+  pageSize?: number;
+  keyword?: string;
+  profileName?: string;
+  styleName?: string;
+  sourceType?: string;
+  isPublic?: number;
+  status?: number;
+};
+
+export type TsRoleImageProfilePublic = {
+  id: number;
+  profileName?: string;
+  styleName?: string;
+  selectedImageUrl?: string;
+  sourceType?: string;
+  promptText?: string;
+  authorName?: string;
+  authorAvatar?: string;
+  updatedAt?: string;
+};
+
+export type TsRoleImageProfilePublicPage = {
+  records?: TsRoleImageProfilePublic[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+};
+
+export type TsRoleImageProfilePublicQuery = {
+  pageNo?: number;
+  pageSize?: number;
+  keyword?: string;
+  styleName?: string;
+  sourceType?: string;
+};
+
 export type TsRoleImageProfileSavePayload = {
   profileName?: string;
   promptText?: string;
@@ -97,6 +144,21 @@ export const tsRoleImageApi = {
     return defHttp.post<TsRoleImageProfile>({
       url: '/sys/ts-role-image-profiles',
       data: payload,
+    });
+  },
+
+  async getRoleImageProfileList(params: TsRoleImageProfileQuery) {
+    return defHttp.get<TsRoleImageProfilePage>({
+      url: '/sys/ts-role-image-profiles',
+      params,
+    });
+  },
+
+  async getPublicRoleImageProfileList(params: TsRoleImageProfilePublicQuery) {
+    return defHttp.get<TsRoleImageProfilePublicPage>({
+      url: '/sys/ts-role-image-profiles/public',
+      params,
+      withToken: false,
     });
   },
 };

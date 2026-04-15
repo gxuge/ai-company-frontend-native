@@ -239,3 +239,171 @@
 | 2026-04-13 | T3 | 已完成 | 系统聊天页接入历史消息加载 | `src/app/pages/admin-chat/index.tsx` |
 | 2026-04-13 | T4 | 已完成 | 普通聊天页接入历史消息加载 | `src/app/pages/chat/index.tsx` |
 | 2026-04-13 | T5 | 已完成 | 对接文档与计划日志回填完成 | `docs/fe-be-integration/任务-会话列表页-系统分流对接-20260413-1945.md` 等 |
+
+## 12. 任务背景（sound-edit 对接补强，2026-04-14）
+- 目标：在不改 UI 布局的前提下，补强 `pages/sound-edit` 的接口链路稳定性，并明确“我的音色库”接口缺口。
+- 边界：仅改动数据请求、状态映射、失败回退与文档，不改层级、尺寸、间距、颜色、样式键名。
+- 非目标：本轮不新增后端代码；不实现“我的音色库”真实重命名/删除落库。
+
+### 12.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 推荐音色链路稳定化 | 已完成 | 修复选中音色解析与试听保存参数来源 | 推荐音色列表、保存、试听保持可用 | `src/app/pages/sound-edit/index.tsx` |
+| T2 我的音色库降级保护 | 已完成 | 重命名/删除改为缺口提示，不误调公共接口 | 点击菜单不触发危险删除，提示清晰 | `src/app/pages/sound-edit/index.tsx` |
+| T3 缺口咨询单落地 | 已完成 | 输出我的音色库 3 个缺口接口定义 | 用途/入参/出参/时机/回退完整 | `docs/fe-be-integration/任务-sound-edit-前后端对接计划-20260414-1614.md` |
+| T4 校验与记录 | 已完成 | 执行定向 eslint 并回填 plan/changelog/任务文件 | 命令已执行，文档更新完成 | `pnpm exec eslint ...`、`docs/**` |
+
+### 12.2 风险与回退
+- 风险：
+  - “我的音色库”真实接口未上线前，页面仅能提供降级提示，不支持真实重命名/删除。
+  - `sound-edit` 文件存在历史 eslint/style 规则问题，本轮未做风格性重排（避免 UI 结构改动风险）。
+- 回退：
+  - 本轮改动仅涉及逻辑分支与提示文案，可直接 `git restore src/app/pages/sound-edit/index.tsx` 回退。
+
+### 12.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | 选中音色支持“推荐 + 我的音色”联合解析；试听请求严格使用可用推荐音色 ID | `src/app/pages/sound-edit/index.tsx` |
+| 2026-04-14 | T2 | 已完成 | 我的音色菜单操作改为 `onRename/onDelete` 回调 + 缺口提示 | `src/app/pages/sound-edit/index.tsx` |
+| 2026-04-14 | T3 | 已完成 | 新增独立任务文件，记录缺口接口 A/B/C 全量定义 | `docs/fe-be-integration/任务-sound-edit-前后端对接计划-20260414-1614.md` |
+| 2026-04-14 | T4 | 已完成 | 执行定向 eslint 并记录历史规则问题 | `pnpm exec eslint src/app/pages/sound-edit/index.tsx --rule "better-tailwindcss/enforce-canonical-classes: off"` |
+
+## 13. 任务背景（admin-chat 对话接口对接，2026-04-14）
+- 目标：`pages/admin-chat` 仅对接“聊天历史 + 聊天发送/AI 回复”接口。
+- 边界：不处理语音、图片、文件、相机、通话、菜单等其它模块；不修改 UI 布局结构。
+- 非目标：本轮不新增后端接口，仅接入既有 `/sys/ts-chat-messages` 与 `/sys/ts-chat-sessions/ai-reply`。
+
+### 13.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 历史消息对接梳理 | 已完成 | 明确历史消息字段映射与空历史展示策略 | 历史消息可回填，空历史可正常渲染 | `src/app/pages/admin-chat/index.tsx` |
+| T2 发送接口封装 | 已完成 | `ts-chat` 新增 `createAiReply` 封装与类型 | 页面层无直连 URL | `src/lib/api/ts-chat.ts` |
+| T3 页面发送逻辑替换 | 已完成 | `handleSend` 与推荐问题统一走真实发送链路 | 点击发送/推荐问题后可看到 AI 回复 | `src/app/pages/admin-chat/index.tsx` |
+| T4 文档回填与验证 | 已完成 | 回填任务文档、计划、变更日志并执行校验命令 | 文档已更新，命令已执行 | `docs/**`、`pnpm exec eslint ...` |
+
+### 13.2 风险与回退
+- 风险：
+  - 上游 AI 服务失败时，`/sys/ts-chat-sessions/ai-reply` 可能返回异常。
+  - `admin-chat` 页面存在历史存量 lint/style 规则问题，本轮未做风格重排。
+- 回退：
+  - 页面发送失败时插入兜底 AI 文案，不改动布局；
+  - 需要回退逻辑时可仅回退 `src/app/pages/admin-chat/index.tsx` 与 `src/lib/api/ts-chat.ts`。
+
+### 13.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | 历史消息映射策略确认并落地空历史行为 | `src/app/pages/admin-chat/index.tsx` |
+| 2026-04-14 | T2 | 已完成 | 新增 `createAiReply(payload)` API 封装 | `src/lib/api/ts-chat.ts` |
+| 2026-04-14 | T3 | 已完成 | mock 发送逻辑替换为真实接口调用 | `src/app/pages/admin-chat/index.tsx` |
+| 2026-04-14 | T4 | 已完成 | 任务文档/计划/日志已回填；eslint 已执行（存在历史存量规则） | `docs/fe-be-integration/任务-系统聊天页-对话接口对接-20260414-1612.md`、`docs/changelog/changelog.md`、`pnpm exec eslint src/app/pages/admin-chat/index.tsx src/lib/api/ts-chat.ts` |
+
+## 14. 任务背景（session-list 系统角色头像切换，2026-04-14）
+- 目标：将 `pages/session-list` 的系统会话头像替换为 `pages/quick-login` 使用的 Logo。
+- 边界：仅改动头像资源与渲染分支，不改动页面布局、尺寸、间距、颜色和交互结构。
+- 非目标：不改动后端接口定义，不改动普通会话头像。
+
+### 14.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 后端标识核对 | 已完成 | 核对系统会话标识是否由后端明确返回 | 找到可用字段并定位来源 | `TsChatSessionVo.java`、`TsChatSessionVoConverter.java` |
+| T2 前端头像分支切换 | 已完成 | `isSystemSession=true` 时改用 quick-login Logo | 系统会话头像切换正确，普通会话不受影响 | `src/app/pages/session-list/index.tsx` |
+| T3 校验与回填 | 已完成 | 执行定向 eslint 并更新文档 | 命令通过，文档记录齐全 | `pnpm exec eslint src/app/pages/session-list/index.tsx`、`docs/**` |
+
+### 14.2 风险与回退
+- 风险：
+  - 若后端未来调整系统会话判定逻辑，`isSystemSession` 语义可能变化。
+- 回退：
+  - 字段缺失或非 `true` 时默认走原头像，不影响列表可用性。
+
+### 14.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | 确认后端 VO 存在 `isSystemSession`，由 `systemSessionKey=DEFAULT_SYSTEM` 转换得出 | `TsChatSessionVo*.java` |
+| 2026-04-14 | T2 | 已完成 | 会话项头像改为系统分支渲染 | `src/app/pages/session-list/index.tsx` |
+| 2026-04-14 | T3 | 已完成 | eslint 校验通过并文档回填 | `pnpm exec eslint src/app/pages/session-list/index.tsx` |
+
+## 15. 任务背景（chat 普通聊天页头部切换与发送链路，2026-04-14）
+- 目标：`pages/chat` 顶部支持“故事 Header / 角色 Header”按会话数据动态切换，并接入文本发送与建议回复链路。
+- 边界：仅改数据请求、字段映射和路由参数，不修改页面视觉与布局结构。
+- 非目标：本轮不实现附件上传、语音识别、AI 音频播放/点赞/重试等扩展交互。
+
+### 15.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 会话详情驱动接入 | 已完成 | 页面读取 `sessionId` 后调用 `getSessionDetail` 判定 Header 模式 | 可根据会话类型分流到对应 Header | `src/app/pages/chat/index.tsx` |
+| T2 Header 动态切换 | 已完成 | 故事会话渲染 `ChatHeader`，角色会话渲染 `ChatRoleHeader` | 两套 Header 可按会话字段切换显示 | `src/app/pages/chat/index.tsx` |
+| T3 头部字段映射 | 已完成 | 接入 `tsStoryApi.getStoryDetail` 与 `tsRoleApi.getRoleDetail` 映射标题/热度/头像等 | Header 文案来自后端数据 | `src/app/pages/chat/index.tsx` |
+| T4 文本发送链路 | 已完成 | `ChatInput` 接入输入与发送回调，调用 `ai-reply` 返回 AI 消息 | 可回车/点击 `+` 发送并回填 AI 回复 | `src/app/pages/chat/index.tsx`、`src/app/pages/chat/components/chat-input/index.tsx` |
+| T5 建议回复链路 | 已完成 | 灯泡按钮调用 `reply-suggestions`，首条建议回填输入框 | 点击灯泡可获得可发送建议文本 | `src/app/pages/chat/index.tsx`、`src/lib/api/ts-chat.ts` |
+| T6 类型补齐与文档回填 | 已完成 | `TsChatSession`/suggestions 类型补齐并回填 docs | 类型可承接后端 VO 字段 | `src/lib/api/ts-chat.ts`、`docs/**` |
+
+### 15.2 风险与回退
+- 风险：
+  - 会话详情缺少 `storyId/targetRoleId` 时，Header 会降级为默认展示。
+  - 上游 AI 服务异常时，页面会显示发送失败兜底文案。
+- 回退：
+  - 回退 `src/app/pages/chat/index.tsx`、`src/app/pages/chat/components/chat-input/*`、`src/lib/api/ts-chat.ts` 即可恢复。
+
+### 15.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | 普通聊天页接入会话详情查询并解析 `storyId/targetRoleId` | `src/app/pages/chat/index.tsx` |
+| 2026-04-14 | T2 | 已完成 | 顶部 Header 支持故事/角色动态分流 | `src/app/pages/chat/index.tsx` |
+| 2026-04-14 | T3 | 已完成 | 故事与角色头部数据映射完成，详情入口透传参数 | `src/app/pages/chat/index.tsx` |
+| 2026-04-14 | T4 | 已完成 | 文本发送链路接入 `ai-reply` 并与历史消息合并展示 | `src/app/pages/chat/index.tsx`、`src/app/pages/chat/components/chat-input/index.tsx` |
+| 2026-04-14 | T5 | 已完成 | 灯泡按钮接入 `reply-suggestions`，支持建议文本回填 | `src/app/pages/chat/index.tsx`、`src/lib/api/ts-chat.ts` |
+| 2026-04-14 | T6 | 已完成 | API 类型补齐，任务文档/总表/日志回填 | `src/lib/api/ts-chat.ts`、`docs/fe-be-integration/任务-普通聊天页-头部切换与会话链路-20260414-1725.md` |
+
+## 16. 任务背景（sound-edit 我的音色库接口落地，2026-04-14）
+- 目标：补齐 `pages/sound-edit` “我的音色库”真实后端能力（列表/重命名/删除），解除前端降级依赖。
+- 边界：仅更新后端接口能力与对接文档，不改页面布局与视觉层。
+- 非目标：不新增额外 UI 交互样式，不改既有推荐音色链路。
+
+### 16.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 接口落地 | 已完成 | 后端新增我的音色列表/重命名/删除接口 | 三个接口可用且含用户归属校验 | `TsVoiceProfileController.java`、`TsVoiceProfileServiceImpl.java` |
+| T2 文档与数据基线 | 已完成 | 同步 API 文档与 SQL 基线 | `docs/api/ts-api.md`、`db/ai-company.sql` 已更新 | `docs/api/ts-api.md`、`db/ai-company.sql` |
+| T3 验证与回填 | 已完成 | 编译通过并回填 hardness 记录 | 编译成功、任务文档状态更新 | `mvn ... compile`、`docs/fe-be-integration/任务-sound-edit-前后端对接计划-20260414-1614.md` |
+
+### 16.2 风险与回退
+- 风险：历史用户数据尚未初始化时，个人音色列表可能为空。
+- 回退：若接口异常，前端保持现有降级提示链路不变。
+
+### 16.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | `GET/PUT/DELETE /sys/ts-user-voice-profiles` 已落地并做归属校验 | `TsVoiceProfileController.java` |
+| 2026-04-14 | T2 | 已完成 | API 文档与 SQL 基线同步完成 | `docs/api/ts-api.md`、`db/ai-company.sql` |
+| 2026-04-14 | T3 | 已完成 | 编译通过并补充前后端 hardness 文档 | `mvn -f D:\project_demo\ai-company-backend-spring\jeecg-boot\pom.xml -pl jeecg-module-system/jeecg-system-biz -am -DskipTests compile` |
+
+## 17. 任务背景（browse-images-list 公共浏览接口 + 页面对接，2026-04-14）
+- 目标：完成 `pages/browse-images-list` 前后端联调，补齐公共浏览接口并替换页面静态数据。
+- 边界：保持原 UI 布局与视觉结构不变，仅改请求链路、字段映射、状态回退。
+- 非目标：本轮不做推荐/订阅/点赞的复杂排序算法，不改底部导航交互。
+
+### 17.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 公共接口补齐（后端） | 已完成 | 新增 `GET /sys/ts-stories/public`、`GET /sys/ts-role-image-profiles/public` | 后端编译通过，接口可查询公开列表 | `TsBrowsePublicController.java`、`TsStoryMapper.xml`、`TsRoleImageProfileMapper.xml` |
+| T2 API 封装补齐（前端） | 已完成 | 新增公共故事/角色形象列表 API，补齐角色形象列表封装 | 页面层无直连 URL | `src/lib/api/ts-story.ts`、`src/lib/api/ts-role-image.ts` |
+| T3 页面数据对接 | 已完成 | browse 页面接入真实数据、搜索、分类映射、触底分页 | 故事/角色 Tab 可真实渲染且支持加载更多 | `src/app/pages/browse-images-list/index.tsx` |
+| T4 组件扩展与回退 | 已完成 | 扩展 `SearchBar/StoryGrid/ImageCard` 数据驱动能力，保留原样式结构 | 接口失败可回退显示，不破坏布局 | `src/app/pages/browse-images-list/components/*` |
+| T5 验证与文档回填 | 已完成 | 后端编译、前端定向 lint、任务文档回填 | 命令通过，记录文件更新 | `mvn ... compile`、`pnpm exec eslint ...`、`docs/**` |
+
+### 17.2 风险与回退
+- 风险：
+  - 分类语义（推荐/订阅/点赞）仍缺后端专用排序策略，当前为基础过滤。
+  - 角色形象公共 VO 目前无稳定浏览量字段，卡片浏览量可能显示 `--`。
+- 回退：
+  - 前端已实现失败回退：公共接口异常时回退到现有私有列表接口；
+  - 如需紧急回退可只恢复 `browse-images-list` 页面与新增 public API 调用。
+
+### 17.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-14 | T1 | 已完成 | 新增公共浏览 controller、VO、mapper 与 SQL 查询 | `TsBrowsePublicController.java`、`TsStoryPublicVo.java`、`TsRoleImageProfilePublicVo.java` |
+| 2026-04-14 | T2 | 已完成 | 前端封装公共列表 API 与角色形象列表 API | `src/lib/api/ts-story.ts`、`src/lib/api/ts-role-image.ts` |
+| 2026-04-14 | T3 | 已完成 | 页面从静态 mock 切换到真实接口，加入搜索/分页/错误回退 | `src/app/pages/browse-images-list/index.tsx` |
+| 2026-04-14 | T4 | 已完成 | 组件扩展为数据驱动，保留既有布局样式 | `src/app/pages/browse-images-list/components/SearchBar.tsx`、`StoryGrid.tsx`、`ImageCard.tsx`、`CategoryTabs.tsx` |
+| 2026-04-14 | T5 | 已完成 | 后端编译通过，前端定向 lint 通过，任务文档回填 | `mvn -pl jeecg-module-system/jeecg-system-biz -am -DskipTests compile`、`pnpm exec eslint ...`、`docs/fe-be-integration/task-browse-images-list-api-integration-20260414-1630.md` |

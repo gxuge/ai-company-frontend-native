@@ -1,10 +1,6 @@
 import { StyleSheet } from 'react-native';
 
-// Figma canvas: 750x109px (2x scale) → RN values ÷ 2
-// Node 222:868 — Chat input bar (pill-shaped dark background)
-
 export const styles = StyleSheet.create({
-  // Outer wrapper - acts as the pill background
   container: {
     marginHorizontal: 15,
     height: 56,
@@ -19,7 +15,6 @@ export const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
 
-  // Left section: microphone icon
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -34,7 +29,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // "按住说话" center label
   holdTextWrapper: {
     position: 'absolute',
     left: 0,
@@ -45,13 +39,16 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 0,
   },
-  holdText: {
+
+  holdInput: {
+    width: '52%',
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '400',
+    textAlign: 'center',
+    paddingVertical: 0,
   },
 
-  // Right section: lightbulb and plus icons
   rightSection: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -3,9 +3,17 @@ import Svg, { Path, Circle } from 'react-native-svg';
 
 interface SearchBarProps {
   placeholder?: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
+  onSubmitEditing?: () => void;
 }
 
-export function SearchBar({ placeholder = '搜索' }: SearchBarProps) {
+export function SearchBar({
+  placeholder = '搜索',
+  value,
+  onChangeText,
+  onSubmitEditing,
+}: SearchBarProps) {
   return (
     <View style={{ paddingHorizontal: 12, marginVertical: 4 }}>
       <View
@@ -30,13 +38,15 @@ export function SearchBar({ placeholder = '搜索' }: SearchBarProps) {
         <TextInput
           placeholder={placeholder}
           placeholderTextColor="#909090"
+          value={value}
+          onChangeText={onChangeText}
+          onSubmitEditing={onSubmitEditing}
+          returnKeyType="search"
           style={{
             flex: 1,
             fontSize: 14,
             color: '#e7e7e7',
             fontFamily: 'Noto Sans SC',
-            // @ts-ignore web only
-            outlineStyle: 'none',
           }}
         />
       </View>

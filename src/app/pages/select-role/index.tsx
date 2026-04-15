@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Search, UserPlus, Check, Inbox } from "lucide-react"
 import { AiHeader } from "../../../components/ai-company/ai-header";
+import AiBottomTabs from "../../../components/ai-company/ai-bottom-tabs";
 import { router } from 'expo-router';
 
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/select-role/bfc3c41d1a6b570e1b0987aedf706c872d00b6d5.png"))
@@ -133,11 +134,16 @@ export default function App() {
         }
       `}</style>
       <button 
-        className="animate-breathing fixed bottom-6 right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-50"
+        className="animate-breathing fixed bottom-[100px] right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-[60]"
         onClick={() => router.push('/pages/create-character')}
       >
         <img src={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
       </button>
+      
+      {/* Bottom Tabs */}
+      <div className="fixed bottom-0 left-0 right-0 z-[70]">
+        <AiBottomTabs activeTab="home" />
+      </div>
     </div>
   )
 }

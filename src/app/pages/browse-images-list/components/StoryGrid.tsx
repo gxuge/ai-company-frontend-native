@@ -1,6 +1,10 @@
 import { View, Image } from 'react-native';
 
-// 6 张故事海报图（竖版，3:4 比例）
+export type StoryGridItem = {
+  id: string | number;
+  imageUrl?: string;
+};
+
 const STORY_POSTERS = [
   'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=300&h=420&fit=crop',
   'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=420&fit=crop',
@@ -10,15 +14,22 @@ const STORY_POSTERS = [
   'https://images.unsplash.com/photo-1596727147705-61a532a659bd?w=300&h=420&fit=crop',
 ];
 
-// 从 Figma：w=208 h=292 in 750px grid → 比例约 0.713:1
 const CARD_ASPECT = 208 / 292;
 
-export function StoryGrid() {
+interface StoryGridProps {
+  items?: StoryGridItem[];
+}
+
+export function StoryGrid({ items }: StoryGridProps) {
+  const data = (items && items.length > 0)
+    ? items
+    : STORY_POSTERS.map((url, index) => ({ id: index, imageUrl: url }));
+
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-      {STORY_POSTERS.map((uri, i) => (
+      {data.map((item, index) => (
         <View
-          key={i}
+          key={String(item.id)}
           style={{
             width: '31.5%',
             aspectRatio: CARD_ASPECT,
@@ -28,7 +39,7 @@ export function StoryGrid() {
           }}
         >
           <Image
-            source={{ uri }}
+            source={{ uri: item.imageUrl || STORY_POSTERS[index % STORY_POSTERS.length] }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
           />

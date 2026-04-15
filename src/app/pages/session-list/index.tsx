@@ -2,6 +2,7 @@ import type { TsChatSession } from '@/lib/api';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi } from '@/lib/api';
 
 const imgCategoryBgBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_blue.svg'));
@@ -14,6 +15,7 @@ const imgIconHeart = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../a
 const imgIconMoreSquare = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/icon_more_square.svg'));
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/fe8f8455c56209efe0d72facc734a87895b2dd6d.png'));
 const imgAvatar = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/5acb32030bcf30b8d2528774380aabcaab7e2018.png'));
+const imgSystemAvatar = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/quick-login/logo.png'));
 
 const tabs = [
   { label: '消息', value: '消息' },
@@ -211,23 +213,26 @@ function Badge({ count }: { count: number }) {
 }
 
 function ConversationItem({
+  isSystemSession,
   name,
   message,
   time,
   badge,
   onPress,
 }: {
+  isSystemSession: boolean;
   name: string;
   message: string;
   time: string;
   badge: number;
   onPress?: () => void;
 }) {
+  const avatarSrc = isSystemSession ? imgSystemAvatar : imgAvatar;
   return (
     <div className="flex items-center border-t border-[#5d5d5d] px-4 py-3" onClick={onPress}>
       <div className="relative mr-3 size-[56px] shrink-0">
         <img
-          src={imgAvatar}
+          src={avatarSrc}
           alt={name}
           className="size-full rounded-full object-cover"
         />
@@ -296,13 +301,14 @@ export default function App() {
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-[90px]">
           {loading ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">加载中...</div> : null}
           {loadError ? <div className="px-4 py-3 text-[12px] text-[#fca5a5]">{loadError}</div> : null}
           {!loading && conversations.length === 0 ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">暂无会话</div> : null}
           {conversations.map(conv => (
             <ConversationItem
               key={conv.id}
+              isSystemSession={conv.isSystemSession}
               name={conv.name}
               message={conv.message}
               time={conv.time}
@@ -310,6 +316,11 @@ export default function App() {
               onPress={() => handleOpenConversation(conv)}
             />
           ))}
+        </div>
+
+        {/* Bottom Tabs */}
+        <div className="fixed bottom-0 left-0 right-0 z-[100] w-full max-w-[430px] self-center">
+          <AiBottomTabs activeTab="chat" />
         </div>
       </div>
     </div>

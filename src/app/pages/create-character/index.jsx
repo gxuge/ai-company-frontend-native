@@ -406,7 +406,7 @@ function Container() {
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-black">
-      <AiHeader title="创建形象" className="h-16 bg-[#0a0a0a] px-4" />
+      <AiHeader title="创建形象" className="h-16 bg-black px-4" />
       <MyGalleryButton />
       <InputCard
         value={promptText}

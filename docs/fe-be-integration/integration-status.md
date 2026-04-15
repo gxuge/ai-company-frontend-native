@@ -1,14 +1,17 @@
 ﻿# 前后端对接状态总表
 
-更新时间：2026-04-10
+更新时间：2026-04-14
 
 | 模块/页面 | 前端位置 | 后端接口 | 状态 | 负责人 | 最后更新 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 角色详情 | `src/app/pages/role-detail/index.tsx` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 进行中 | - | 2026-04-09 | 数量相关接口暂不对接 |
-| 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 已对接（精确试听完成） | - | 2026-04-09 | 保持原 UI 布局；试听按 `voiceProfileId` 精确生成 |
+| 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 部分对接（推荐音色已完成） | - | 2026-04-14 | 保持原 UI 布局；“我的音色库”真实接口待补 |
 | 用户设置 | `src/app/pages/user-setting/index.tsx` | `/sys/user/login/setting/getUserData`、`/sys/user/login/setting/userEdit` | 已对接 | - | 2026-04-09 | 完成昵称/性别/生日读取与保存链路，保持原 UI 布局 |
 | 创建人物 | `src/app/pages/create-character/index.jsx` | `/sys/ts-roles/one-click-image`、`/sys/ts-user-image-assets`、`/sys/ts-role-image-profiles` | 已对接（本轮完成） | - | 2026-04-09 | 保持原 UI 布局；接入生成、图库与保存链路 |
-| 会话列表 | `src/app/pages/session-list/index.tsx` | `/sys/ts-chat-sessions`、`/sys/ts-chat-messages` | 已对接（本轮完成） | - | 2026-04-10 | 保持原 UI 布局；会话与最近消息改为真实接口 |
+| 会话列表 | `src/app/pages/session-list/index.tsx` | `/sys/ts-chat-sessions`、`/sys/ts-chat-messages` | 已对接（系统头像切换完成） | - | 2026-04-14 | 保持原 UI 布局；系统会话（`isSystemSession=true`）头像改为 quick-login Logo |
+| 浏览图片页 | `src/app/pages/browse-images-list/index.tsx` | `/sys/ts-stories/public`、`/sys/ts-role-image-profiles/public`（回退：`/sys/ts-stories`、`/sys/ts-role-image-profiles`） | 已对接（本轮完成） | - | 2026-04-14 | 保持原 UI 布局；故事/角色 Tab 改为真实接口数据，支持搜索与分页加载 |
+| 系统聊天 | `src/app/pages/admin-chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/ai-reply` | 已对接（历史+发送） | - | 2026-04-14 | 保持原 UI 布局；发送链路由 mock 改为真实接口 |
+| 普通聊天 | `src/app/pages/chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/detail`、`/sys/ts-stories/detail`、`/sys/ts-roles/detail`、`/sys/ts-chat-sessions/ai-reply`、`/sys/ts-chat-sessions/reply-suggestions` | 部分对接（历史+头部+发送） | - | 2026-04-14 | 保持原 UI 布局；已实现头部分流与文本发送，附件/语音链路待补 |
 | 会话详情 | `src/app/pages/conversation-detail/index.tsx` | `/sys/ts-stories/detail`、`/sys/ts-story-chapters`、`/sys/ts-roles/detail` | 已对接（本轮完成） | - | 2026-04-10 | 保持原 UI 布局；标题/描述/章节/角色列表改为真实接口 |
 
 ## 待补接口清单
@@ -16,11 +19,36 @@
 | 业务点 | 建议接口 | 说明 | 是否已与用户确认 |
 | --- | --- | --- | --- |
 | Mine 顶部统计（关注/粉丝/点赞） | `GET /sys/user/mine-stats`（建议） | 现有接口无稳定同名字段，前端当前回退 `--` | 否 |
+| Sound Edit 我的音色列表 | `GET /sys/ts-user-voice-profiles`（建议） | “我的音色库”当前为降级数据，待真实列表接口 | 否 |
+| Sound Edit 我的音色重命名 | `PUT /sys/ts-user-voice-profiles/{id}`（建议） | 菜单“重命名”当前仅提示缺口 | 否 |
+| Sound Edit 我的音色删除 | `DELETE /sys/ts-user-voice-profiles/{id}`（建议） | 避免误用公共删除接口导致误删风险 | 否 |
+| Chat 消息附件链路 | `POST /sys/ts-chat-message-attachments`（已有，待接前端） | 普通聊天页尚未接入图片/文件发送 | 否 |
+| Chat 语音识别链路 | `ASR 转写接口`（待确认） | 当前仅保留麦克风入口，尚无转写接入 | 否 |
 
 ## Mine 对接任务文件（2026-04-09）
 
 - 任务记录：`docs/fe-be-integration/task-mine-page-api-integration-20260409-1851.md`
 - 状态：已完成前端可用接口对接；统计接口缺口待用户确认是否补充。
+
+## Session List 系统头像任务文件（2026-04-14）
+
+- 任务记录：`docs/fe-be-integration/task-session-list-system-avatar-20260414-1617.md`
+- 状态：已完成；后端系统会话标识可用（`isSystemSession`）。
+
+## 系统聊天页对话接口任务文件（2026-04-14）
+
+- 任务记录：`docs/fe-be-integration/任务-系统聊天页-对话接口对接-20260414-1612.md`
+- 状态：已完成；仅对接聊天历史与发送回复链路，未改动页面布局。
+
+## 普通聊天页头部切换任务文件（2026-04-14）
+
+- 任务记录：`docs/fe-be-integration/任务-普通聊天页-头部切换与会话链路-20260414-1725.md`
+- 状态：已完成 Header 分流、文本发送与建议回复；语音、附件等扩展链路待补。
+
+## 浏览图片页接口对接任务文件（2026-04-14）
+
+- 任务记录：`docs/fe-be-integration/task-browse-images-list-api-integration-20260414-1630.md`
+- 状态：已完成；后端已补公共浏览接口，前端已切换真实数据渲染。
 
 ## 声音编辑对接计划
 

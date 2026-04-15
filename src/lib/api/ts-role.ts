@@ -110,9 +110,12 @@ export type TsRoleOneClickImagePayload = {
   styleName?: string;
   aspectRatio?: string;
   referenceImageUrl?: string;
+  asyncGenerate?: boolean;
 };
 
 export type TsRoleOneClickImageResult = {
+  accepted?: boolean;
+  generateStatus?: string;
   imageUrl?: string;
   imageAssetId?: number;
   generateRecordId?: number;
@@ -121,6 +124,20 @@ export type TsRoleOneClickImageResult = {
   promptVersion?: string;
   renderedPrompt?: string;
   snapshotKey?: string;
+};
+
+export type TsRoleImageGenerateRecordDetail = {
+  id: number;
+  roleId?: number;
+  generateStatus?: string;
+  applyStatus?: string;
+  resultAssetId?: number;
+  resultImageUrl?: string;
+  failReason?: string;
+  promptText?: string;
+  styleName?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type TsRoleOneClickVoiceGeneratePayload = {
@@ -227,6 +244,13 @@ export const tsRoleApi = {
     return defHttp.post<TsRoleOneClickImageResult>({
       url: '/sys/ts-roles/one-click-image',
       data: payload,
+    });
+  },
+
+  async getImageGenerateRecordDetail(id: number) {
+    return defHttp.get<TsRoleImageGenerateRecordDetail>({
+      url: '/sys/ts-role-image-generate-records/detail',
+      params: { id },
     });
   },
 

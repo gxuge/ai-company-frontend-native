@@ -4,11 +4,13 @@ export type TsChatSession = {
   id: number;
   userId?: string;
   storyId?: number;
+  targetRoleId?: number;
   roleId?: number;
   sessionType?: string;
   isSystemSession?: boolean;
   sessionTitle?: string;
   coverUrl?: string;
+  sessionStatus?: number;
   lastMessageId?: number;
   lastMessageAt?: string;
   unreadCount?: number;
@@ -71,6 +73,46 @@ export type TsChatMessageQuery = {
   status?: number;
 };
 
+export type TsChatAiReplyPayload = {
+  sessionId: number;
+  userContent: string;
+  historyCount?: number;
+  voiceProfileId?: number;
+  voiceId?: string;
+  generateVoice?: boolean;
+};
+
+export type TsChatAiReplyResult = {
+  sessionId?: number;
+  userMessageId?: number;
+  assistantMessageId?: number;
+  attachmentId?: number;
+  voiceProfileId?: number;
+  voiceId?: string;
+  contentText?: string;
+  audioUrl?: string;
+  audioFileSize?: number;
+  durationSec?: number;
+  mimeType?: string;
+  createdAt?: string;
+};
+
+export type TsChatReplySuggestionsPayload = {
+  sessionId: number;
+  historyCount?: number;
+  userDraft?: string;
+  lastAssistantMessageId?: number;
+};
+
+export type TsChatReplySuggestionsResult = {
+  sessionId?: number;
+  suggestions?: string[];
+  promptCode?: string;
+  promptVersion?: string;
+  renderedPrompt?: string;
+  snapshotKey?: string;
+};
+
 export const tsChatApi = {
   async getSessionList(params: TsChatSessionQuery) {
     return defHttp.get<TsChatSessionPage>({
@@ -97,6 +139,20 @@ export const tsChatApi = {
     return defHttp.get<TsChatMessage>({
       url: '/sys/ts-chat-messages/detail',
       params: { id: messageId },
+    });
+  },
+
+  async createAiReply(payload: TsChatAiReplyPayload) {
+    return defHttp.post<TsChatAiReplyResult>({
+      url: '/sys/ts-chat-sessions/ai-reply',
+      data: payload,
+    });
+  },
+
+  async createReplySuggestions(payload: TsChatReplySuggestionsPayload) {
+    return defHttp.post<TsChatReplySuggestionsResult>({
+      url: '/sys/ts-chat-sessions/reply-suggestions',
+      data: payload,
     });
   },
 };

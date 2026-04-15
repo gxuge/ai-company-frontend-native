@@ -119,11 +119,11 @@ export default function StoryDetailModal({
       </button>
 
       <div
-        className="relative z-[55] flex h-full w-full max-w-[654px] flex-col overflow-hidden"
+        className="relative z-[55] flex h-auto w-[87%] max-w-[654px] flex-col overflow-hidden text-left"
         style={{
-          maxHeight: '90vh',
+          maxHeight: '82vh',
           background: '#161616',
-          borderRadius: '20px',
+          borderRadius: '40px',
           border: '2px solid #424242',
         }}
       >

@@ -1,6 +1,6 @@
 import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
@@ -8,6 +8,7 @@ import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
 import { tsRoleApi } from '@/lib/api';
 import { BasicInfoSection } from './basic-info';
+import { SoundGenerating } from './sound-generating';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
 const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/plus_gray.svg'));
@@ -50,7 +51,7 @@ function Header({
   onTabChange: (tab: 'basic' | 'advanced') => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b border-white/10 bg-[rgba(0,0,0,0.9)] px-4 py-3 backdrop-blur-md">
+    <div className="sticky top-0 z-10 border-b border-white/10 bg-black px-4 py-3">
       <AiHeader title="创建角色" className="mb-4" />
       <AiTopTabs
         tabs={[
@@ -281,14 +282,14 @@ function SaveButton({
 
 // eslint-disable-next-line max-lines-per-function
 export function CreateCharacter() {
-  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('advanced');
+  const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [roleId, setRoleId] = useState<number | null>(null);
 
   const [name, setName] = useState('');
-  const [gender, setGender] = useState<Gender>('male');
+  const [gender, setGender] = useState<Gender>('random');
   const [job, setJob] = useState('');
   const [background, setBackground] = useState('');
-  const [voiceName, setVoiceName] = useState('温柔男声');
+  const [voiceName, setVoiceName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
 
@@ -304,6 +305,22 @@ export function CreateCharacter() {
   const [generatingSetting, setGeneratingSetting] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
+  const imagePollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const imagePollingInFlightRef = useRef(false);
+  const imagePollingRecordIdRef = useRef<number | null>(null);
+
+  const stopImagePolling = () => {
+    if (imagePollingTimerRef.current) {
+      clearInterval(imagePollingTimerRef.current);
+      imagePollingTimerRef.current = null;
+    }
+    imagePollingInFlightRef.current = false;
+    imagePollingRecordIdRef.current = null;
+  };
+
+  useEffect(() => () => {
+    stopImagePolling();
+  }, []);
 
   const extJson = (() => {
     const payload: Record<string, unknown> = {
@@ -401,19 +418,72 @@ export function CreateCharacter() {
         gender,
         occupation: job.trim() || undefined,
         backgroundStory: background.trim() || undefined,
+        asyncGenerate: true,
       });
+
+      if (result?.generateRecordId) {
+        const recordId = result.generateRecordId;
+        stopImagePolling();
+        imagePollingRecordIdRef.current = recordId;
+        showMessage('形象生成任务已提交，后台生成中。');
+
+        const pollImageResult = async () => {
+          if (imagePollingInFlightRef.current || imagePollingRecordIdRef.current !== recordId) {
+            return;
+          }
+          imagePollingInFlightRef.current = true;
+          try {
+            const detail = await tsRoleApi.getImageGenerateRecordDetail(recordId);
+            const status = (detail?.generateStatus || '').toLowerCase();
+            if (status === 'success') {
+              if (!detail?.resultImageUrl) {
+                stopImagePolling();
+                setGeneratingImage(false);
+                showMessage('形象生成完成，但未返回图片地址。');
+                return;
+              }
+              setAvatarUrl(detail.resultImageUrl);
+              setAdvancedAiGenerated(true);
+              stopImagePolling();
+              setGeneratingImage(false);
+              showMessage('角色形象生成成功。');
+              return;
+            }
+            if (status === 'failed') {
+              stopImagePolling();
+              setGeneratingImage(false);
+              showMessage(detail?.failReason || '形象生成失败，请稍后重试。');
+            }
+          }
+          catch {
+            // 不设超时，单次轮询失败不终止，等待下一轮继续。
+          }
+          finally {
+            imagePollingInFlightRef.current = false;
+          }
+        };
+
+        await pollImageResult();
+        if (imagePollingRecordIdRef.current === recordId && !imagePollingTimerRef.current) {
+          imagePollingTimerRef.current = setInterval(() => {
+            void pollImageResult();
+          }, 10000);
+        }
+        return;
+      }
+
       if (!result?.imageUrl) {
         throw new Error('形象生成成功，但未返回图片地址。');
       }
       setAvatarUrl(result.imageUrl);
       setAdvancedAiGenerated(true);
+      setGeneratingImage(false);
       showMessage('角色形象生成成功。');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '形象生成失败，请稍后重试。'));
-    }
-    finally {
+      stopImagePolling();
       setGeneratingImage(false);
+      showMessage(extractErrorMessage(error, '形象生成失败，请稍后重试。'));
     }
   };
 
@@ -518,6 +588,7 @@ export function CreateCharacter() {
                     job={job}
                     background={background}
                     voiceName={voiceName}
+                    avatarUrl={avatarUrl}
                     onNameChange={setName}
                     onGenderChange={setGender}
                     onJobChange={setJob}
@@ -529,11 +600,7 @@ export function CreateCharacter() {
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}
                   />
-                  {generatingVoice && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl px-4">
-                      <SoundGenerating />
-                    </div>
-                  )}
+
                 </div>
               )}
         </div>
