@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
+import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { router } from 'expo-router';
 import { tsRoleApi, tsStoryApi, userApi } from '@/lib/api';
 
@@ -295,9 +296,17 @@ function MineGridSection(props: MineGridSectionProps) {
       {loadError ? <Text style={styles.dataErrorText}>{loadError}</Text> : null}
 
       <View style={styles.gridContainer}>
-        {activeGridItems.map(item => (
-          <GridCard key={item.id} item={item} />
-        ))}
+        {activeGridItems.length > 0 ? (
+          activeGridItems.map(item => (
+            <GridCard key={item.id} item={item} />
+          ))
+        ) : !loading && !loadError ? (
+          <AiEmpty 
+            title={activeTab === 0 ? "还没有发布故事" : "还没有发布角色"} 
+            description="快去发现页看看大家的创作，或者自己动笔试试吧！" 
+            style={{ marginTop: 40, width: width - GRID_PADDING * 2 }}
+          />
+        ) : null}
       </View>
     </>
   );
@@ -358,8 +367,7 @@ function useMineViewModel(activeTab: number) {
     [authorAvatarSource, authorName, roles],
   );
   const activeGridItems = React.useMemo(() => {
-    const source = activeTab === 0 ? storyGridItems : roleGridItems;
-    return source.length > 0 ? source : FALLBACK_GRID_ITEMS;
+    return activeTab === 0 ? storyGridItems : roleGridItems;
   }, [activeTab, roleGridItems, storyGridItems]);
 
   return {

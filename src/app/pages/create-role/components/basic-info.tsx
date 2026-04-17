@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import Svg, { Line } from 'react-native-svg';
 import { AiFormInput } from '@/components/ai-company/ai-form-input';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
@@ -27,9 +27,11 @@ type BasicInfoSectionProps = {
   onGenerateSetting?: () => void;
   onGenerateImage?: () => void;
   onGenerateVoice?: () => void;
+  onPreviewVoice?: () => void;
   generatingSetting?: boolean;
   generatingImage?: boolean;
   generatingVoice?: boolean;
+  previewingVoice?: boolean;
 };
 
 function FieldLabel({ text, required }: { text: string; required?: boolean }) {
@@ -59,9 +61,11 @@ export function BasicInfoSection({
   onGenerateSetting,
   onGenerateImage,
   onGenerateVoice,
+  onPreviewVoice,
   generatingSetting = false,
   generatingImage = false,
   generatingVoice = false,
+  previewingVoice = false,
 }: BasicInfoSectionProps) {
   const isAnyGenerating = generatingSetting || generatingImage || generatingVoice;
   const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
@@ -77,13 +81,12 @@ export function BasicInfoSection({
               <span className="text-[rgba(155,254,3,0.9)]">*</span>
             </h2>
             <AiGenerateBtn
-              text={generatingImage ? '生成中...' : '一键生成'}
+              loading={generatingImage}
               onClick={() => {
                 if (!isAnyGenerating) {
                   onGenerateImage?.();
                 }
               }}
-              className={isAnyGenerating ? 'opacity-60' : ''}
             />
           </div>
 
@@ -121,13 +124,12 @@ export function BasicInfoSection({
             <span className="text-[rgba(155,254,3,0.9)]">*</span>
           </h2>
           <AiGenerateBtn
-            text={generatingSetting ? '生成中...' : '一键生成'}
+            loading={generatingSetting}
             onClick={() => {
               if (!isAnyGenerating) {
                 onGenerateSetting?.();
               }
             }}
-            className={isAnyGenerating ? 'opacity-60' : ''}
           />
         </div>
 
@@ -231,13 +233,12 @@ export function BasicInfoSection({
         <div className="flex items-center justify-between px-1">
           <h2 className="text-sm tracking-wide text-white">角色声音</h2>
           <AiGenerateBtn
-            text={generatingVoice ? '生成中...' : '一键生成'}
+            loading={generatingVoice}
             onClick={() => {
               if (!isAnyGenerating) {
                 onGenerateVoice?.();
               }
             }}
-            className={isAnyGenerating ? 'opacity-60' : ''}
           />
         </div>
 
@@ -253,9 +254,24 @@ export function BasicInfoSection({
                 ? (
                     <>
                       <span className="text-[14px] text-[rgba(155,254,3,0.9)]">{voiceName}</span>
-                      <div className="flex size-8 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)]">
-                        <img src={imgPlay} alt="" className="size-[12px] translate-x-[1px] object-contain" />
-                      </div>
+                      <button
+                        type="button"
+                        disabled={generatingVoice || previewingVoice}
+                        className={`flex size-8 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] ${generatingVoice || previewingVoice ? 'opacity-60' : ''}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (!generatingVoice && !previewingVoice) {
+                            onPreviewVoice?.();
+                          }
+                        }}
+                      >
+                        <img
+                          src={imgPlay}
+                          alt=""
+                          className={`size-[12px] translate-x-[1px] object-contain ${previewingVoice ? 'animate-pulse' : ''}`}
+                        />
+                      </button>
                     </>
                   )
                 : null}

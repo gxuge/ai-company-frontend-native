@@ -2,20 +2,19 @@ import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
-import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
-import { tsRoleApi } from '@/lib/api';
+import { tsRoleApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
 import { BasicInfoSection } from './basic-info';
-import { SoundGenerating } from './sound-generating';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
 const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/plus_gray.svg'));
 const imgChevronRightGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/chevron_right_green.svg'));
 
 const fontBase = 'font-[\'Noto_Sans_SC\',sans-serif]';
-const allTags = ['傲娇', '温柔', '极客', '高冷', '毒舌', '腹黑'];
+const DEFAULT_VOICE_PREVIEW_TEXT = '你好呀，很高兴认识你。';
 
 function showMessage(message: string) {
   if (!message) {
@@ -116,17 +115,24 @@ function TagChip({
 }
 
 function TagsSection({
+  tagOptions,
   selectedTags,
   onToggleTag,
+  onSmartRecommend,
 }: {
+  tagOptions: string[];
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
+  onSmartRecommend: () => void;
 }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
         <h2 className={`text-base text-white ${fontBase} font-bold tracking-wide`}>角色标签</h2>
-        <button className="flex items-center gap-1.5 rounded-full border border-[rgba(155,254,3,0.2)] px-3 py-1.5 shadow-[0px_0px_6px_0px_rgba(155,254,3,0.2),0px_0px_12px_0px_rgba(155,254,3,0.1)]">
+        <button
+          onClick={onSmartRecommend}
+          className="flex items-center gap-1.5 rounded-full border border-[rgba(155,254,3,0.2)] px-3 py-1.5 shadow-[0px_0px_6px_0px_rgba(155,254,3,0.2),0px_0px_12px_0px_rgba(155,254,3,0.1)]"
+        >
           <img src={imgSparkle} alt="" className="size-[14px] shrink-0 object-contain" />
           <span className={`text-sm text-[rgba(155,254,3,0.9)] ${fontBase} font-medium`}>
             智能推荐
@@ -135,7 +141,7 @@ function TagsSection({
       </div>
       <div className="rounded-2xl border border-[#494949] bg-black p-5">
         <div className="flex flex-wrap gap-3">
-          {allTags.map(tag => (
+          {tagOptions.map(tag => (
             <TagChip
               key={tag}
               label={tag}
@@ -206,7 +212,7 @@ function DialogueStyleSection({
             containerClassName="bg-[#111] rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className={`w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[16px] text-[#d1d5db] placeholder-[#6b7280] text-sm ${fontBase} leading-relaxed`}
             value={previewText}
-            onChange={(e) => setPreviewText(e.target.value)}
+            onChange={e => setPreviewText(e.target.value)}
           />
         </div>
 
@@ -290,11 +296,15 @@ export function CreateCharacter() {
   const [job, setJob] = useState('');
   const [background, setBackground] = useState('');
   const [voiceName, setVoiceName] = useState('');
+  const [voiceProfileId, setVoiceProfileId] = useState<number | null>(null);
+  const [providerVoiceId, setProviderVoiceId] = useState('');
+  const [voicePreviewText, setVoicePreviewText] = useState(DEFAULT_VOICE_PREVIEW_TEXT);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
 
   const [isPublic, setIsPublic] = useState(true);
-  const [selectedTags, setSelectedTags] = useState<string[]>(['傲娇', '极客']);
+  const [tagOptions, setTagOptions] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [dialogLength, setDialogLength] = useState<string>('详细');
   const [interactivity, setInteractivity] = useState<string>('主动引导');
   const [toneTendency] = useState<string>('幽默傲娇');
@@ -305,6 +315,7 @@ export function CreateCharacter() {
   const [generatingSetting, setGeneratingSetting] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
+  const [previewingVoice, setPreviewingVoice] = useState(false);
   const imagePollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imagePollingInFlightRef = useRef(false);
   const imagePollingRecordIdRef = useRef<number | null>(null);
@@ -320,6 +331,39 @@ export function CreateCharacter() {
 
   useEffect(() => () => {
     stopImagePolling();
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadRoleTags = async () => {
+      try {
+        const list = await tsRoleTagApi.getRoleTags();
+        if (!alive) {
+          return;
+        }
+        const names = (list || [])
+          .map(item => item?.tagName?.trim())
+          .filter((item): item is string => Boolean(item));
+        const uniqueNames = Array.from(new Set(names));
+        setTagOptions(uniqueNames);
+        setSelectedTags(prev => prev.filter(tag => uniqueNames.includes(tag)));
+      }
+      catch (error) {
+        if (!alive) {
+          return;
+        }
+        console.warn('load role tags failed', error);
+        setTagOptions([]);
+        setSelectedTags([]);
+      }
+    };
+
+    void loadRoleTags();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const extJson = (() => {
@@ -357,10 +401,11 @@ export function CreateCharacter() {
       return roleId;
     }
     const roleName = name.trim();
-    if (!roleName) {
-      throw new Error('请先填写角色名字，再执行形象或声音生成。');
-    }
-    const created = await tsRoleApi.createRole(buildSavePayload());
+    const draftRoleName = roleName || `未命名角色-${Date.now()}`;
+    const created = await tsRoleApi.createRole({
+      ...buildSavePayload(),
+      roleName: draftRoleName,
+    });
     if (!created?.id) {
       throw new Error('创建角色草稿失败，请稍后重试。');
     }
@@ -493,9 +538,8 @@ export function CreateCharacter() {
     }
     setGeneratingVoice(true);
     try {
-      const draftRoleId = await ensureRoleDraft();
       const result = await tsRoleApi.generateRoleVoice({
-        roleId: draftRoleId,
+        roleId: roleId || undefined,
         roleName: name.trim() || undefined,
         gender,
         occupation: job.trim() || undefined,
@@ -505,6 +549,15 @@ export function CreateCharacter() {
       });
       if (result?.voiceName) {
         setVoiceName(result.voiceName);
+      }
+      if (typeof result?.voiceProfileId === 'number' && Number.isFinite(result.voiceProfileId)) {
+        setVoiceProfileId(result.voiceProfileId);
+      }
+      if (result?.providerVoiceId) {
+        setProviderVoiceId(result.providerVoiceId);
+      }
+      if (result?.previewText) {
+        setVoicePreviewText(result.previewText);
       }
       if (result?.previewAudioUrl) {
         setVoicePreviewAudioUrl(result.previewAudioUrl);
@@ -520,10 +573,90 @@ export function CreateCharacter() {
     }
   };
 
+  const playPreviewAudio = async (audioUrl: string) => {
+    const AudioCtor = (globalThis as { Audio?: new (src?: string) => { play: () => Promise<void> } }).Audio;
+    if (!AudioCtor) {
+      return false;
+    }
+    const audio = new AudioCtor(audioUrl);
+    await audio.play();
+    return true;
+  };
+
+  const handlePreviewVoice = async () => {
+    if (saving || generatingSetting || generatingImage || generatingVoice || previewingVoice) {
+      return;
+    }
+    const previewProfileId = voiceProfileId || undefined;
+    const previewProviderVoiceId = providerVoiceId.trim() || undefined;
+    if (!previewProfileId && !previewProviderVoiceId) {
+      if (voicePreviewAudioUrl) {
+        try {
+          const played = await playPreviewAudio(voicePreviewAudioUrl);
+          if (!played) {
+            showMessage('已获取试听音频，当前环境暂不支持直接播放。');
+          }
+        }
+        catch (error) {
+          showMessage(extractErrorMessage(error, '试听播放失败，请稍后重试。'));
+        }
+        return;
+      }
+      showMessage('请先点击一键生成声音，再进行试听。');
+      return;
+    }
+
+    setPreviewingVoice(true);
+    try {
+      const preview = await tsVoiceApi.previewVoiceProfile({
+        voiceProfileId: previewProfileId,
+        voiceId: previewProviderVoiceId,
+        previewText: voicePreviewText || DEFAULT_VOICE_PREVIEW_TEXT,
+        speed: 1.0,
+        pitch: 0,
+        volume: 1.0,
+      });
+
+      if (typeof preview?.voiceProfileId === 'number' && Number.isFinite(preview.voiceProfileId)) {
+        setVoiceProfileId(preview.voiceProfileId);
+      }
+      if (preview?.providerVoiceId) {
+        setProviderVoiceId(preview.providerVoiceId);
+      }
+      if (preview?.previewText) {
+        setVoicePreviewText(preview.previewText);
+      }
+
+      const audioUrl = preview?.previewAudioUrl || voicePreviewAudioUrl;
+      if (!audioUrl) {
+        showMessage('试听生成成功，但未返回音频地址。');
+        return;
+      }
+      setVoicePreviewAudioUrl(audioUrl);
+      const played = await playPreviewAudio(audioUrl);
+      if (!played) {
+        showMessage('试听生成成功，当前环境暂不支持直接播放。');
+      }
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, '试听生成失败，请稍后重试。'));
+    }
+    finally {
+      setPreviewingVoice(false);
+    }
+  };
+
   const handleToggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag],
     );
+  };
+
+  const handleSmartRecommendTags = () => {
+    const next = [...tagOptions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(2, tagOptions.length));
+    setSelectedTags(next);
   };
 
   const handleSave = async () => {
@@ -570,7 +703,12 @@ export function CreateCharacter() {
             ? (
                 <>
                   <PublicStatusSection isPublic={isPublic} onPublicChange={setIsPublic} />
-                  <TagsSection selectedTags={selectedTags} onToggleTag={handleToggleTag} />
+                  <TagsSection
+                    tagOptions={tagOptions}
+                    selectedTags={selectedTags}
+                    onToggleTag={handleToggleTag}
+                    onSmartRecommend={handleSmartRecommendTags}
+                  />
                   <DialogueStyleSection
                     dialogLength={dialogLength}
                     interactivity={interactivity}
@@ -596,9 +734,11 @@ export function CreateCharacter() {
                     onGenerateSetting={handleGenerateSetting}
                     onGenerateImage={handleGenerateImage}
                     onGenerateVoice={handleGenerateVoice}
+                    onPreviewVoice={handlePreviewVoice}
                     generatingSetting={generatingSetting}
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}
+                    previewingVoice={previewingVoice}
                   />
 
                 </div>

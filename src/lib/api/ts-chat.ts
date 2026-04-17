@@ -80,6 +80,9 @@ export type TsChatAiReplyPayload = {
   voiceProfileId?: number;
   voiceId?: string;
   generateVoice?: boolean;
+  speed?: number;
+  pitch?: number;
+  volume?: number;
 };
 
 export type TsChatAiReplyResult = {

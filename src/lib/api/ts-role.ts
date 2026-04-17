@@ -244,6 +244,7 @@ export const tsRoleApi = {
     return defHttp.post<TsRoleOneClickImageResult>({
       url: '/sys/ts-roles/one-click-image',
       data: payload,
+      timeout: 60_000,
     });
   },
 

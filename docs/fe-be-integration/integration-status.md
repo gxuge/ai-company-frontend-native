@@ -1,6 +1,6 @@
 ﻿# 前后端对接状态总表
 
-更新时间：2026-04-14
+更新时间：2026-04-17
 
 | 模块/页面 | 前端位置 | 后端接口 | 状态 | 负责人 | 最后更新 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -8,11 +8,13 @@
 | 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 部分对接（推荐音色已完成） | - | 2026-04-14 | 保持原 UI 布局；“我的音色库”真实接口待补 |
 | 用户设置 | `src/app/pages/user-setting/index.tsx` | `/sys/user/login/setting/getUserData`、`/sys/user/login/setting/userEdit` | 已对接 | - | 2026-04-09 | 完成昵称/性别/生日读取与保存链路，保持原 UI 布局 |
 | 创建人物 | `src/app/pages/create-character/index.jsx` | `/sys/ts-roles/one-click-image`、`/sys/ts-user-image-assets`、`/sys/ts-role-image-profiles` | 已对接（本轮完成） | - | 2026-04-09 | 保持原 UI 布局；接入生成、图库与保存链路 |
+| 我的图库 | `src/app/pages/my-gallery/index.tsx` | `/sys/ts-user-image-assets`（`GET`/`DELETE`） | 已对接（本轮完成） | - | 2026-04-17 | 保持原 UI 布局；已接通真实列表加载、管理模式删除与失败回退 |
 | 会话列表 | `src/app/pages/session-list/index.tsx` | `/sys/ts-chat-sessions`、`/sys/ts-chat-messages` | 已对接（系统头像切换完成） | - | 2026-04-14 | 保持原 UI 布局；系统会话（`isSystemSession=true`）头像改为 quick-login Logo |
 | 浏览图片页 | `src/app/pages/browse-images-list/index.tsx` | `/sys/ts-stories/public`、`/sys/ts-role-image-profiles/public`（回退：`/sys/ts-stories`、`/sys/ts-role-image-profiles`） | 已对接（本轮完成） | - | 2026-04-14 | 保持原 UI 布局；故事/角色 Tab 改为真实接口数据，支持搜索与分页加载 |
 | 系统聊天 | `src/app/pages/admin-chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/ai-reply` | 已对接（历史+发送） | - | 2026-04-14 | 保持原 UI 布局；发送链路由 mock 改为真实接口 |
 | 普通聊天 | `src/app/pages/chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/detail`、`/sys/ts-stories/detail`、`/sys/ts-roles/detail`、`/sys/ts-chat-sessions/ai-reply`、`/sys/ts-chat-sessions/reply-suggestions` | 部分对接（历史+头部+发送） | - | 2026-04-14 | 保持原 UI 布局；已实现头部分流与文本发送，附件/语音链路待补 |
 | 会话详情 | `src/app/pages/conversation-detail/index.tsx` | `/sys/ts-stories/detail`、`/sys/ts-story-chapters`、`/sys/ts-roles/detail` | 已对接（本轮完成） | - | 2026-04-10 | 保持原 UI 布局；标题/描述/章节/角色列表改为真实接口 |
+| 创建故事 | `src/app/pages/create-story/index.tsx` | `/sys/ts-stories`、`/sys/ts-stories/story-setting-generate`、`/sys/ts-stories/story--scene-generate`、`/sys/ts-stories/story--outline-generate`、`/sys/ts-story-chapters` | 部分对接（主链路完成） | - | 2026-04-17 | 保持原 UI 布局；已接通保存+一键生成+章节保存，角色选择链路待补 |
 
 ## 待补接口清单
 
@@ -189,3 +191,19 @@
   - `docs/fe-be-integration/任务-会话列表页-系统分流对接-20260413-1945.md`
   - `docs/fe-be-integration/任务-系统聊天页-历史消息回填-20260413-1945.md`
   - `docs/fe-be-integration/任务-普通聊天页-历史消息回填-20260413-1945.md`
+
+## 2026-04-16 更新（create-role 形象生成去除姓名依赖）
+- 页面：`src/app/pages/create-role/components/create-character.tsx`
+- 调整：点击“形象生成”时，若无 `roleId` 且无名字，不再先创建角色草稿，直接调用 `/sys/ts-roles/one-click-image`。
+- 保留：有 `roleId` 或有名字时继续使用异步生成+轮询链路。
+- UI：未改动布局，仅修改请求分支与参数映射。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-create-role-形象生成去除姓名依赖-20260416-1035.md`
+
+## 2026-04-17 更新（my-gallery 前后端对接）
+- 页面：`src/app/pages/my-gallery/index.tsx`
+- 调整：移除本地 mock，改为分页读取 `/sys/ts-user-image-assets`；管理模式删除改为调用 `DELETE /sys/ts-user-image-assets?id=...` 并处理部分失败回退。
+- 保留：页面布局、卡片样式、底部操作结构保持不变。
+- UI：仅补充加载/错误文案与空态回退，不改视觉结构。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-my-gallery-前后端对接计划-20260417-1105.md`

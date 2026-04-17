@@ -130,6 +130,7 @@ export const tsRoleImageApi = {
     return defHttp.post<TsRoleOneClickImageGenerateResult>({
       url: '/sys/ts-roles/one-click-image',
       data: payload,
+      timeout: 60_000,
     });
   },
 
@@ -137,6 +138,13 @@ export const tsRoleImageApi = {
     return defHttp.get<TsUserImageAssetPage>({
       url: '/sys/ts-user-image-assets',
       params,
+    });
+  },
+
+  async deleteUserImageAsset(id: number) {
+    return defHttp.delete<void>({
+      url: '/sys/ts-user-image-assets',
+      params: { id },
     });
   },
 

@@ -589,6 +589,7 @@ export default function App() {
             />
 
             <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15 }}>
+              {/* Feature Expand Button (Plus rotates to X) */}
               <Pressable
                 style={{
                   width: 45.7,
@@ -596,22 +597,16 @@ export default function App() {
                   borderRadius: 12,
                   alignItems: "center",
                   justifyContent: "center",
-                  marginRight: 12,
                 }}
                 onPress={toggleFeatureExpanded}
               >
                 <Animated.View style={plusIconAnimatedStyle}>
-                  <Image source={imgSendWhite} style={{ width: 34, height: 34 }} resizeMode="contain" />
+                  <Image 
+                    source={imgSendWhite} 
+                    style={{ width: 42, height: 42 }} // Larger size as requested
+                    resizeMode="contain" 
+                  />
                 </Animated.View>
-              </Pressable>
-
-              {/* send icon */}
-              <Pressable style={{ width: 45.7, height: 47.2 }} onPress={handleSend}>
-                {({ hovered }) => (
-                  <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                    <Image source={hovered ? imgSendActive : imgSendWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-                  </View>
-                )}
               </Pressable>
             </View>
           </View>

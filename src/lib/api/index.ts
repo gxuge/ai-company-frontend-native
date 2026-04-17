@@ -8,6 +8,7 @@ export * from './request';
 export * from './ts-chat';
 export * from './ts-role';
 export * from './ts-role-image';
+export * from './ts-role-tag';
 export * from './ts-story';
 export * from './ts-voice';
 export * from './types';

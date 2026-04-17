@@ -1,6 +1,6 @@
 ﻿# Frontend Integration Plan
 
-更新时间：2026-04-09
+更新时间：2026-04-17
 
 ## 0. 任务背景（user-setting 对接，2026-04-09）
 - 目标：完成 `pages/user-setting` 的“读取当前用户资料 + 提交保存”链路。
@@ -407,3 +407,40 @@
 | 2026-04-14 | T3 | 已完成 | 页面从静态 mock 切换到真实接口，加入搜索/分页/错误回退 | `src/app/pages/browse-images-list/index.tsx` |
 | 2026-04-14 | T4 | 已完成 | 组件扩展为数据驱动，保留既有布局样式 | `src/app/pages/browse-images-list/components/SearchBar.tsx`、`StoryGrid.tsx`、`ImageCard.tsx`、`CategoryTabs.tsx` |
 | 2026-04-14 | T5 | 已完成 | 后端编译通过，前端定向 lint 通过，任务文档回填 | `mvn -pl jeecg-module-system/jeecg-system-biz -am -DskipTests compile`、`pnpm exec eslint ...`、`docs/fe-be-integration/task-browse-images-list-api-integration-20260414-1630.md` |
+
+## 18. 任务背景（create-role 形象生成去除姓名依赖，2026-04-16）
+- 目标：修复 create-role 生图必须先填名字的问题，未填名字时也能生成形象。
+- 边界：只改调用分支和参数映射，不改 UI 布局与视觉结构。
+- 非目标：本轮不改声音生成逻辑，不改数据库结构。
+
+### 18.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 生图分支调整 | 已完成 | 无名字时不再强制创建草稿角色 | 点击“生成形象”可直接请求后端 | `src/app/pages/create-role/components/create-character.tsx` |
+| T2 异步链路兼容 | 已完成 | 有 `roleId/roleName` 时继续异步生成+轮询 | 原有已创建角色场景行为不变 | `src/app/pages/create-role/components/create-character.tsx` |
+| T3 记录回填 | 已完成 | 任务文件、计划、变更日志与状态总表同步 | 文档记录完整可追溯 | `docs/**` |
+
+### 18.2 风险与回退
+- 风险：无名字场景多为同步返回，若上游慢可能体感等待更长。
+- 回退：若需恢复旧策略，可回退 `handleGenerateImage` 中的分支判断逻辑。
+
+## 19. 任务背景（my-gallery 前后端对接，2026-04-17）
+- 目标：完成 `pages/my-gallery` 与真实后端接口联调，替换本地 mock 并接通删除链路。
+- 边界：仅改 API 调用、字段映射、状态与回退逻辑，不改页面布局和视觉结构。
+- 非目标：本轮不新增后端接口，不改图库卡片样式与交互结构。
+
+### 19.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 API 封装补齐 | 已完成 | 在 `ts-role-image` 新增用户图库删除封装 | 页面层无直连 URL | `src/lib/api/ts-role-image.ts` |
+| T2 页面列表对接 | 已完成 | `my-gallery` 改为分页拉取真实图库并字段映射 | 卡片数据来自后端接口 | `src/app/pages/my-gallery/index.tsx` |
+| T3 删除链路对接 | 已完成 | 管理模式删除改为真实接口并处理部分失败回退 | 删除成功项移除、失败项保留重试 | `src/app/pages/my-gallery/index.tsx` |
+| T4 兜底与验证回填 | 已完成 | 增加加载/错误/空态兜底并执行定向校验，回填任务文档 | 页面失败不白屏、命令可执行、记录完整 | `pnpm exec eslint ...`、`docs/**` |
+
+### 19.2 风险与回退
+- 风险：
+  - 历史素材可能缺失 `thumbnailUrl` 或 `fileName`，需依赖 fallback 字段。
+  - 批量删除可能出现部分失败，需要保留失败项继续重试。
+- 回退：
+  - 若需回滚，可仅回退 `src/app/pages/my-gallery/index.tsx` 与 `src/lib/api/ts-role-image.ts`。
+  - 接口异常时页面保持可渲染，显示错误文案并保留本地状态。

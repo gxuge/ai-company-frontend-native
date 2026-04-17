@@ -4,11 +4,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 
 const imgHome = resolveAsset(require('../../assets/images/ai-tabs/svg/home.svg'));
+const imgHomeActive = resolveAsset(require('../../assets/images/ai-tabs/svg/home-active.svg'));
 const imgSearch = resolveAsset(require('../../assets/images/ai-tabs/svg/search.svg'));
+const imgSearchActive = resolveAsset(require('../../assets/images/ai-tabs/svg/search-active.svg'));
 const imgCreate = resolveAsset(require('../../assets/images/ai-tabs/svg/create.svg'));
 const imgCreateBadge = resolveAsset(require('../../assets/images/ai-tabs/svg/create-badge.svg'));
 const imgChat = resolveAsset(require('../../assets/images/ai-tabs/svg/chat.svg'));
+const imgChatActive = resolveAsset(require('../../assets/images/ai-tabs/svg/chat-active.svg'));
 const imgProfile = resolveAsset(require('../../assets/images/ai-tabs/svg/profile.svg'));
+const imgProfileActive = resolveAsset(require('../../assets/images/ai-tabs/svg/profile-active.svg'));
 
 const tabs = [
   { id: 'home', label: '首页', path: '/pages/select-role' },
@@ -21,7 +25,7 @@ const tabs = [
 function HomeIcon({ active }: { active: boolean }) {
   return (
     <div style={{ width: 24, height: 24 }}>
-      <img src={imgHome} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: active ? 1 : 0.5 }} />
+      <img src={active ? imgHomeActive : imgHome} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   );
 }
@@ -29,7 +33,7 @@ function HomeIcon({ active }: { active: boolean }) {
 function SearchIcon({ active }: { active: boolean }) {
   return (
     <div style={{ width: 24, height: 24 }}>
-      <img src={imgSearch} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: active ? 1 : 0.5 }} />
+      <img src={active ? imgSearchActive : imgSearch} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   );
 }
@@ -46,7 +50,7 @@ function CreateIcon({ active }: { active: boolean }) {
 function ChatIcon({ active }: { active: boolean }) {
   return (
     <div style={{ width: 24, height: 24 }}>
-      <img src={imgChat} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: active ? 1 : 0.5 }} />
+      <img src={active ? imgChatActive : imgChat} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   );
 }
@@ -54,7 +58,7 @@ function ChatIcon({ active }: { active: boolean }) {
 function ProfileIcon({ active }: { active: boolean }) {
   return (
     <div style={{ width: 24, height: 24 }}>
-      <img src={imgProfile} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', opacity: active ? 1 : 0.5 }} />
+      <img src={active ? imgProfileActive : imgProfile} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   );
 }
@@ -87,4 +91,3 @@ export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
     </nav>
   );
 }
-

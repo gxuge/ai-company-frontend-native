@@ -56,14 +56,19 @@ export type TsUserVoiceConfigSavePayload = {
 };
 
 export type TsVoiceProfilePreviewPayload = {
-  voiceProfileId: number;
+  voiceProfileId?: number;
+  voiceId?: string;
   previewText?: string;
+  speed?: number;
+  pitch?: number;
+  volume?: number;
 };
 
 export type TsVoiceProfilePreviewResult = {
   voiceProfileId?: number;
   voiceName?: string;
   providerVoiceId?: string;
+  matchSource?: string;
   previewText?: string;
   previewAudioUrl?: string;
 };

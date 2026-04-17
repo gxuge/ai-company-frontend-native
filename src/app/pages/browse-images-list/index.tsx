@@ -15,6 +15,7 @@ import { StoryGrid } from './components/StoryGrid';
 import type { StoryGridItem } from './components/StoryGrid';
 import { ImageCard } from './components/ImageCard';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
+import { AiEmpty } from '@/components/ai-company/ai-empty';
 
 type TabValue = 'story' | 'character';
 
@@ -389,10 +390,13 @@ export default function BrowseImagesList() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 12, paddingBottom: 90 }}
-        showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={160}
+        contentContainerStyle={{ 
+          padding: 12, 
+          paddingBottom: 90,
+          flexGrow: 1 // Important for centering when empty
+        }}
       >
         {currentState.loading ? (
           <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>加载中...</Text>
@@ -405,7 +409,11 @@ export default function BrowseImagesList() {
           <>
             <StoryGrid items={storyState.items} />
             {!storyState.loading && !storyState.error && storyState.items.length === 0 ? (
-              <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 10 }}>暂无故事</Text>
+              <AiEmpty 
+                title="暂无故事" 
+                description="换个关键词搜索试试看？" 
+                style={{ marginTop: 60 }} 
+              />
             ) : null}
           </>
         ) : (
@@ -424,7 +432,11 @@ export default function BrowseImagesList() {
               ))}
             </View>
             {!characterState.loading && !characterState.error && characterState.items.length === 0 ? (
-              <Text style={{ color: '#9ca3af', fontSize: 12 }}>暂无角色</Text>
+              <AiEmpty 
+                title="暂无角色" 
+                description="试试搜索其他的关键词" 
+                style={{ marginTop: 60 }}
+              />
             ) : null}
           </>
         )}

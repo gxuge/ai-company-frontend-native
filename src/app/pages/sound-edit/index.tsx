@@ -4,6 +4,8 @@ import { tsVoiceApi } from '@/lib/api';
 import EditSoundText from './components/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { Check, Play, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { router } from 'expo-router';
 
 const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/play.svg'));
 const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/edit.svg'));
@@ -402,22 +404,29 @@ export default function SoundEditPage() {
       notifyMessage('\u8BF7\u5148\u9009\u62E9\u97F3\u8272');
       return;
     }
-    if (!selectedVoiceFromRecommend) {
-      notifyMessage('\u5F53\u524D\u201C\u6211\u7684\u97F3\u8272\u5E93\u201D\u6682\u672A\u5B8C\u6210\u670D\u52A1\u7AEF\u63A5\u53E3\u5BF9\u63A5\uFF0C\u6682\u4EC5\u652F\u6301\u63A8\u8350\u97F3\u8272\u8BD5\u542C');
+    const providerVoiceId = selectedVoice.providerVoiceId?.trim();
+    if (!providerVoiceId) {
+      notifyMessage('\u5F53\u524D\u97F3\u8272\u7F3A\u5C11 providerVoiceId\uFF0C\u65E0\u6CD5\u8BD5\u542C');
       return;
     }
 
     setIsListening(true);
     try {
-      await tsVoiceApi.saveCurrentVoiceConfig({
-        selectedVoiceProfileId: selectedVoiceFromRecommend.id,
-        pitchPercent: Number(pitch.toFixed(2)),
-        speedRate: Number(speed.toFixed(2)),
-      });
+      if (selectedVoiceFromRecommend) {
+        await tsVoiceApi.saveCurrentVoiceConfig({
+          selectedVoiceProfileId: selectedVoiceFromRecommend.id,
+          pitchPercent: Number(pitch.toFixed(2)),
+          speedRate: Number(speed.toFixed(2)),
+        });
+      }
 
       const preview = await tsVoiceApi.previewVoiceProfile({
-        voiceProfileId: selectedVoiceFromRecommend.id,
+        voiceProfileId: selectedVoiceFromRecommend?.id,
+        voiceId: providerVoiceId,
         previewText,
+        speed: Math.max(0.8, Math.min(1.2, Number(speed.toFixed(2)))),
+        pitch: Math.max(-6, Math.min(6, Number((pitch / 10).toFixed(2)))),
+        volume: 1.0,
       });
 
       const audioUrl = preview.previewAudioUrl;
@@ -680,6 +689,13 @@ export default function SoundEditPage() {
                   onDelete={handleMyVoiceDelete}
                 />
               ))}
+              {myVoices.length === 0 && (
+                <AiEmpty 
+                  title="还没有录音" 
+                  description="在推荐音色库中选择音色或开始您的创作" 
+                  style={{ marginTop: 40 }}
+                />
+              )}
             </div>
           )}
         </div>
