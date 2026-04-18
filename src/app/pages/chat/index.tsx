@@ -307,6 +307,8 @@ function ChatView({
   onMicPress,
   onSuggestion,
   onPlusPress,
+  playingMessageId,
+  onPlayMessageAudio,
 }: {
   headerState: ChatHeaderState;
   sessionId: number | null;
@@ -319,6 +321,8 @@ function ChatView({
   onMicPress: () => void;
   onSuggestion: () => void;
   onPlusPress: () => void;
+  playingMessageId: string | null;
+  onPlayMessageAudio: (id: string) => void;
 }) {
   const featureExpandProgress = useSharedValue(isFeatureExpanded ? 1 : 0);
 
@@ -355,6 +359,8 @@ function ChatView({
                     actionText={msg.actionText}
                     speechText={msg.speechText}
                     audioDuration={msg.audioDuration}
+                    isPlaying={playingMessageId === msg.id}
+                    onPlayAudio={() => onPlayMessageAudio(msg.id)}
                   />
                 );
               }
@@ -417,6 +423,11 @@ export default function Chat() {
   const [inputValue, setInputValue] = React.useState('');
   const [sending, setSending] = React.useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = React.useState(false);
+  const [playingMessageId, setPlayingMessageId] = React.useState<string | null>(null);
+
+  const handlePlayMessageAudio = React.useCallback((id: string) => {
+    setPlayingMessageId(prev => (prev === id ? null : id));
+  }, []);
 
   const appendMessage = React.useCallback((next: ChatListItem) => {
     setMessages(prev => [...prev, next]);
@@ -522,6 +533,8 @@ export default function Chat() {
       onMicPress={handleMicPress}
       onSuggestion={() => { void handleSuggestion(); }}
       onPlusPress={handleToggleFeature}
+      playingMessageId={playingMessageId}
+      onPlayMessageAudio={handlePlayMessageAudio}
     />
   );
 }

@@ -87,6 +87,13 @@ export const tsVoiceApi = {
     });
   },
 
+  async getUserVoiceProfiles(params: TsVoiceProfileQuery) {
+    return defHttp.get<TsVoiceProfilePage>({
+      url: '/sys/ts-user-voice-profiles',
+      params,
+    });
+  },
+
   async saveCurrentVoiceConfig(payload: TsUserVoiceConfigSavePayload) {
     return defHttp.put<TsUserVoiceConfig>({
       url: '/sys/ts-user-voice-config/current',

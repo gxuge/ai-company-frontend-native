@@ -2,6 +2,7 @@ import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
@@ -288,6 +289,7 @@ function SaveButton({
 
 // eslint-disable-next-line max-lines-per-function
 export function CreateCharacter() {
+  const params = useLocalSearchParams<{ selectedImageUrl?: string }>();
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [roleId, setRoleId] = useState<number | null>(null);
 
@@ -301,6 +303,12 @@ export function CreateCharacter() {
   const [voicePreviewText, setVoicePreviewText] = useState(DEFAULT_VOICE_PREVIEW_TEXT);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
+
+  useEffect(() => {
+    if (params.selectedImageUrl) {
+      setAvatarUrl(params.selectedImageUrl);
+    }
+  }, [params.selectedImageUrl]);
 
   const [isPublic, setIsPublic] = useState(true);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
@@ -500,8 +508,8 @@ export function CreateCharacter() {
               showMessage(detail?.failReason || '形象生成失败，请稍后重试。');
             }
           }
-          catch {
-            // 不设超时，单次轮询失败不终止，等待下一轮继续。
+          catch (error) {
+            console.error('Polling individual error', error);
           }
           finally {
             imagePollingInFlightRef.current = false;
@@ -530,6 +538,13 @@ export function CreateCharacter() {
       setGeneratingImage(false);
       showMessage(extractErrorMessage(error, '形象生成失败，请稍后重试。'));
     }
+    finally {
+      // Fallback to ensure generatingImage is reset if not handled by success/fail paths
+      // Note: If polling is active, we don't reset here.
+      if (!imagePollingRecordIdRef.current) {
+        setGeneratingImage(false);
+      }
+    }
   };
 
   const handleGenerateVoice = async () => {
@@ -547,20 +562,26 @@ export function CreateCharacter() {
         preferredVoiceName: voiceName || undefined,
         targetTone: toneTendency,
       });
-      if (result?.voiceName) {
-        setVoiceName(result.voiceName);
+      const voice = result?.voice;
+      const resolvedVoiceName = voice?.voiceName || result?.voiceName;
+      const resolvedVoiceProfileId = voice?.voiceProfileId ?? result?.voiceProfileId;
+      const resolvedProviderVoiceId = voice?.providerVoiceId || result?.providerVoiceId;
+      const resolvedPreviewText = voice?.previewText || result?.previewText;
+      const resolvedPreviewAudioUrl = voice?.previewAudioUrl || result?.previewAudioUrl;
+      if (resolvedVoiceName) {
+        setVoiceName(resolvedVoiceName);
       }
-      if (typeof result?.voiceProfileId === 'number' && Number.isFinite(result.voiceProfileId)) {
-        setVoiceProfileId(result.voiceProfileId);
+      if (typeof resolvedVoiceProfileId === 'number' && Number.isFinite(resolvedVoiceProfileId)) {
+        setVoiceProfileId(resolvedVoiceProfileId);
       }
-      if (result?.providerVoiceId) {
-        setProviderVoiceId(result.providerVoiceId);
+      if (resolvedProviderVoiceId) {
+        setProviderVoiceId(resolvedProviderVoiceId);
       }
-      if (result?.previewText) {
-        setVoicePreviewText(result.previewText);
+      if (resolvedPreviewText) {
+        setVoicePreviewText(resolvedPreviewText);
       }
-      if (result?.previewAudioUrl) {
-        setVoicePreviewAudioUrl(result.previewAudioUrl);
+      if (resolvedPreviewAudioUrl) {
+        setVoicePreviewAudioUrl(resolvedPreviewAudioUrl);
       }
       setAdvancedAiGenerated(true);
       showMessage('角色声音生成成功。');
@@ -685,6 +706,7 @@ export function CreateCharacter() {
         setVoiceName(result.voiceName);
       }
       showMessage('角色保存成功。');
+      router.navigate('/pages/create-page');
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '保存失败，请稍后重试。'));
@@ -735,6 +757,9 @@ export function CreateCharacter() {
                     onGenerateImage={handleGenerateImage}
                     onGenerateVoice={handleGenerateVoice}
                     onPreviewVoice={handlePreviewVoice}
+                    onSelectFromGallery={() => {
+                      router.push('/pages/my-gallery?from=create-role');
+                    }}
                     generatingSetting={generatingSetting}
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}

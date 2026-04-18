@@ -182,6 +182,7 @@ function SectionHeader({
   showGenerate = true,
   large = false,
   generateLoading = false,
+  generateDisabled = false,
   onGenerate,
 }: {
   title: string;
@@ -190,6 +191,7 @@ function SectionHeader({
   showGenerate?: boolean;
   large?: boolean;
   generateLoading?: boolean;
+  generateDisabled?: boolean;
   onGenerate?: () => void;
 }) {
   return (
@@ -231,7 +233,13 @@ function SectionHeader({
           </span>
         )}
       </div>
-      {showGenerate && <AiGenerateBtn onClick={onGenerate} loading={generateLoading} />}
+      {showGenerate && (
+        <AiGenerateBtn 
+          onClick={onGenerate} 
+          loading={generateLoading} 
+          disabled={generateDisabled}
+        />
+      )}
     </div>
   );
 }
@@ -258,6 +266,7 @@ function StorySettingsSection({
       />
       <AiFormTextarea
         placeholder="输入故事整体想法和背景设定，可辅助生成剧情。"
+        isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
       />
@@ -267,15 +276,17 @@ function StorySettingsSection({
 
 /* —— CharacterList Section —— */
 function CharacterListSection({
+  roles = [],
   onAddRole,
 }: {
+  roles?: any[];
   onAddRole: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="角色列表" required />
+      <SectionHeader title="角色列表" required showGenerate={false} />
       <div className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
-        <div className="flex items-start gap-[24px]">
+        <div className="flex flex-wrap items-start gap-[24px]">
           <div className="flex shrink-0 flex-col items-center">
             <div className="relative">
               <div className="flex size-[61px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
@@ -285,18 +296,18 @@ function CharacterListSection({
                 <img src={imgUserEdit} alt="" className="size-[13px] object-contain" />
               </div>
             </div>
-            <span
-              className="mt-[12px] text-[#9ca3af]"
-              style={{
-                fontFamily: '\'Noto Sans SC\', sans-serif',
-                fontSize: '12px',
-                fontWeight: 500,
-                letterSpacing: '0.3px',
-              }}
-            >
-              用户
-            </span>
+            <span className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">用户</span>
           </div>
+          
+          {roles.map((role, idx) => (
+            <div key={`${role.id}-${idx}`} className="flex shrink-0 flex-col items-center">
+              <div className="size-[61px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] overflow-hidden">
+                <img src={role.avatar || imgUserDefault} alt="" className="w-full h-full object-cover" />
+              </div>
+              <span className="mt-[12px] text-white text-[12px] font-medium truncate w-[60px] text-center">{role.name}</span>
+            </div>
+          ))}
+
           <div className="flex shrink-0 flex-col items-center">
             <button
               onClick={onAddRole}
@@ -304,6 +315,7 @@ function CharacterListSection({
             >
               <img src={imgAddRoleGray} alt="" className="h-[23px] w-[22px] object-contain" />
             </button>
+            <span className="mt-[12px] text-[#4b5563] text-[12px]">添加</span>
           </div>
         </div>
       </div>
@@ -334,6 +346,7 @@ function LocationSection({
       />
       <AiFormTextarea
         placeholder="输入场所设定，生成人物所在场所"
+        isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
       />
@@ -353,10 +366,12 @@ function GlowDot() {
 function ChapterCard({
   chapter,
   index,
+  isGenerating,
   onChange,
 }: {
   chapter: ChapterForm;
   index: number;
+  isGenerating?: boolean;
   onChange: (next: ChapterForm) => void;
 }) {
   return (
@@ -427,6 +442,7 @@ function ChapterCard({
           </div>
           <AiFormTextarea
             skeletonLines={3}
+            isGenerating={isGenerating}
             skeletonPaddingClassName="p-[13px]"
             containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className="min-h-[96px] w-full resize-none border-0 bg-transparent p-[13px] text-white placeholder-[#4b5563] outline-none"
@@ -454,6 +470,7 @@ function ChapterCard({
           </div>
           <AiFormTextarea
             skeletonLines={3}
+            isGenerating={isGenerating}
             skeletonPaddingClassName="p-[13px]"
             containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className="min-h-[96px] w-full resize-none border-0 bg-transparent p-[13px] text-white placeholder-[#4b5563] outline-none"
@@ -525,6 +542,7 @@ function PlotOutlineSection({
         />
         <AiFormTextarea
           placeholder="输入剧情大纲..."
+          isGenerating={generateLoading}
           value={outlineText}
           onChange={e => onOutlineChange(e.target.value)}
         />
@@ -545,6 +563,7 @@ function PlotOutlineSection({
           key={`${chapter.id || 'new'}-${index}`}
           chapter={chapter}
           index={index}
+          isGenerating={generateLoading}
           onChange={next => onChapterChange(index, next)}
         />
       ))}
@@ -595,7 +614,13 @@ function BottomButton({
 
 // eslint-disable-next-line max-lines-per-function
 export default function App() {
-  const params = useLocalSearchParams<{ storyId?: string | string[]; id?: string | string[] }>();
+  const params = useLocalSearchParams<{ 
+    storyId?: string | string[]; 
+    id?: string | string[];
+    selectedRoleId?: string;
+    selectedRoleName?: string;
+    selectedRoleAvatar?: any;
+  }>();
   const routeStoryId = useMemo(
     () => parsePositiveInt(params.storyId) ?? parsePositiveInt(params.id),
     [params.id, params.storyId],
@@ -618,6 +643,29 @@ export default function App() {
   const [generatingSetting, setGeneratingSetting] = useState(false);
   const [generatingScene, setGeneratingScene] = useState(false);
   const [generatingOutline, setGeneratingOutline] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
+
+  const isOutlineEnabled = useMemo(() => {
+    return (
+      storySettingText.trim().length > 0 &&
+      selectedRoles.length > 0 &&
+      sceneSettingText.trim().length > 0
+    );
+  }, [storySettingText, selectedRoles, sceneSettingText]);
+
+  useEffect(() => {
+    if (params.selectedRoleId) {
+      const roleId = Number(params.selectedRoleId);
+      setSelectedRoles(prev => {
+        if (prev.find(r => r.id === roleId)) return prev;
+        return [...prev, { 
+          id: roleId, 
+          name: params.selectedRoleName || '未知角色', 
+          avatar: params.selectedRoleAvatar 
+        }];
+      });
+    }
+  }, [params.selectedRoleId, params.selectedRoleName, params.selectedRoleAvatar]);
 
   useEffect(() => {
     if (!routeStoryId) {
@@ -702,8 +750,13 @@ export default function App() {
       if (result?.storyMode) {
         setActiveTab(normalizeStoryMode(result.storyMode));
       }
-      setIsAiStorySetting(true);
-      showMessage('故事设定已生成并回填。');
+      setIsAiStorySetting(result?.generated !== false);
+      if (result?.generated === false) {
+        showMessage(result?.fallbackReason || '故事设定生成失败，当前为兜底内容，请重试。');
+      }
+      else {
+        showMessage('故事设定已生成并回填。');
+      }
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '故事设定生成失败，请稍后重试。'));
@@ -730,7 +783,12 @@ export default function App() {
       if (sceneText) {
         setSceneSettingText(sceneText);
       }
-      showMessage('场景设定已生成并回填。');
+      if (result?.generated === false) {
+        showMessage(result?.fallbackReason || '场景设定生成失败，当前为兜底内容，请重试。');
+      }
+      else {
+        showMessage('场景设定已生成并回填。');
+      }
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '场景设定生成失败，请稍后重试。'));
@@ -872,7 +930,8 @@ export default function App() {
               generateLoading={generatingSetting}
             />
             <CharacterListSection
-              onAddRole={() => router.push('/pages/select-role')}
+              roles={selectedRoles}
+              onAddRole={() => router.push('/pages/select-role?from=create-story')}
             />
             <LocationSection
               text={sceneSettingText}
@@ -893,6 +952,7 @@ export default function App() {
               }}
               onGenerate={handleGenerateOutline}
               generateLoading={generatingOutline}
+              generateDisabled={!isOutlineEnabled}
             />
             <div className="h-[20px] shrink-0" />
           </div>

@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
@@ -16,9 +16,9 @@ const imgImagePlaceholder = resolveAsset(require('@/assets/images/my-gallery/ima
 const PAGE_SIZE = 60;
 
 const SOURCE_TYPE_LABEL_MAP: Record<string, string> = {
-  reference: '\u53C2\u8003\u56FE',
-  generated: '\u751F\u6210\u56FE',
-  favorite: '\u6536\u85CF\u56FE',
+  reference: '参考图',
+  generated: '生成图',
+  favorite: '收藏图',
 };
 
 type ImageItem = {
@@ -39,11 +39,11 @@ type ImageCardProps = {
 
 function resolveSourceTypeLabel(sourceType?: string) {
   if (!sourceType) {
-    return '\u672A\u5206\u7C7B';
+    return '未分类';
   }
   const key = sourceType.trim().toLowerCase();
   if (!key) {
-    return '\u672A\u5206\u7C7B';
+    return '未分类';
   }
   return SOURCE_TYPE_LABEL_MAP[key] || sourceType;
 }
@@ -56,7 +56,7 @@ function mapAssetToImageItem(asset: TsUserImageAsset, index: number): ImageItem 
       ? asset.fileUrl.trim()
       : undefined;
 
-  const fallbackName = Number.isFinite(id) ? `\u56FE\u7247${id}` : `\u56FE\u7247${index + 1}`;
+  const fallbackName = Number.isFinite(id) ? `图片${id}` : `图片${index + 1}`;
   const name = typeof asset.fileName === 'string' && asset.fileName.trim()
     ? asset.fileName.trim()
     : fallbackName;
@@ -138,6 +138,7 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
 }
 
 export default function MyGallery() {
+  const params = useLocalSearchParams<{ from?: string }>();
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -192,7 +193,7 @@ export default function MyGallery() {
         if (!alive) {
           return;
         }
-        setLoadError(extractErrorMessage(error, '\u56FE\u5E93\u52A0\u8F7D\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5'));
+        setLoadError(extractErrorMessage(error, '图库加载失败，请稍后重试'));
       } finally {
         if (alive) {
           setLoading(false);
@@ -230,14 +231,18 @@ export default function MyGallery() {
 
   const handleUseImage = () => {
     if (!selectedImageItem?.url) {
-      setLoadError('\u5F53\u524D\u56FE\u7247\u5730\u5740\u4E0D\u53EF\u7528\uFF0C\u65E0\u6CD5\u56DE\u586B');
+      setLoadError('当前图片地址不可用，无法回填');
       return;
     }
 
+    const isFromCreateRole = params.from === 'create-role';
+    const pathname = isFromCreateRole ? '/pages/create-role' : '/pages/create-character';
+    const paramKey = isFromCreateRole ? 'selectedImageUrl' : 'referenceImageUrl';
+
     router.replace({
-      pathname: '/pages/create-character',
+      pathname: pathname as any,
       params: {
-        referenceImageUrl: selectedImageItem.url,
+        [paramKey]: selectedImageItem.url,
       },
     });
   };
@@ -275,7 +280,7 @@ export default function MyGallery() {
 
     if (failedIds.length > 0) {
       setSelectedForDelete(failedIds);
-      setLoadError(`\u6709 ${failedIds.length} \u5F20\u56FE\u7247\u5220\u9664\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5`);
+      setLoadError(`有 ${failedIds.length} 张图片删除失败，请重试`);
     } else {
       setSelectedForDelete([]);
       setIsManageMode(false);
@@ -301,7 +306,7 @@ export default function MyGallery() {
         fontWeight: '500',
         fontFamily: 'Noto Sans SC',
       }}>
-        {isManageMode ? '\u5B8C\u6210' : '\u7BA1\u7406'}
+        {isManageMode ? '完成' : '管理'}
       </Text>
     </Pressable>
   );
@@ -309,9 +314,9 @@ export default function MyGallery() {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#09090b' }}>
-        <AiHeader title="\u6211\u7684\u56FE\u5E93" className="px-5 py-4" />
+        <AiHeader title="我的图库" className="px-5 py-4" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#a1a1aa', fontSize: 14 }}>\u52A0\u8F7D\u4E2D...</Text>
+          <Text style={{ color: '#a1a1aa', fontSize: 14 }}>加载中...</Text>
         </View>
       </View>
     );
@@ -320,11 +325,11 @@ export default function MyGallery() {
   if (images.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: '#09090b' }}>
-        <AiHeader title="\u6211\u7684\u56FE\u5E93" className="px-5 py-4" />
+        <AiHeader title="我的图库" className="px-5 py-4" />
         <AiEmpty 
-          title="\u4F60\u8FD8\u6CA1\u6709\u56FE\u7247" 
-          description="\u4E0A\u4F20\u53C2\u8003\u56FE\u6216\u4FDD\u5B58\u751F\u6210\u7ED3\u679C\u540E\uFF0C\u4F1A\u663E\u793A\u5728\u8FD9\u91CC" 
-          actionText="\u8FD4\u56DE\u521B\u5EFA\u4EBA\u7269"
+          title="你还没有图片" 
+          description="上传参考图或保存生成结果后，会显示在这里" 
+          actionText="返回创建人物"
           onAction={() => router.push('/pages/create-character')}
           style={{ flex: 1 }}
         />
@@ -334,7 +339,7 @@ export default function MyGallery() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#09090b' }}>
-      <AiHeader title="\u6211\u7684\u56FE\u5E93" className="px-5 py-4" rightElement={manageButton} />
+      <AiHeader title="我的图库" className="px-5 py-4" rightElement={manageButton} />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20, paddingBottom: 128 }}>
         {loadError ? (
@@ -376,7 +381,7 @@ export default function MyGallery() {
               opacity: selectedImageItem?.url ? 1 : 0.6,
             }}
           >
-            <Text style={{ color: 'black', fontSize: 16, fontWeight: '600' }}>\u4F7F\u7528\u8FD9\u5F20\u56FE\u7247</Text>
+            <Text style={{ color: 'black', fontSize: 16, fontWeight: '600' }}>使用这张图片</Text>
           </Pressable>
         </Animated.View>
       )}
@@ -398,7 +403,7 @@ export default function MyGallery() {
           >
             <Image source={imgTrashWhite} style={{ width: 20, height: 20 }} resizeMode="contain" />
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-              {deleting ? '\u5220\u9664\u4E2D...' : `\u5220\u9664 ${selectedForDelete.length} \u5F20\u56FE\u7247`}
+              {deleting ? '删除中...' : `删除 ${selectedForDelete.length} 张图片`}
             </Text>
           </Pressable>
         </Animated.View>

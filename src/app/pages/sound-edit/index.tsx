@@ -7,25 +7,18 @@ import { Check, Play, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { router } from 'expo-router';
 
-const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/play.svg'));
-const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/edit.svg'));
-const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/chevron_down.svg'));
-const imgListenHeadphone = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/listen_headphone.svg'));
+const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/play.svg'));
+const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/edit.svg'));
+const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/chevron_down.svg'));
+const imgListenHeadphone = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/listen_headphone.svg'));
+const imgWaveGreenTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-green-tiny.gif'));
 
 const DEFAULT_PREVIEW_TEXT = '\u8FD9\u662F\u8BD5\u542C\u6587\u672C\uFF0C\u8BF7\u6839\u636E\u97F3\u8272\u53C2\u6570\u64AD\u653E\u3002';
 const GENDERS = ['\u5168\u90E8', '\u7537', '\u5973'] as const;
 const AGE_OPTIONS = ['\u5C11\u5E74', '\u9752\u5E74', '\u4E2D\u5E74', '\u8001\u5E74'] as const;
 
-const VOICE_FALLBACK_LIST: TsVoiceProfile[] = [
-  { id: 1, name: '\u674E\u660E', tags: [{ id: 1, tagName: '\u65B0\u95FB' }, { id: 2, tagName: '\u65C1\u767D' }], gender: 'male', ageGroup: 'teen' },
-  { id: 2, name: '\u674E\u660E', tags: [{ id: 3, tagName: '\u65B0\u95FB' }, { id: 4, tagName: '\u65C1\u767D' }], gender: 'male', ageGroup: 'adult' },
-  { id: 3, name: '\u674E\u660E', tags: [{ id: 5, tagName: '\u65B0\u95FB' }, { id: 6, tagName: '\u65C1\u767D' }], gender: 'male', ageGroup: 'adult' },
-];
-
-const MY_VOICES_FALLBACK_LIST: TsVoiceProfile[] = [
-  { id: 101, name: '\u6211\u7684\u5F55\u97F31', tags: [{ id: 1, tagName: '\u65B0\u95FB' }, { id: 2, tagName: '\u65C1\u767D' }], gender: 'male', ageGroup: 'adult' },
-  { id: 102, name: '\u674E\u660E', tags: [{ id: 3, tagName: '\u65B0\u95FB' }, { id: 4, tagName: '\u65C1\u767D' }], gender: 'male', ageGroup: 'teen' },
-];
+const DEFAULT_RECOMMEND_VOICE_LIST: TsVoiceProfile[] = [];
+const DEFAULT_MY_VOICE_LIST: TsVoiceProfile[] = [];
 
 function toGenderQuery(label: string) {
   if (label === '\u7537') {
@@ -138,9 +131,10 @@ type VoiceCardProps = {
   isMyVoice?: boolean;
   onRename?: (id: number) => void;
   onDelete?: (id: number) => void;
+  isPlaying?: boolean;
 };
 
-function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete }: VoiceCardProps) {
+function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, isPlaying }: VoiceCardProps) {
   const tags = resolveVoiceTags(voice);
   const [showMenu, setShowMenu] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -190,7 +184,11 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete }:
           {/* Figma node 150:3037 Play Button Overlay */}
           {selected && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
-              <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
+              {isPlaying ? (
+                <img src={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
+              ) : (
+                <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
+              )}
             </div>
           )}
         </div>
@@ -283,10 +281,9 @@ export default function SoundEditPage() {
   const [activeLibraryTab, setActiveLibraryTab] = useState<'recommend' | 'my'>('recommend');
   const [pitch, setPitch] = useState(20);
   const [speed, setSpeed] = useState(1.2);
-  const [voices, setVoices] = useState<TsVoiceProfile[]>(VOICE_FALLBACK_LIST);
-  const [myVoices] = useState<TsVoiceProfile[]>(MY_VOICES_FALLBACK_LIST);
-  const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(VOICE_FALLBACK_LIST[0]?.id ?? null);
-  const [preferredVoiceId, setPreferredVoiceId] = useState<number | null>(null);
+  const [voices, setVoices] = useState<TsVoiceProfile[]>(DEFAULT_RECOMMEND_VOICE_LIST);
+  const [myVoices, setMyVoices] = useState<TsVoiceProfile[]>(DEFAULT_MY_VOICE_LIST);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(null);
   const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('\u5168\u90E8');
   const [ageOpen, setAgeOpen] = useState(false);
   const [age, setAge] = useState<(typeof AGE_OPTIONS)[number]>('\u5C11\u5E74');
@@ -320,12 +317,6 @@ export default function SoundEditPage() {
         }
         if (typeof config.speedRate === 'number') {
           setSpeed(Number(config.speedRate));
-        }
-
-        const selectedId = config.selectedVoiceProfileId ?? config.selectedVoiceProfile?.id ?? null;
-        if (selectedId) {
-          setPreferredVoiceId(selectedId);
-          setSelectedVoiceId(selectedId);
         }
 
         if (config.selectedVoiceProfile?.gender) {
@@ -364,24 +355,14 @@ export default function SoundEditPage() {
         }
 
         const records = (pageData.records || []).filter(item => item && item.id);
-        const nextList = records.length > 0 ? records : VOICE_FALLBACK_LIST;
-        setVoices(nextList);
-
-        setSelectedVoiceId((prev) => {
-          const preferred = preferredVoiceId ?? prev;
-          if (preferred && nextList.some(item => item.id === preferred)) {
-            return preferred;
-          }
-          return nextList[0]?.id ?? null;
-        });
+        setVoices(records);
       }
       catch (error) {
         if (!alive) {
           return;
         }
         console.warn('load voice list failed', error);
-        setVoices(VOICE_FALLBACK_LIST);
-        setSelectedVoiceId(prev => prev ?? VOICE_FALLBACK_LIST[0]?.id ?? null);
+        setVoices(DEFAULT_RECOMMEND_VOICE_LIST);
       }
     };
 
@@ -389,7 +370,38 @@ export default function SoundEditPage() {
     return () => {
       alive = false;
     };
-  }, [age, genderFilter, preferredVoiceId]);
+  }, [age, genderFilter]);
+
+  useEffect(() => {
+    let alive = true;
+
+    const loadMyVoices = async () => {
+      try {
+        const pageData = await tsVoiceApi.getUserVoiceProfiles({
+          pageNo: 1,
+          pageSize: 50,
+          status: 1,
+        });
+        if (!alive) {
+          return;
+        }
+        const records = (pageData.records || []).filter(item => item && item.id);
+        setMyVoices(records);
+      }
+      catch (error) {
+        if (!alive) {
+          return;
+        }
+        console.warn('load my voice list failed', error);
+        setMyVoices(DEFAULT_MY_VOICE_LIST);
+      }
+    };
+
+    void loadMyVoices();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleReset = () => {
     setPitch(0);
@@ -404,25 +416,18 @@ export default function SoundEditPage() {
       notifyMessage('\u8BF7\u5148\u9009\u62E9\u97F3\u8272');
       return;
     }
+    const selectedVoiceProfileId = selectedVoice.id;
     const providerVoiceId = selectedVoice.providerVoiceId?.trim();
-    if (!providerVoiceId) {
-      notifyMessage('\u5F53\u524D\u97F3\u8272\u7F3A\u5C11 providerVoiceId\uFF0C\u65E0\u6CD5\u8BD5\u542C');
+    if (!selectedVoiceProfileId && !providerVoiceId) {
+      notifyMessage('\u5F53\u524D\u97F3\u8272\u7F3A\u5C11\u53EF\u7528\u6807\u8BC6\uFF0C\u65E0\u6CD5\u8BD5\u542C');
       return;
     }
 
     setIsListening(true);
     try {
-      if (selectedVoiceFromRecommend) {
-        await tsVoiceApi.saveCurrentVoiceConfig({
-          selectedVoiceProfileId: selectedVoiceFromRecommend.id,
-          pitchPercent: Number(pitch.toFixed(2)),
-          speedRate: Number(speed.toFixed(2)),
-        });
-      }
-
       const preview = await tsVoiceApi.previewVoiceProfile({
-        voiceProfileId: selectedVoiceFromRecommend?.id,
-        voiceId: providerVoiceId,
+        voiceProfileId: selectedVoiceProfileId,
+        voiceId: providerVoiceId || undefined,
         previewText,
         speed: Math.max(0.8, Math.min(1.2, Number(speed.toFixed(2)))),
         pitch: Math.max(-6, Math.min(6, Number((pitch / 10).toFixed(2)))),
@@ -435,7 +440,7 @@ export default function SoundEditPage() {
         await audio.play();
       }
       else {
-        notifyMessage('\u5DF2\u4FDD\u5B58\u97F3\u8272\u914D\u7F6E\uFF0C\u6682\u672A\u83B7\u53D6\u5230\u8BD5\u542C\u97F3\u9891');
+        notifyMessage('\u8BD5\u542C\u751F\u6210\u6210\u529F\uFF0C\u4F46\u6682\u672A\u83B7\u53D6\u5230\u97F3\u9891\u5730\u5740');
       }
     }
     catch (error) {
@@ -504,7 +509,7 @@ export default function SoundEditPage() {
                       disabled={isListening}
                       className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] transition-colors hover:bg-[rgba(155,254,3,0.3)] disabled:opacity-50"
                     >
-                      <img src={imgPlay} alt="" className="size-[16px] object-contain ml-[2px]" />
+                      <img src={isListening ? imgWaveGreenTiny : imgPlay} alt="" className={`size-[16px] object-contain ${!isListening ? 'ml-[2px]' : ''}`} />
                     </button>
                   </div>
 
@@ -583,7 +588,7 @@ export default function SoundEditPage() {
                     disabled={isListening}
                     className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-[rgba(155,254,3,0.9)] disabled:opacity-60"
                   >
-                    <img src={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
+                    <img src={isListening ? imgWaveGreenTiny : imgListenHeadphone} alt="" className={`${isListening ? 'size-[24px]' : 'size-[19px]'} object-contain`} />
                     <span className="text-[16px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
                       {isListening ? '\u8BD5\u542C\u4E2D...' : '\u8BD5\u542C\u97F3\u8272'}
                     </span>
@@ -670,6 +675,7 @@ export default function SoundEditPage() {
                     voice={voice}
                     selected={selectedVoiceId === voice.id}
                     onSelect={() => setSelectedVoiceId(voice.id)}
+                    isPlaying={isListening && selectedVoiceId === voice.id}
                   />
                 ))}
               </div>
@@ -687,6 +693,7 @@ export default function SoundEditPage() {
                   onSelect={() => setSelectedVoiceId(voice.id)}
                   onRename={handleMyVoiceRename}
                   onDelete={handleMyVoiceDelete}
+                  isPlaying={isListening && selectedVoiceId === voice.id}
                 />
               ))}
               {myVoices.length === 0 && (

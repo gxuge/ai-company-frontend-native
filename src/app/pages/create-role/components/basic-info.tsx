@@ -6,10 +6,12 @@ import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '@/components/ai-company/ai-generate-btn';
 import { AiSelectTab } from '@/components/ai-company/ai-select-tab';
 import { SoundGenerating } from './sound-generating';
+import { CharacterGenerating } from './character-generating';
 
-const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/play.svg'));
-const imgChevronRight = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/chevron_right.svg'));
-const imgAddImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/add-image.svg'));
+const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/create-role/play.svg'));
+const imgChevronRight = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/create-role/chevron_right.svg'));
+const imgAddImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/create-role/add-image.svg'));
+const imgWaveGreenTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-green-tiny.gif'));
 
 export type Gender = 'male' | 'female' | 'random';
 
@@ -32,6 +34,7 @@ type BasicInfoSectionProps = {
   generatingImage?: boolean;
   generatingVoice?: boolean;
   previewingVoice?: boolean;
+  onSelectFromGallery?: () => void;
 };
 
 function FieldLabel({ text, required }: { text: string; required?: boolean }) {
@@ -62,6 +65,7 @@ export function BasicInfoSection({
   onGenerateImage,
   onGenerateVoice,
   onPreviewVoice,
+  onSelectFromGallery,
   generatingSetting = false,
   generatingImage = false,
   generatingVoice = false,
@@ -93,26 +97,27 @@ export function BasicInfoSection({
           <div className="my-2 flex w-full justify-center">
             <button
               onClick={() => {
+                if (generatingImage) return;
                 if (avatarUrl) {
                   setIsAvatarPreviewOpen(true);
                   return;
                 }
-                router.push('/pages/create-character');
+                onSelectFromGallery?.();
               }}
               className="relative flex h-[184px] w-[135px] flex-col items-center justify-center overflow-hidden rounded-[15px] border-2 border-dashed border-[rgba(155,254,3,0.5)] bg-black active:opacity-80"
             >
-              {avatarUrl
-                ? (
-                    <img src={avatarUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                  )
-                : (
-                    <>
-                      <div className="mb-[12px] flex size-[34px] items-center justify-center rounded-full border border-[rgba(155,254,3,0.3)]">
-                        <img src={imgAddImage} alt="" className="size-[17px] object-contain" />
-                      </div>
-                      <span className="text-[13.5px] font-medium text-[#a1a1aa]">点击添加形象</span>
-                    </>
-                  )}
+              {generatingImage ? (
+                <CharacterGenerating mini />
+              ) : avatarUrl ? (
+                <img src={avatarUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <>
+                  <div className="mb-[12px] flex size-[34px] items-center justify-center rounded-full border border-[rgba(155,254,3,0.3)]">
+                    <img src={imgAddImage} alt="" className="size-[17px] object-contain" />
+                  </div>
+                  <span className="text-[13.5px] font-medium text-[#a1a1aa]">点击添加形象</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -140,13 +145,17 @@ export function BasicInfoSection({
               placeholder="输入角色名字"
               value={name}
               onChangeText={onNameChange}
+              isGenerating={generatingSetting}
               customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             />
           </div>
 
           <div className="space-y-2">
             <FieldLabel text="性别" />
-            <AiFormInput customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden h-[44px]">
+            <AiFormInput 
+              isGenerating={generatingSetting}
+              customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden h-[44px]"
+            >
               <AiSelectTab
                 options={[
                   { label: '男生', value: 'male' },
@@ -166,6 +175,7 @@ export function BasicInfoSection({
               placeholder="输入角色职业"
               value={job}
               onChangeText={onJobChange}
+              isGenerating={generatingSetting}
               customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             />
           </div>
@@ -175,6 +185,7 @@ export function BasicInfoSection({
             <AiFormTextarea
               placeholder="输入角色背景故事，可辅助生成人设和剧情。"
               value={background}
+              isGenerating={generatingSetting}
               className="min-h-[139px] w-full resize-none bg-transparent p-[16px] text-[13.5px] text-white placeholder-[#6b7280] outline-none"
               containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
               onChange={e => onBackgroundChange(e.target.value)}
@@ -212,7 +223,7 @@ export function BasicInfoSection({
                 className="flex h-12 w-full items-center justify-center rounded-full bg-[rgba(155,254,3,0.9)] text-sm font-bold text-black active:opacity-90"
                 onClick={() => {
                   setIsAvatarPreviewOpen(false);
-                  router.push('/pages/select-role');
+                  onSelectFromGallery?.();
                 }}
               >
                 更换形象
@@ -267,9 +278,9 @@ export function BasicInfoSection({
                         }}
                       >
                         <img
-                          src={imgPlay}
+                          src={previewingVoice ? imgWaveGreenTiny : imgPlay}
                           alt=""
-                          className={`size-[12px] translate-x-[1px] object-contain ${previewingVoice ? 'animate-pulse' : ''}`}
+                          className={`size-[18px] object-contain ${!previewingVoice ? 'translate-x-[1px]' : ''}`}
                         />
                       </button>
                     </>

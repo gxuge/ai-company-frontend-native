@@ -167,6 +167,8 @@ export type TsStoryOneClickSettingGenerateResult = {
   storyMode?: string;
   storySetting?: string;
   storyBackground?: string;
+  generated?: boolean;
+  fallbackReason?: string;
   promptCode?: string;
   promptVersion?: string;
   renderedPrompt?: string;
@@ -186,6 +188,8 @@ export type TsStoryOneClickSceneGenerateResult = {
   sceneNameSnapshot?: string;
   sceneSummary?: string;
   sceneElements?: string[];
+  generated?: boolean;
+  fallbackReason?: string;
   promptCode?: string;
   promptVersion?: string;
   renderedPrompt?: string;

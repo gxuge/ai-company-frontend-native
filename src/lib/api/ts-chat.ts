@@ -34,6 +34,8 @@ export type TsChatSessionQuery = {
   keyword?: string;
   sessionType?: string;
   storyId?: number;
+  targetRoleId?: number;
+  /** @deprecated use targetRoleId */
   roleId?: number;
   status?: number;
 };
@@ -118,9 +120,13 @@ export type TsChatReplySuggestionsResult = {
 
 export const tsChatApi = {
   async getSessionList(params: TsChatSessionQuery) {
+    const normalizedParams: TsChatSessionQuery = {
+      ...params,
+      targetRoleId: params?.targetRoleId ?? params?.roleId,
+    };
     return defHttp.get<TsChatSessionPage>({
       url: '/sys/ts-chat-sessions',
-      params,
+      params: normalizedParams,
     });
   },
 
@@ -142,6 +148,24 @@ export const tsChatApi = {
     return defHttp.get<TsChatMessage>({
       url: '/sys/ts-chat-messages/detail',
       params: { id: messageId },
+    });
+  },
+  
+  async createSession(payload: {
+    storyId?: number;
+    targetRoleId?: number;
+    /** @deprecated use targetRoleId */
+    roleId?: number;
+    sessionType?: string;
+    sessionTitle?: string;
+  }) {
+    const normalizedPayload = {
+      ...payload,
+      targetRoleId: payload?.targetRoleId ?? payload?.roleId,
+    };
+    return defHttp.post<TsChatSession>({
+      url: '/sys/ts-chat-sessions',
+      data: normalizedPayload,
     });
   },
 

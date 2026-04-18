@@ -14,26 +14,29 @@ interface AiGenerateBtnProps {
   onClick?: () => void;
   className?: string;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export function AiGenerateBtn({ 
   text = "一键生成", 
   onClick, 
   className = "",
-  loading = false
+  loading = false,
+  disabled = false
 }: AiGenerateBtnProps) {
   const displaySafeText = loading && text === '一键生成' ? '生成中...' : text;
+  const isActionable = !loading && !disabled;
 
   return (
     <button 
-      onClick={!loading ? onClick : undefined}
-      disabled={loading}
-      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(155,254,3,0.2)] shadow-[0px_0px_5px_0px_rgba(155,254,3,0.2),0px_0px_10px_0px_rgba(155,254,3,0.1)] bg-transparent shrink-0 transition-all duration-300 ${loading ? 'cursor-not-allowed opacity-80' : 'cursor-pointer active:opacity-70'} ${className}`}
+      onClick={isActionable ? onClick : undefined}
+      disabled={!isActionable}
+      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(155,254,3,0.2)] shadow-[0px_0px_5px_0px_rgba(155,254,3,0.2),0px_0px_10px_0px_rgba(155,254,3,0.1)] bg-transparent shrink-0 transition-all duration-300 ${disabled ? 'cursor-not-allowed grayscale-[0.8] opacity-40' : (loading ? 'cursor-progress text-glow' : 'cursor-pointer active:opacity-70 text-glow')} ${className}`}
       style={{
         animation: loading ? 'pulse-glow 2s ease-in-out infinite' : 'none'
       }}
     >
-      <div className={loading ? 'animate-spin' : ''} style={{ animationDuration: '2s' }}>
+      <div className={loading ? 'animate-spin' : ''} style={{ animationDuration: '2s', opacity: disabled ? 0.4 : 1 }}>
         <SparkleIcon />
       </div>
       <span 
@@ -42,7 +45,7 @@ export function AiGenerateBtn({
           fontFamily: "'Noto Sans SC', sans-serif",
           fontSize: "14px",
           fontWeight: 500,
-          color: "rgba(155,254,3,0.9)",
+          color: disabled ? "#6b7280" : "rgba(155,254,3,0.9)",
           ...(loading ? {
             backgroundImage: "linear-gradient(90deg, rgba(155,254,3,0.9) 0%, #fff 50%, rgba(155,254,3,0.9) 100%)",
             backgroundSize: "200% auto",

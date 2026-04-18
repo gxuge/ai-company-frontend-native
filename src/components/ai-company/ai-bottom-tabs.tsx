@@ -40,7 +40,7 @@ function SearchIcon({ active }: { active: boolean }) {
 
 function CreateIcon({ active }: { active: boolean }) {
   return (
-    <div className="relative" style={{ width: 28, height: 28, opacity: active ? 1 : 0.5 }}>
+    <div className="relative" style={{ width: 28, height: 28 }}>
       <img src={imgCreate} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
       <img src={imgCreateBadge} alt="" className="absolute -top-2 -right-3" style={{ width: 16, height: 16 }} />
     </div>

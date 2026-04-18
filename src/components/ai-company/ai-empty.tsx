@@ -15,8 +15,8 @@ const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const defaultPlaceholder = resolveAsset(require('@/assets/images/my-gallery/image_placeholder.svg'));
 
 export function AiEmpty({ 
-  title = '暂无记录', 
-  description = '这里还没有任何内容显示', 
+  title = '\u6682\u65E0\u8BB0\u5F55', 
+  description = '\u8FD9\u91CC\u8FD8\u6CA1\u6709\u4EFB\u4F55\u5185\u5BB9\u663E\u793A', 
   icon, 
   actionText, 
   onAction,

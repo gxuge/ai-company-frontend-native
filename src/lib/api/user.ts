@@ -28,6 +28,7 @@ export type UserSettingUpdatePayload = {
   realname?: string;
   sex?: number;
   birthday?: string;
+  avatar?: string;
 };
 
 const LOCAL_PHONE_LOGIN_MODE = false;
@@ -87,5 +88,20 @@ export const userApi = {
       url: '/sys/user/login/setting/userEdit',
       data: payload,
     });
+  },
+
+  async uploadFile(file: File | Blob) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return defHttp.post<string>(
+      {
+        url: '/sys/common/upload',
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+      { isTransformResponse: true },
+    );
   },
 };

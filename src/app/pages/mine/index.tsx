@@ -4,18 +4,23 @@ import * as React from 'react';
 import {
   Dimensions,
   Image,
+  Modal,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { router } from 'expo-router';
-import { tsRoleApi, tsStoryApi, userApi } from '@/lib/api';
+import { tsRoleApi } from '@/lib/api/ts-role';
+import { tsStoryApi } from '@/lib/api/ts-story';
+import { tsChatApi } from '@/lib/api/ts-chat';
+import { userApi } from '@/lib/api/user';
 
 const { width } = Dimensions.get('window');
 const GRID_GAP = 8;
@@ -33,6 +38,8 @@ const imgViewIcon = require('../../../assets/images/mine/view_icon.png');
 
 type GridItem = {
   id: string;
+  originalId: number;
+  type: 'story' | 'role';
   image: ImageSourcePropType;
   views: string;
   author: string;
@@ -54,6 +61,8 @@ type MineHeaderSectionProps = {
   fansStat: string;
   followStat: string;
   likeStat: string;
+  onAvatarPress?: () => void;
+  onEditPress?: () => void;
 };
 
 type MineGridSectionProps = {
@@ -62,6 +71,7 @@ type MineGridSectionProps = {
   loadError: string | null;
   loading: boolean;
   onTabChange: (value: number) => void;
+  onItemPress: (item: GridItem) => void;
 };
 
 const FALLBACK_GRID_ITEMS: GridItem[] = Array.from({ length: 6 }, (_, i) => ({
@@ -126,9 +136,13 @@ function StatItem({ value, label }: { value: string; label: string }) {
   );
 }
 
-function GridCard({ item }: { item: GridItem }) {
+function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
   return (
-    <View style={styles.gridCard}>
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onPress}
+      style={styles.gridCard}
+    >
       <Image source={item.image} style={styles.gridImage} />
       <View style={styles.gridOverlay}>
         <View style={styles.gridAuthorRow}>
@@ -140,7 +154,7 @@ function GridCard({ item }: { item: GridItem }) {
           <Text style={styles.gridViewText}>{item.views}</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -160,7 +174,7 @@ function useMineData() {
       const [userResult, storyResult, roleResult] = await Promise.allSettled([
         userApi.getUserInfo(),
         tsStoryApi.getStoryList({ pageNo: 1, pageSize: 30 }),
-        tsRoleApi.getRoleList({ pageNo: 1, pageSize: 30 }),
+        tsRoleApi.getRoleList({ pageNo: 1, pageSize: 30, status: 1 }),
       ]);
 
       if (!alive) {
@@ -221,12 +235,20 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
         </TouchableOpacity>
 
         <View style={styles.avatarWrapper}>
-          <View style={styles.avatarRing}>
+          <TouchableOpacity 
+            activeOpacity={0.9} 
+            onPress={props.onAvatarPress}
+            style={styles.avatarRing}
+          >
             <Image source={avatarSource} style={styles.avatarImage} />
-          </View>
-          <View style={styles.editBadge}>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            activeOpacity={0.8} 
+            onPress={props.onEditPress}
+            style={styles.editBadge}
+          >
             <Image source={imgEditAvatar} style={styles.editBadgeIcon} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.username}>{displayName}</Text>
@@ -247,25 +269,6 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
         </View>
       </View>
 
-      <View style={styles.proContainer}>
-        <View style={styles.proBanner}>
-          <View style={styles.proGlowEffect} />
-          <View style={styles.proContent}>
-            <View style={styles.proLeft}>
-              <View style={styles.proTitleRow}>
-                <Text style={styles.proTitle}>AI PRO</Text>
-                <View style={styles.vipBadge}>
-                  <Text style={styles.vipText}>VIP</Text>
-                </View>
-              </View>
-              <Text style={styles.proDesc}>解锁无限对话 &amp; 高级音色模型</Text>
-            </View>
-            <TouchableOpacity style={styles.upgradeBtn}>
-              <Text style={styles.upgradeBtnText}>立即升级</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
     </>
   );
 }
@@ -277,6 +280,7 @@ function MineGridSection(props: MineGridSectionProps) {
     loadError,
     loading,
     onTabChange,
+    onItemPress,
   } = props;
 
   return (
@@ -298,7 +302,7 @@ function MineGridSection(props: MineGridSectionProps) {
       <View style={styles.gridContainer}>
         {activeGridItems.length > 0 ? (
           activeGridItems.map(item => (
-            <GridCard key={item.id} item={item} />
+            <GridCard key={item.id} item={item} onPress={() => onItemPress(item)} />
           ))
         ) : !loading && !loadError ? (
           <AiEmpty 
@@ -349,6 +353,8 @@ function useMineViewModel(activeTab: number) {
   const storyGridItems = React.useMemo<GridItem[]>(
     () => stories.map(story => ({
       id: `story-${story.id}`,
+      originalId: story.id,
+      type: 'story',
       image: toRemoteSource(story.coverUrl) ?? imgGridImage,
       views: formatCount(story.followerCount ?? story.dialogueCount),
       author: authorName,
@@ -359,6 +365,8 @@ function useMineViewModel(activeTab: number) {
   const roleGridItems = React.useMemo<GridItem[]>(
     () => roles.map(role => ({
       id: `role-${role.id}`,
+      originalId: role.id,
+      type: 'role',
       image: toRemoteSource(role.coverUrl || role.avatarUrl) ?? imgGridImage,
       views: '--',
       author: authorName,
@@ -385,7 +393,70 @@ function useMineViewModel(activeTab: number) {
 
 export default function Mine() {
   const [activeTab, setActiveTab] = React.useState(1);
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [isResolving, setIsResolving] = React.useState(false);
   const viewModel = useMineViewModel(activeTab);
+
+  const handleAvatarPress = () => {
+    setIsPreviewOpen(true);
+  };
+
+  const handleEditPress = () => {
+    router.push('/pages/user-setting');
+  };
+
+  const handleItemPress = async (item: GridItem) => {
+    if (isResolving) {
+      return;
+    }
+
+    setIsResolving(true);
+    try {
+      const queryParams: any = {};
+      if (item.type === 'role') {
+        queryParams.targetRoleId = item.originalId;
+      } else {
+        queryParams.storyId = item.originalId;
+      }
+
+      // 1. Try to find an existing session
+      const sessions = await tsChatApi.getSessionList({
+        ...queryParams,
+        pageNo: 1,
+        pageSize: 1,
+      });
+
+      if (sessions?.records && sessions.records.length > 0) {
+        const existsSession = sessions.records[0];
+        const pathname = existsSession?.isSystemSession ? '/pages/admin-chat' : '/pages/chat';
+        router.push({
+          pathname,
+          params: { sessionId: String(existsSession.id) },
+        });
+        return;
+      }
+
+      // 2. No session found, create a new one
+      const newSession = await tsChatApi.createSession({
+        ...queryParams,
+        sessionType: item.type === 'role' ? 'single' : 'story',
+      });
+
+      if (newSession?.id) {
+        const pathname = newSession?.isSystemSession ? '/pages/admin-chat' : '/pages/chat';
+        router.push({
+          pathname,
+          params: { sessionId: String(newSession.id) },
+        });
+      } else {
+        throw new Error('创建会话失败');
+      }
+    } catch (err) {
+      console.error('Failed to resolve chat session:', err);
+    } finally {
+      setIsResolving(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -398,19 +469,43 @@ export default function Mine() {
             fansStat={viewModel.fansStat}
             followStat={viewModel.followStat}
             likeStat={viewModel.likeStat}
+            onAvatarPress={handleAvatarPress}
+            onEditPress={handleEditPress}
           />
           <MineGridSection
             activeGridItems={viewModel.activeGridItems}
             activeTab={activeTab}
             loadError={viewModel.loadError}
-            loading={viewModel.loading}
+            loading={viewModel.loading || isResolving}
             onTabChange={setActiveTab}
+            onItemPress={handleItemPress}
           />
         </ScrollView>
         <View style={styles.tabContainer}>
           <AiBottomTabs activeTab="profile" />
         </View>
       </SafeAreaView>
+
+      {/* Avatar Full-screen Preview Modal */}
+      <Modal
+        visible={isPreviewOpen}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setIsPreviewOpen(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setIsPreviewOpen(false)}>
+          <View style={styles.previewContainer}>
+            <View style={{ width: width * 0.85, height: width * 0.85 }}>
+              <Image 
+                source={viewModel.avatarSource} 
+                style={styles.previewImage} 
+                resizeMode="cover"
+              />
+            </View>
+            <Text style={styles.previewTip}>点击任意区域关闭</Text>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 }
@@ -671,5 +766,23 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  previewTip: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
+    marginTop: 30,
   },
 });

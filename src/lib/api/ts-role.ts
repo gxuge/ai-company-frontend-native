@@ -152,12 +152,27 @@ export type TsRoleOneClickVoiceGeneratePayload = {
 };
 
 export type TsRoleOneClickVoiceGenerateResult = {
+  voice?: {
+    voiceName?: string;
+    voiceGender?: string;
+    voiceProfileId?: number;
+    providerVoiceId?: string;
+    previewText?: string;
+    previewAudioUrl?: string;
+    selectionReason?: string;
+    matchSource?: string;
+    traceId?: string;
+    schemaVersion?: string;
+  };
   voiceProfileId?: number;
   voiceName?: string;
   providerVoiceId?: string;
   recommendation?: string;
   previewText?: string;
   previewAudioUrl?: string;
+  matchSource?: string;
+  traceId?: string;
+  schemaVersion?: string;
   promptCode?: string;
   promptVersion?: string;
   renderedPrompt?: string;
@@ -259,6 +274,7 @@ export const tsRoleApi = {
     return defHttp.post<TsRoleOneClickVoiceGenerateResult>({
       url: '/sys/ts-roles/one-click-voice',
       data: payload,
+      timeout: 60_000,
     });
   },
 

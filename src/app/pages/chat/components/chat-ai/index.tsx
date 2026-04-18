@@ -9,7 +9,18 @@ const imgThumbsUpIcon = require('../../../../../assets/images/chat/chat-ai/thumb
 const imgNameTagBg = require('../../../../../assets/images/chat/chat-ai/name-tag-bg.svg');
 const imgPlayBg = require('../../../../../assets/images/chat/chat-ai/play-bg.svg');
 
-function PlayIcon() {
+const imgWaveWhiteTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-white-tiny.gif'));
+
+function PlayIcon({ isPlaying }: { isPlaying?: boolean }) {
+  if (isPlaying) {
+    return (
+      <Image
+        source={typeof imgWaveWhiteTiny === 'string' ? { uri: imgWaveWhiteTiny } : imgWaveWhiteTiny}
+        style={{ width: 22, height: 18, marginTop: -2 }}
+        resizeMode="contain"
+      />
+    );
+  }
   return <Image source={imgPlayIcon} style={{ width: 14, height: 14 }} resizeMode="contain" />;
 }
 
@@ -31,6 +42,7 @@ interface ChatAiProps {
   onRefresh?: () => void;
   onThumbsUp?: () => void;
   onPlayAudio?: () => void;
+  isPlaying?: boolean;
 }
 
 // ─── Main Component ───
@@ -43,6 +55,7 @@ export function ChatAi({
   onRefresh,
   onThumbsUp,
   onPlayAudio,
+  isPlaying,
 }: ChatAiProps) {
   return (
     <View style={styles.container}>
@@ -56,7 +69,7 @@ export function ChatAi({
         <Pressable style={styles.playBgWrapper} onPress={onPlayAudio}>
           <ImageBackground source={imgPlayBg} style={styles.playBg} imageStyle={styles.playBgImage}>
             <View style={styles.playContent}>
-              <PlayIcon />
+              <PlayIcon isPlaying={isPlaying} />
               <Text style={styles.playDuration}>{audioDuration}</Text>
             </View>
           </ImageBackground>

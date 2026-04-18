@@ -444,3 +444,26 @@
 - 回退：
   - 若需回滚，可仅回退 `src/app/pages/my-gallery/index.tsx` 与 `src/lib/api/ts-role-image.ts`。
   - 接口异常时页面保持可渲染，显示错误文案并保留本地状态。
+
+## 20. 任务背景（sound-edit 双音色库与试听对接，2026-04-17）
+- 目标：`pages/sound-edit` 接入“推荐音色库 + 我的音色库”真实列表，并保证默认不勾选；试听调用生成接口并返回可播放音频。
+- 边界：仅改接口调用、状态流转、字段映射与失败回退，不改页面布局和视觉结构。
+- 非目标：本轮不改“我的音色库”重命名/删除真实落库交互。
+
+### 20.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 前端 API 封装补齐 | 已完成 | `ts-voice` 新增我的音色库列表 API | 页面层无直连 URL | `src/lib/api/ts-voice.ts` |
+| T2 双音色库列表对接 | 已完成 | 推荐库/我的库分别调用后端列表接口 | 两个 Tab 均渲染真实数据 | `src/app/pages/sound-edit/index.tsx` |
+| T3 默认不选中策略 | 已完成 | 去除初始化自动选中逻辑 | 首次进入无勾选态 | `src/app/pages/sound-edit/index.tsx` |
+| T4 试听链路调整 | 已完成 | 试听仅调用 preview 生成并播放，不在试听前保存配置 | 点击试听触发生成并可播放 | `src/app/pages/sound-edit/index.tsx` |
+| T5 后端 preview 回退 | 已完成 | upload 关闭时将 audioHex 转 data URL 返回 | 不依赖 R2 也能返回可播放地址 | `TsVoiceProfileServiceImpl.java` |
+| T6 验证与文档回填 | 已完成 | 执行定向校验并更新任务/总表/日志 | 证据完整可追溯 | `pnpm exec eslint ...`、`docs/**` |
+
+### 20.2 风险与回退
+- 风险：
+  - 部分音色可能缺失 `providerVoiceId`，试听可能失败。
+  - data URL 模式会增加接口返回体积。
+- 回退：
+  - 前端可仅回退 `src/app/pages/sound-edit/index.tsx` 与 `src/lib/api/ts-voice.ts`。
+  - 后端可仅回退 `TsVoiceProfileServiceImpl.previewVoice` 的 data URL 回退逻辑。

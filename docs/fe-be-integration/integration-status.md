@@ -5,7 +5,7 @@
 | 模块/页面 | 前端位置 | 后端接口 | 状态 | 负责人 | 最后更新 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
 | 角色详情 | `src/app/pages/role-detail/index.tsx` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 进行中 | - | 2026-04-09 | 数量相关接口暂不对接 |
-| 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 部分对接（推荐音色已完成） | - | 2026-04-14 | 保持原 UI 布局；“我的音色库”真实接口待补 |
+| 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 已对接（推荐+我的音色+试听） | - | 2026-04-17 | 保持原 UI 布局；双音色库改为真实列表，默认不选中，试听改为实时生成并兼容非 R2 返回 |
 | 用户设置 | `src/app/pages/user-setting/index.tsx` | `/sys/user/login/setting/getUserData`、`/sys/user/login/setting/userEdit` | 已对接 | - | 2026-04-09 | 完成昵称/性别/生日读取与保存链路，保持原 UI 布局 |
 | 创建人物 | `src/app/pages/create-character/index.jsx` | `/sys/ts-roles/one-click-image`、`/sys/ts-user-image-assets`、`/sys/ts-role-image-profiles` | 已对接（本轮完成） | - | 2026-04-09 | 保持原 UI 布局；接入生成、图库与保存链路 |
 | 我的图库 | `src/app/pages/my-gallery/index.tsx` | `/sys/ts-user-image-assets`（`GET`/`DELETE`） | 已对接（本轮完成） | - | 2026-04-17 | 保持原 UI 布局；已接通真实列表加载、管理模式删除与失败回退 |
@@ -21,7 +21,6 @@
 | 业务点 | 建议接口 | 说明 | 是否已与用户确认 |
 | --- | --- | --- | --- |
 | Mine 顶部统计（关注/粉丝/点赞） | `GET /sys/user/mine-stats`（建议） | 现有接口无稳定同名字段，前端当前回退 `--` | 否 |
-| Sound Edit 我的音色列表 | `GET /sys/ts-user-voice-profiles`（建议） | “我的音色库”当前为降级数据，待真实列表接口 | 否 |
 | Sound Edit 我的音色重命名 | `PUT /sys/ts-user-voice-profiles/{id}`（建议） | 菜单“重命名”当前仅提示缺口 | 否 |
 | Sound Edit 我的音色删除 | `DELETE /sys/ts-user-voice-profiles/{id}`（建议） | 避免误用公共删除接口导致误删风险 | 否 |
 | Chat 消息附件链路 | `POST /sys/ts-chat-message-attachments`（已有，待接前端） | 普通聊天页尚未接入图片/文件发送 | 否 |
@@ -207,3 +206,16 @@
 - UI：仅补充加载/错误文案与空态回退，不改视觉结构。
 - 任务记录文件：
   - `docs/fe-be-integration/任务-my-gallery-前后端对接计划-20260417-1105.md`
+
+## 2026-04-17 更新（sound-edit 双音色库与试听对接）
+- 页面：`src/app/pages/sound-edit/index.tsx`
+- 调整：
+  - 推荐音色库接入 `/sys/ts-voice-profiles` 真实列表。
+  - 我的音色库接入 `/sys/ts-user-voice-profiles` 真实列表。
+  - 默认取消首项自动勾选，进入页面时不预选音色。
+  - 试听统一调用 `/sys/ts-voice-profiles/preview` 生成并播放。
+- 后端：
+  - `/sys/ts-voice-profiles/preview` 新增无上传配置时的数据 URL 回退，避免依赖 R2/对象存储上传。
+- UI：未改动布局与视觉结构，仅改数据链路和状态行为。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-sound-edit-双音色库与试听对接-20260417-1705.md`
