@@ -1,6 +1,6 @@
 ﻿# 前后端对接状态总表
 
-更新时间：2026-04-17
+更新时间：2026-04-18
 
 | 模块/页面 | 前端位置 | 后端接口 | 状态 | 负责人 | 最后更新 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -12,7 +12,7 @@
 | 会话列表 | `src/app/pages/session-list/index.tsx` | `/sys/ts-chat-sessions`、`/sys/ts-chat-messages` | 已对接（系统头像切换完成） | - | 2026-04-14 | 保持原 UI 布局；系统会话（`isSystemSession=true`）头像改为 quick-login Logo |
 | 浏览图片页 | `src/app/pages/browse-images-list/index.tsx` | `/sys/ts-stories/public`、`/sys/ts-role-image-profiles/public`（回退：`/sys/ts-stories`、`/sys/ts-role-image-profiles`） | 已对接（本轮完成） | - | 2026-04-14 | 保持原 UI 布局；故事/角色 Tab 改为真实接口数据，支持搜索与分页加载 |
 | 系统聊天 | `src/app/pages/admin-chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/ai-reply` | 已对接（历史+发送） | - | 2026-04-14 | 保持原 UI 布局；发送链路由 mock 改为真实接口 |
-| 普通聊天 | `src/app/pages/chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/detail`、`/sys/ts-stories/detail`、`/sys/ts-roles/detail`、`/sys/ts-chat-sessions/ai-reply`、`/sys/ts-chat-sessions/reply-suggestions` | 部分对接（历史+头部+发送） | - | 2026-04-14 | 保持原 UI 布局；已实现头部分流与文本发送，附件/语音链路待补 |
+| 普通聊天 | `src/app/pages/chat/index.tsx` | `/sys/ts-chat-messages`、`/sys/ts-chat-sessions/detail`、`/sys/ts-stories/detail`、`/sys/ts-roles/detail`、`/sys/ts-chat-sessions/ai-reply`、`/sys/ts-chat-sessions/reply-suggestions` | 已对接（历史+头部+发送+推荐） | - | 2026-04-18 | 保持原 UI 布局；ChatTip 推荐改为展开列表模式，支持竞态保护与会话切换重置 |
 | 会话详情 | `src/app/pages/conversation-detail/index.tsx` | `/sys/ts-stories/detail`、`/sys/ts-story-chapters`、`/sys/ts-roles/detail` | 已对接（本轮完成） | - | 2026-04-10 | 保持原 UI 布局；标题/描述/章节/角色列表改为真实接口 |
 | 创建故事 | `src/app/pages/create-story/index.tsx` | `/sys/ts-stories`、`/sys/ts-stories/story-setting-generate`、`/sys/ts-stories/story--scene-generate`、`/sys/ts-stories/story--outline-generate`、`/sys/ts-story-chapters` | 部分对接（主链路完成） | - | 2026-04-17 | 保持原 UI 布局；已接通保存+一键生成+章节保存，角色选择链路待补 |
 
@@ -219,3 +219,9 @@
 - UI：未改动布局与视觉结构，仅改数据链路和状态行为。
 - 任务记录文件：
   - `docs/fe-be-integration/任务-sound-edit-双音色库与试听对接-20260417-1705.md`
+
+## 普通聊天页 ChatTip 推荐回复任务文件（2026-04-18）
+
+- 任务记录：`docs/fe-be-integration/任务-chat页-ChatTip推荐回复对接-20260418-1049.md`
+- 状态：已完成；ChatTip 推荐回复支持展开加载、请求竞态保护与失败回退。
+

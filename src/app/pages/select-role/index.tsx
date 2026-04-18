@@ -7,6 +7,7 @@ const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../asset
 const imgFabAddRole = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/select-role/fab_add_role.svg"));
 
 export default function App() {
+  const { from, storyId } = useLocalSearchParams<{ from?: string, storyId?: string }>();
   const [selectedId, setSelectedId] = useState(4)
   const [search, setSearch] = useState("")
 
@@ -14,7 +15,7 @@ export default function App() {
     { id: 1, name: "赛博朋克黑客", avatar: imgImage },
     { id: 2, name: "未来战士", avatar: imgImage },
     { id: 3, name: "数字游侠", avatar: imgImage },
-    { id: 4, name: "閲忓瓙宸ョ▼甯?", avatar: imgImage },
+    { id: 4, name: "量子工程师", avatar: imgImage },
   ]
 
   const filtered = items.filter((item) =>
@@ -147,7 +148,7 @@ export default function App() {
               }
             });
           } else {
-            router.push('/pages/create-character');
+            router.push('/pages/create-role');
           }
         }}
       >

@@ -9,18 +9,15 @@ const imgChatPreviewIcon = require('../../../../../assets/images/chat/chat-heade
 const imgVolumeIcon = require('../../../../../assets/images/chat/chat-header/volume.svg');
 
 function AddUserIcon() {
-  // add-user.svg viewBox: 35.35 x 33.59 → scale to 19pt
-  return <Image source={imgAddUserIcon} style={{ width: 19, height: 18 }} resizeMode="contain" />;
+  return <Image source={imgAddUserIcon} style={{ width: 20, height: 20 }} resizeMode="contain" />;
 }
 
 function ChatPreviewIcon() {
-  // chat-preview.svg viewBox: 35.83 x 34.17 → scale to 20pt
-  return <Image source={imgChatPreviewIcon} style={{ width: 20, height: 19 }} resizeMode="contain" />;
+  return <Image source={imgChatPreviewIcon} style={{ width: 22, height: 22 }} resizeMode="contain" />;
 }
 
 function VolumeIcon() {
-  // volume icon: svg 11, 56.3px at @2x → ~28pt
-  return <Image source={imgVolumeIcon} style={{ width: 24, height: 24 }} resizeMode="contain" />;
+  return <Image source={imgVolumeIcon} style={{ width: 28, height: 28 }} resizeMode="contain" />;
 }
 
 // ─── Component Props ───
@@ -33,6 +30,7 @@ interface ChatRoleHeaderProps {
   onAddUserPress?: () => void;
   onChatPreviewPress?: () => void;
   onVolumePress?: () => void;
+  onAvatarPress?: () => void;
 }
 
 // ─── Main Component ───
@@ -45,23 +43,25 @@ export function ChatRoleHeader({
   onAddUserPress,
   onChatPreviewPress,
   onVolumePress,
+  onAvatarPress,
 }: ChatRoleHeaderProps) {
   return (
     <View style={styles.container}>
-      {/* ── Left section: pill with avatar + name + add-user, then chat badge ── */}
+      {/* ── 左侧：胶囊（头像 + 姓名 + add-user）+ chat 徽章 ── */}
       <View style={styles.leftSection}>
-        {/* Avatar + Name pill */}
+
+        {/* 深色胶囊：头像 + 名字 + 用户名 + add-user 图标 */}
         <View style={styles.pill}>
-          {/* Avatar image */}
-          <View style={styles.avatarWrapper}>
+          {/* 头像 */}
+          <Pressable onPress={onAvatarPress}>
             <Image
               source={avatarSource ? { uri: avatarSource as string } : imgAvatar}
               style={styles.avatar}
               resizeMode="cover"
             />
-          </View>
+          </Pressable>
 
-          {/* Name + username text block */}
+          {/* 名字 + 用户名 */}
           <View style={styles.nameBlock}>
             <Text style={styles.nameText} numberOfLines={1}>
               {name}
@@ -71,20 +71,22 @@ export function ChatRoleHeader({
             </Text>
           </View>
 
-          {/* Add user icon */}
+          {/* Add user 图标 */}
           <Pressable style={styles.addUserBtn} onPress={onAddUserPress}>
             <AddUserIcon />
           </Pressable>
         </View>
 
-        {/* Chat preview badge */}
+        {/* Chat 预览徽章：图标 + 数字叠加 */}
         <Pressable style={styles.chatBadge} onPress={onChatPreviewPress}>
-          <ChatPreviewIcon />
+          <View style={styles.chatIconWrapper}>
+            <ChatPreviewIcon />
+          </View>
           <Text style={styles.chatCount}>{chatCount}</Text>
         </Pressable>
       </View>
 
-      {/* ── Right: volume button ── */}
+      {/* ── 右侧：音量按钮 ── */}
       <Pressable style={styles.volumeBtn} onPress={onVolumePress}>
         <VolumeIcon />
       </Pressable>

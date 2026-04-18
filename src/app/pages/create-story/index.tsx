@@ -645,14 +645,6 @@ export default function App() {
   const [generatingOutline, setGeneratingOutline] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
 
-  const isOutlineEnabled = useMemo(() => {
-    return (
-      storySettingText.trim().length > 0 &&
-      selectedRoles.length > 0 &&
-      sceneSettingText.trim().length > 0
-    );
-  }, [storySettingText, selectedRoles, sceneSettingText]);
-
   useEffect(() => {
     if (params.selectedRoleId) {
       const roleId = Number(params.selectedRoleId);
@@ -802,6 +794,12 @@ export default function App() {
     if (saving || generatingSetting || generatingScene || generatingOutline) {
       return;
     }
+
+    if (!storySettingText.trim() || selectedRoles.length === 0 || !sceneSettingText.trim()) {
+      showMessage('请先完成故事设定、添加角色并填写场所设定，然后再尝试生成大纲。');
+      return;
+    }
+
     setGeneratingOutline(true);
     try {
       const result = await tsStoryApi.generateStoryOutline({
@@ -952,7 +950,6 @@ export default function App() {
               }}
               onGenerate={handleGenerateOutline}
               generateLoading={generatingOutline}
-              generateDisabled={!isOutlineEnabled}
             />
             <div className="h-[20px] shrink-0" />
           </div>

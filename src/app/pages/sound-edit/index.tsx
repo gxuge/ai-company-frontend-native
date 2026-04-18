@@ -347,7 +347,6 @@ export default function SoundEditPage() {
           pageSize: 50,
           status: 1,
           gender: toGenderQuery(genderFilter),
-          ageGroup: toAgeGroupQuery(age),
         });
 
         if (!alive) {
@@ -370,7 +369,7 @@ export default function SoundEditPage() {
     return () => {
       alive = false;
     };
-  }, [age, genderFilter]);
+  }, [genderFilter]);
 
   useEffect(() => {
     let alive = true;
@@ -634,36 +633,6 @@ export default function SoundEditPage() {
                         {g}
                       </button>
                     ))}
-                  </div>
-                </div>
-                <div className="flex items-center gap-[8px]">
-                  <span className="text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{`\u5E74\u9F84`}</span>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setAgeOpen(!ageOpen)}
-                      className="relative z-30 flex h-[31px] w-[66px] items-center justify-between rounded-[8px] border border-[rgba(155,254,3,0.2)] bg-[#161616] px-[12px] shadow-[0_1px_4px_rgba(0,0,0,0.1)] transition-colors hover:border-[rgba(155,254,3,0.4)]"
-                    >
-                      <span className="text-[11px] text-[#9bfe03]" style={{ fontWeight: 500 }}>{age}</span>
-                      <img src={imgChevronDown} alt="" className={`h-[5px] w-[7px] object-contain transition-transform duration-200 ${ageOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    {ageOpen && (
-                      <div className="absolute top-[calc(100%+6px)] right-0 z-40 flex w-[66px] flex-col overflow-hidden rounded-[8px] border border-[rgba(255,255,255,0.06)] bg-[#222] py-[4px] shadow-lg">
-                        {AGE_OPTIONS.map(a => (
-                          <button
-                            type="button"
-                            key={a}
-                            onClick={() => {
-                              setAge(a);
-                              setAgeOpen(false);
-                            }}
-                            className={`block w-full px-[12px] py-[6px] text-center text-[11px] transition-colors ${age === a ? 'bg-[rgba(155,254,3,0.08)] text-[#9bfe03]' : 'text-[#9ca3af] hover:bg-[rgba(255,255,255,0.05)] hover:text-white'}`}
-                          >
-                            {a}
-                          </button>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

@@ -10,6 +10,7 @@ import ChatDesc from './components/chat-desc';
 import { ChatHeader } from './components/chat-header';
 import { ChatInput } from './components/chat-input';
 import { ChatRoleHeader } from './components/chat-role-header';
+import { ChatTip, type ChatTipItem } from './components/chat-tip';
 import { ChatUser } from './components/chat-user';
 
 const imgFeatureCamera = require('@/assets/images/admin-chat/feature_camera.svg');
@@ -17,6 +18,8 @@ const imgFeatureImage = require('@/assets/images/admin-chat/feature_image.svg');
 const imgFeatureFile = require('@/assets/images/admin-chat/feature_file.svg');
 const imgFeatureCall = require('@/assets/images/admin-chat/feature_call.svg');
 const FEATURE_EXPANDED_HEIGHT = 92;
+const TIP_HINT_EMPTY_ID = '__tip_hint_empty__';
+const TIP_HINT_ERROR_ID = '__tip_hint_error__';
 
 type ChatListItem = {
   id: string;
@@ -109,6 +112,39 @@ function mapBackendMessages(records?: TsChatMessage[]): ChatListItem[] {
       audioDuration: '',
     };
   });
+}
+
+function toTipItems(source: unknown, emptyText: string): ChatTipItem[] {
+  if (!Array.isArray(source)) {
+    return [{ id: TIP_HINT_EMPTY_ID, text: emptyText }];
+  }
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const item of source) {
+    if (typeof item !== 'string') {
+      continue;
+    }
+    const value = item.trim();
+    if (!value || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    normalized.push(value);
+    if (normalized.length >= 3) {
+      break;
+    }
+  }
+  if (normalized.length === 0) {
+    return [{ id: TIP_HINT_EMPTY_ID, text: emptyText }];
+  }
+  return normalized.map((text, index) => ({
+    id: `tip-${index + 1}`,
+    text,
+  }));
+}
+
+function isTipHintItem(item: ChatTipItem) {
+  return item.id === TIP_HINT_EMPTY_ID || item.id === TIP_HINT_ERROR_ID;
 }
 
 function toPositiveInt(value: unknown) {
@@ -274,6 +310,15 @@ function ChatTopHeader({ headerState, sessionId }: { headerState: ChatHeaderStat
     });
   }, [headerState.storyId, sessionId]);
 
+  const openRoleDetail = React.useCallback(() => {
+    if (headerState.roleId) {
+      router.push({
+        pathname: '/pages/role-detail',
+        params: { roleId: String(headerState.roleId) },
+      });
+    }
+  }, [headerState.roleId]);
+
   if (headerState.mode === 'role') {
     return (
       <ChatRoleHeader
@@ -282,6 +327,7 @@ function ChatTopHeader({ headerState, sessionId }: { headerState: ChatHeaderStat
         chatCount={headerState.roleChatCount}
         avatarSource={headerState.roleAvatar}
         onChatPreviewPress={openConversationDetail}
+        onAvatarPress={openRoleDetail}
       />
     );
   }
@@ -309,6 +355,10 @@ function ChatView({
   onPlusPress,
   playingMessageId,
   onPlayMessageAudio,
+  tips,
+  tipsExpanded,
+  tipsLoading,
+  onTipPress,
 }: {
   headerState: ChatHeaderState;
   sessionId: number | null;
@@ -323,17 +373,33 @@ function ChatView({
   onPlusPress: () => void;
   playingMessageId: string | null;
   onPlayMessageAudio: (id: string) => void;
+  tips: ChatTipItem[];
+  tipsExpanded: boolean;
+  tipsLoading: boolean;
+  onTipPress: (item: ChatTipItem) => void;
 }) {
   const featureExpandProgress = useSharedValue(isFeatureExpanded ? 1 : 0);
+  const tipsExpandProgress = useSharedValue(tipsExpanded ? 1 : 0);
 
   React.useEffect(() => {
     featureExpandProgress.value = withTiming(isFeatureExpanded ? 1 : 0, { duration: 240 });
   }, [featureExpandProgress, isFeatureExpanded]);
 
+  React.useEffect(() => {
+    tipsExpandProgress.value = withTiming(tipsExpanded ? 1 : 0, { duration: 300 });
+  }, [tipsExpandProgress, tipsExpanded]);
+
   const featureCardsAnimatedStyle = useAnimatedStyle(() => ({
     opacity: featureExpandProgress.value,
     height: interpolate(featureExpandProgress.value, [0, 1], [0, FEATURE_EXPANDED_HEIGHT]),
     transform: [{ translateY: interpolate(featureExpandProgress.value, [0, 1], [8, 0]) }],
+  }));
+
+  const tipsAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: tipsExpandProgress.value,
+    height: interpolate(tipsExpandProgress.value, [0, 1], [0, 130]), // Approximate height for 3 tips + padding
+    transform: [{ translateY: interpolate(tipsExpandProgress.value, [0, 1], [10, 0]) }],
+    marginBottom: interpolate(tipsExpandProgress.value, [0, 1], [0, 12]),
   }));
 
   return (
@@ -344,6 +410,7 @@ function ChatView({
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <ChatDesc />
@@ -375,6 +442,14 @@ function ChatView({
         </ScrollView>
 
         <View style={{ marginBottom: 12 }}>
+          <Animated.View style={[styles.tipsWrap, tipsAnimatedStyle]}>
+            <ChatTip 
+              items={tips} 
+              loading={tipsLoading} 
+              onTipPress={onTipPress} 
+              onEditPress={(item) => console.log('Edit tip:', item)}
+            />
+          </Animated.View>
           <ChatInput
             value={inputValue}
             onChangeText={onInputChange}
@@ -424,6 +499,35 @@ export default function Chat() {
   const [sending, setSending] = React.useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = React.useState(false);
   const [playingMessageId, setPlayingMessageId] = React.useState<string | null>(null);
+  const [isTipsExpanded, setIsTipsExpanded] = React.useState(false);
+  const [isTipsLoading, setIsTipsLoading] = React.useState(false);
+  const [tipsData, setTipsData] = React.useState<ChatTipItem[]>([]);
+  const tipsRequestIdRef = React.useRef(0);
+
+  const lastAssistantMessageId = React.useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const message = messages[i];
+      if (message.type !== 'ai') {
+        continue;
+      }
+      const rawId = String(message.id);
+      if (!/^\d+$/.test(rawId)) {
+        continue;
+      }
+      const numericId = Number(rawId);
+      if (Number.isFinite(numericId) && numericId > 0) {
+        return Math.trunc(numericId);
+      }
+    }
+    return undefined;
+  }, [messages]);
+
+  React.useEffect(() => {
+    tipsRequestIdRef.current += 1;
+    setIsTipsExpanded(false);
+    setIsTipsLoading(false);
+    setTipsData([]);
+  }, [sessionId]);
 
   const handlePlayMessageAudio = React.useCallback((id: string) => {
     setPlayingMessageId(prev => (prev === id ? null : id));
@@ -444,11 +548,15 @@ export default function Chat() {
     }
 
     appendMessage({
-      id: String(Date.now()),
+      id: `local-user-${Date.now()}`,
       type: 'user',
       segments: [{ text, type: 'speech' }],
     });
     setInputValue('');
+    tipsRequestIdRef.current += 1;
+    setIsTipsExpanded(false);
+    setIsTipsLoading(false);
+    setTipsData([]);
     setSending(true);
     try {
       const reply = await tsChatApi.createAiReply({
@@ -463,7 +571,7 @@ export default function Chat() {
       appendMessage({
         id: typeof reply?.assistantMessageId === 'number' && Number.isFinite(reply.assistantMessageId)
           ? String(reply.assistantMessageId)
-          : String(Date.now() + 1),
+          : `local-ai-${Date.now() + 1}`,
         type: 'ai',
         name: '系统',
         speechText: aiText,
@@ -471,7 +579,7 @@ export default function Chat() {
     }
     catch {
       appendMessage({
-        id: String(Date.now() + 1),
+        id: `local-ai-${Date.now() + 1}`,
         type: 'ai',
         name: '系统',
         speechText: SEND_ERROR_TEXT,
@@ -487,26 +595,54 @@ export default function Chat() {
   }, [inputValue, sendMessage]);
 
   const handleSuggestion = React.useCallback(async () => {
-    if (!sessionId || sending) {
+    if (!sessionId || isTipsLoading) {
       return;
     }
+
+    if (isTipsExpanded) {
+      tipsRequestIdRef.current += 1;
+      setIsTipsExpanded(false);
+      setIsTipsLoading(false);
+      return;
+    }
+
+    setIsTipsExpanded(true);
+    const requestId = tipsRequestIdRef.current + 1;
+    tipsRequestIdRef.current = requestId;
+    setIsTipsLoading(true);
     try {
       const result = await tsChatApi.createReplySuggestions({
         sessionId,
         historyCount: 12,
         userDraft: inputValue.trim() || undefined,
+        lastAssistantMessageId,
       });
-      const suggestion = (result?.suggestions || []).find(item => typeof item === 'string' && item.trim());
-      if (!suggestion) {
-        Alert.alert('提示', SUGGESTION_EMPTY_TEXT);
+      if (tipsRequestIdRef.current !== requestId) {
         return;
       }
-      setInputValue(suggestion.trim());
+      setTipsData(toTipItems(result?.suggestions, SUGGESTION_EMPTY_TEXT));
     }
-    catch {
-      Alert.alert('提示', SUGGESTION_ERROR_TEXT);
+    catch (error) {
+      if (tipsRequestIdRef.current !== requestId) {
+        return;
+      }
+      console.error('Fetch suggestions error:', error);
+      setTipsData([{ id: TIP_HINT_ERROR_ID, text: SUGGESTION_ERROR_TEXT }]);
     }
-  }, [inputValue, sending, sessionId]);
+    finally {
+      if (tipsRequestIdRef.current === requestId) {
+        setIsTipsLoading(false);
+      }
+    }
+  }, [inputValue, isTipsExpanded, isTipsLoading, lastAssistantMessageId, sessionId]);
+
+  const handleTipPress = React.useCallback((item: ChatTipItem) => {
+    if (isTipHintItem(item)) {
+      return;
+    }
+    setInputValue(item.text);
+    setIsTipsExpanded(false);
+  }, []);
 
   const handleMicPress = React.useCallback(() => {
     if (inputValue.trim()) {
@@ -535,6 +671,10 @@ export default function Chat() {
       onPlusPress={handleToggleFeature}
       playingMessageId={playingMessageId}
       onPlayMessageAudio={handlePlayMessageAudio}
+      tips={tipsData}
+      tipsExpanded={isTipsExpanded}
+      tipsLoading={isTipsLoading}
+      onTipPress={handleTipPress}
     />
   );
 }
@@ -592,5 +732,9 @@ const styles = StyleSheet.create({
   featureLabel: {
     color: 'rgba(255,255,255,0.88)',
     fontSize: 12,
+  },
+  tipsWrap: {
+    overflow: 'hidden',
+    marginHorizontal: 15,
   },
 });

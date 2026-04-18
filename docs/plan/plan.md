@@ -467,3 +467,28 @@
 - 回退：
   - 前端可仅回退 `src/app/pages/sound-edit/index.tsx` 与 `src/lib/api/ts-voice.ts`。
   - 后端可仅回退 `TsVoiceProfileServiceImpl.previewVoice` 的 data URL 回退逻辑。
+
+## 21. 任务背景（chat ChatTip 推荐回复对接，2026-04-18）
+- 目标：`pages/chat?sessionId=6` 的 `ChatTip` 对接后端推荐回复生成，稳定输出 3 条左右可选回复。
+- 边界：仅改数据请求、状态流转与字段映射，不改 UI 布局。
+- 非目标：不改 ChatTip 样式与结构。
+
+### 21.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 契约核对 | 已完成 | 核对 `reply-suggestions` 入参与出参 | 字段映射明确 | `src/lib/api/ts-chat.ts`、后端 `TsChatSessionController` |
+| T2 状态机补强 | 已完成 | 展开/收起、并发防抖、竞态保护、会话切换重置 | 推荐加载稳定，旧请求不污染新状态 | `src/app/pages/chat/index.tsx` |
+| T3 回退与交互 | 已完成 | 空结果/失败提示项 + 提示项点击保护 | 不误写入输入框，失败可回退 | `src/app/pages/chat/index.tsx` |
+| T4 验证与记录 | 已完成 | lint 执行与文档回填 | 记录完整可追溯 | `pnpm exec eslint ...`、`docs/**` |
+
+### 21.2 风险与回退
+- 风险：`src/app/pages/chat/index.tsx` 存在历史存量 lint 风格规则告警。
+- 回退：仅需回退 `src/app/pages/chat/index.tsx` 即可恢复本轮逻辑改动。
+
+### 21.3 进展记录
+| 时间 | 任务 | 进展状态 | 说明 | 证据索引 |
+| --- | --- | --- | --- | --- |
+| 2026-04-18 | T1 | 已完成 | 后端与前端建议回复契约已核对 | `TsChatSessionController.java`、`TsChatReplySuggestionsDto.java`、`src/lib/api/ts-chat.ts` |
+| 2026-04-18 | T2 | 已完成 | 推荐请求引入 requestId 竞态保护与会话切换重置 | `src/app/pages/chat/index.tsx` |
+| 2026-04-18 | T3 | 已完成 | 建议列表映射与提示项点击保护已落地 | `src/app/pages/chat/index.tsx` |
+| 2026-04-18 | T4 | 已完成 | 定向 lint 与任务文档回填完成 | `pnpm exec eslint ...`、`docs/fe-be-integration/任务-chat页-ChatTip推荐回复对接-20260418-1049.md` |

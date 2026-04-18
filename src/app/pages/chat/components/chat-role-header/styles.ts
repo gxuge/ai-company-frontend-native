@@ -1,99 +1,88 @@
 import { StyleSheet } from 'react-native';
 
-// Figma canvas: 690px wide (@2x) → RN values ÷ 2
-// Node 221:449 — Groups / chat role header row
-
 export const styles = StyleSheet.create({
-  // Full-width row, vertically centered, space-between
   container: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingVertical: 11.5, // 23px / 2
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-
-  // ─── Left group: pill + chat badge ───
+  
+  // ─── 左侧区域 ───
   leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5, // 10px / 2
+    gap: 12, // 增大胶囊和聊天提醒的间距
   },
 
-  // Dark pill: avatar + name + add-user icon
-  // 266 x 80px → 133 x 40pt
+  // 1. 头像与姓名胶囊区
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    borderRadius: 30, // 60.6px / 2
-    paddingVertical: 0,
-    paddingLeft: 6,
-    paddingRight: 8,
-    height: 40,
-    gap: 6, // 12.12px / 2
-  },
-
-  // Avatar: 70.3 x 72.7px → ~35 x 36pt
-  avatarWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)', // 半透明遮罩，适应深色背景
+    borderRadius: 30,
+    paddingLeft: 4,  // 紧贴头像
+    paddingRight: 12,
+    paddingVertical: 4,
+    gap: 8,
   },
   avatar: {
-    width: '100%',
-    height: '100%',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#000', // 防止透明图镂空
   },
-
-  // Name + username stacked text block
   nameBlock: {
     flexDirection: 'column',
     justifyContent: 'center',
-    gap: 2,
+    maxWidth: 110, // 防止长名字溢出
   },
   nameText: {
-    color: '#c2c2c3',
-    fontSize: 12, // 24.24px / 2
-    fontWeight: '400',
+    color: '#F0F0F0', // 提升对比度
+    fontSize: 14,     // 稍微增大字体提升阅读体验
+    fontWeight: '600',
+    lineHeight: 18,
   },
   usernameText: {
-    color: '#a8a0a4',
-    fontSize: 10, // 19.39px / 2
-    fontWeight: '400',
+    color: '#A8A0A4',
+    fontSize: 11,
+    lineHeight: 14,
   },
-
-  // Add-user icon button: 38 x 38px → 19 x 19pt
   addUserBtn: {
-    width: 19,
-    height: 19,
+    marginLeft: 2,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 2,
   },
 
-  // Chat preview icon + count badge: 56 x 45px → 28 x 22.5pt
+  // 2. 聊天信息预览徽章
   chatBadge: {
-    width: 36,
+    width: 46, // 固定容器宽度以容纳文字和图标
     height: 28,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-start',
+  },
+  chatIconWrapper: {
+    position: 'absolute',
+    left: 0,
+    bottom: 2, // 让图标靠下
   },
   chatCount: {
     position: 'absolute',
-    top: 0,
-    right: -4,
+    left: 18, // 文字向右偏移，悬浮在图标上侧
+    top: -2,
     color: '#ffffff',
-    fontSize: 8, // 15.48px / 2 ≈ 7.7
-    fontWeight: '400',
+    fontSize: 12,
+    fontWeight: '500',
+    fontFamily: 'Inter',
   },
 
-  // ─── Right: volume button ───
+  // ─── 右侧音量 ───
   volumeBtn: {
-    width: 28,
-    height: 28,
-    alignItems: 'center',
+    width: 32,
+    height: 32,
+    alignItems: 'flex-end',  // 使得触控区域靠右
     justifyContent: 'center',
   },
 });
