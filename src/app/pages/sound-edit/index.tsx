@@ -1,9 +1,9 @@
 import type { TsVoiceProfile } from '@/lib/api';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { tsVoiceApi } from '@/lib/api';
 import EditSoundText from './components/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
-import { Check, Play, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Check, Play, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { router } from 'expo-router';
 
@@ -16,9 +16,206 @@ const imgWaveGreenTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/asse
 const DEFAULT_PREVIEW_TEXT = '\u8FD9\u662F\u8BD5\u542C\u6587\u672C\uFF0C\u8BF7\u6839\u636E\u97F3\u8272\u53C2\u6570\u64AD\u653E\u3002';
 const GENDERS = ['\u5168\u90E8', '\u7537', '\u5973'] as const;
 const AGE_OPTIONS = ['\u5C11\u5E74', '\u9752\u5E74', '\u4E2D\u5E74', '\u8001\u5E74'] as const;
+const AUDIO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const AUDIO_CACHE_NAME = 'sound-edit-preview-audio-v1';
+const AUDIO_CACHE_META_KEY = 'sound-edit-preview-audio-meta-v1';
 
 const DEFAULT_RECOMMEND_VOICE_LIST: TsVoiceProfile[] = [];
 const DEFAULT_MY_VOICE_LIST: TsVoiceProfile[] = [];
+
+type ListenPhase = 'idle' | 'loading' | 'playing';
+type PreviewCacheMetaItem = {
+  entryUrl: string;
+  expiresAt: number;
+};
+type PreviewCacheMeta = Record<string, PreviewCacheMetaItem>;
+type PreviewAudioCacheItem = {
+  objectUrl: string;
+  expiresAt: number;
+};
+
+function toPreviewSpeedValue(speed: number) {
+  return Math.max(0.8, Math.min(1.2, Number(speed.toFixed(2))));
+}
+
+function toPreviewPitchValue(pitch: number) {
+  return Math.max(-6, Math.min(6, Number((pitch / 10).toFixed(2))));
+}
+
+function buildPreviewCacheKey(params: {
+  voiceProfileId: number;
+  voiceId?: string;
+  previewText: string;
+  speed: number;
+  pitch: number;
+  volume: number;
+}) {
+  return [
+    `voiceProfileId=${params.voiceProfileId}`,
+    `voiceId=${params.voiceId || ''}`,
+    `previewText=${params.previewText}`,
+    `speed=${params.speed}`,
+    `pitch=${params.pitch}`,
+    `volume=${params.volume}`,
+  ].join('|');
+}
+
+function buildCacheEntryUrl(cacheKey: string) {
+  return `https://sound-edit-preview-cache.local/${encodeURIComponent(cacheKey)}`;
+}
+
+function readPreviewCacheMeta() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+    return {} as PreviewCacheMeta;
+  }
+  try {
+    const raw = window.localStorage.getItem(AUDIO_CACHE_META_KEY);
+    if (!raw) {
+      return {} as PreviewCacheMeta;
+    }
+    const parsed = JSON.parse(raw) as PreviewCacheMeta;
+    if (!parsed || typeof parsed !== 'object') {
+      return {} as PreviewCacheMeta;
+    }
+    return parsed;
+  }
+  catch {
+    return {} as PreviewCacheMeta;
+  }
+}
+
+function writePreviewCacheMeta(meta: PreviewCacheMeta) {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') {
+    return;
+  }
+  try {
+    window.localStorage.setItem(AUDIO_CACHE_META_KEY, JSON.stringify(meta));
+  }
+  catch {
+    // Ignore storage write failures to keep preview flow available.
+  }
+}
+
+function revokeCachedObjectUrl(cacheItem?: PreviewAudioCacheItem) {
+  if (!cacheItem?.objectUrl || typeof URL === 'undefined' || typeof URL.revokeObjectURL !== 'function') {
+    return;
+  }
+  try {
+    URL.revokeObjectURL(cacheItem.objectUrl);
+  }
+  catch {
+    // Ignore revoke failures.
+  }
+}
+
+async function removeExpiredCacheEntry(cacheKey: string, meta: PreviewCacheMeta) {
+  const target = meta[cacheKey];
+  if (!target) {
+    return;
+  }
+
+  delete meta[cacheKey];
+  writePreviewCacheMeta(meta);
+
+  if (typeof window === 'undefined' || !('caches' in window)) {
+    return;
+  }
+  try {
+    const cache = await window.caches.open(AUDIO_CACHE_NAME);
+    await cache.delete(target.entryUrl);
+  }
+  catch {
+    // Ignore cache delete failures.
+  }
+}
+
+async function getCachedPreviewObjectUrl(cacheKey: string, memoryCache: Map<string, PreviewAudioCacheItem>) {
+  const now = Date.now();
+  const memoryItem = memoryCache.get(cacheKey);
+  if (memoryItem && memoryItem.expiresAt > now) {
+    return memoryItem.objectUrl;
+  }
+  if (memoryItem) {
+    revokeCachedObjectUrl(memoryItem);
+    memoryCache.delete(cacheKey);
+  }
+
+  const meta = readPreviewCacheMeta();
+  const metaItem = meta[cacheKey];
+  if (!metaItem) {
+    return null;
+  }
+  if (metaItem.expiresAt <= now) {
+    await removeExpiredCacheEntry(cacheKey, meta);
+    return null;
+  }
+
+  if (typeof window === 'undefined' || !('caches' in window) || typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    return null;
+  }
+
+  try {
+    const cache = await window.caches.open(AUDIO_CACHE_NAME);
+    const response = await cache.match(metaItem.entryUrl);
+    if (!response) {
+      delete meta[cacheKey];
+      writePreviewCacheMeta(meta);
+      return null;
+    }
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    memoryCache.set(cacheKey, {
+      objectUrl,
+      expiresAt: metaItem.expiresAt,
+    });
+    return objectUrl;
+  }
+  catch {
+    return null;
+  }
+}
+
+async function savePreviewBlobToCache(params: {
+  cacheKey: string;
+  blob: Blob;
+  expiresAt: number;
+  memoryCache: Map<string, PreviewAudioCacheItem>;
+}) {
+  const {
+    cacheKey,
+    blob,
+    expiresAt,
+    memoryCache,
+  } = params;
+  if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
+    throw new TypeError('当前环境不支持音频对象URL');
+  }
+  const objectUrl = URL.createObjectURL(blob);
+
+  const previousMemory = memoryCache.get(cacheKey);
+  if (previousMemory) {
+    revokeCachedObjectUrl(previousMemory);
+  }
+  memoryCache.set(cacheKey, { objectUrl, expiresAt });
+
+  if (typeof window === 'undefined' || !('caches' in window)) {
+    return objectUrl;
+  }
+
+  try {
+    const entryUrl = buildCacheEntryUrl(cacheKey);
+    const cache = await window.caches.open(AUDIO_CACHE_NAME);
+    await cache.put(entryUrl, new Response(blob));
+    const meta = readPreviewCacheMeta();
+    meta[cacheKey] = { entryUrl, expiresAt };
+    writePreviewCacheMeta(meta);
+  }
+  catch {
+    // Ignore persistent cache failures, in-memory cache still works.
+  }
+
+  return objectUrl;
+}
 
 function toGenderQuery(label: string) {
   if (label === '\u7537') {
@@ -96,8 +293,8 @@ function Slider({ value, onChange, min, max, step }: { value: number; onChange: 
     <div className="relative flex h-[16px] w-full items-center">
       <div className="pointer-events-none absolute inset-x-0 z-0 h-[3px] rounded-full bg-[#333]" />
       <div className="pointer-events-none absolute inset-0 z-0">
-        {[...Array.from({ length: 6 })].map((_, i) => {
-          const p = i * 20;
+        {[...Array.from({ length: 5 })].map((_, i) => {
+          const p = i * 25;
           return (
             <div
               key={`dot-${p}`}
@@ -132,9 +329,10 @@ type VoiceCardProps = {
   onRename?: (id: number) => void;
   onDelete?: (id: number) => void;
   isPlaying?: boolean;
+  isLoading?: boolean;
 };
 
-function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, isPlaying }: VoiceCardProps) {
+function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, isPlaying, isLoading }: VoiceCardProps) {
   const tags = resolveVoiceTags(voice);
   const [showMenu, setShowMenu] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -184,7 +382,9 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           {/* Figma node 150:3037 Play Button Overlay */}
           {selected && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
-              {isPlaying ? (
+              {isLoading ? (
+                <Loader2 className="size-6 animate-spin text-[#9BFE03]" />
+              ) : isPlaying ? (
                 <img src={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
               ) : (
                 <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
@@ -280,8 +480,8 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
 export default function SoundEditPage() {
   const [activeLibraryTab, setActiveLibraryTab] = useState<'recommend' | 'my'>('recommend');
   const [pitch, setPitch] = useState(20);
-  const [speed, setSpeed] = useState(1.2);
-  const [voices, setVoices] = useState<TsVoiceProfile[]>(DEFAULT_RECOMMEND_VOICE_LIST);
+  const [speed, setSpeed] = useState(1.0);
+  const [allRecommendVoices, setAllRecommendVoices] = useState<TsVoiceProfile[]>(DEFAULT_RECOMMEND_VOICE_LIST);
   const [myVoices, setMyVoices] = useState<TsVoiceProfile[]>(DEFAULT_MY_VOICE_LIST);
   const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(null);
   const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('\u5168\u90E8');
@@ -289,18 +489,60 @@ export default function SoundEditPage() {
   const [age, setAge] = useState<(typeof AGE_OPTIONS)[number]>('\u5C11\u5E74');
   const [isEditSoundTextOpen, setIsEditSoundTextOpen] = useState(false);
   const [previewText, setPreviewText] = useState(DEFAULT_PREVIEW_TEXT);
-  const [isListening, setIsListening] = useState(false);
+  const [listenPhase, setListenPhase] = useState<ListenPhase>('idle');
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
+  const previewMemoryCacheRef = useRef(new Map<string, PreviewAudioCacheItem>());
+  const previewInFlightRef = useRef(new Map<string, Promise<string>>());
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const listenRequestIdRef = useRef(0);
+
+  const isListening = listenPhase !== 'idle';
+  const isPlaying = listenPhase === 'playing';
+
+  const displayedRecommendVoices = useMemo(() => {
+    if (genderFilter === '\u5168\u90E8') {
+      return allRecommendVoices;
+    }
+    const queryGender = toGenderQuery(genderFilter);
+    return allRecommendVoices.filter(v => v.gender === queryGender);
+  }, [allRecommendVoices, genderFilter]);
 
   const selectedVoiceFromRecommend = useMemo(
-    () => voices.find(item => item.id === selectedVoiceId) || null,
-    [selectedVoiceId, voices],
+    () => allRecommendVoices.find(item => item.id === selectedVoiceId) || null,
+    [selectedVoiceId, allRecommendVoices],
   );
   const selectedVoiceFromMyLibrary = useMemo(
     () => myVoices.find(item => item.id === selectedVoiceId) || null,
     [myVoices, selectedVoiceId],
   );
   const selectedVoice = selectedVoiceFromRecommend || selectedVoiceFromMyLibrary;
+
+  const stopCurrentAudio = () => {
+    const audio = audioRef.current;
+    if (!audio) {
+      return;
+    }
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.onended = null;
+      audio.onerror = null;
+    }
+    catch {
+      // Ignore audio stop errors.
+    }
+    audioRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => {
+      listenRequestIdRef.current += 1;
+      stopCurrentAudio();
+      previewInFlightRef.current.clear();
+      previewMemoryCacheRef.current.forEach(cacheItem => revokeCachedObjectUrl(cacheItem));
+      previewMemoryCacheRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -344,9 +586,9 @@ export default function SoundEditPage() {
       try {
         const pageData = await tsVoiceApi.getVoiceProfiles({
           pageNo: 1,
-          pageSize: 50,
+          pageSize: 200, // Fetch a larger set for local filtering
           status: 1,
-          gender: toGenderQuery(genderFilter),
+          // gender: undefined (fetch all)
         });
 
         if (!alive) {
@@ -354,14 +596,14 @@ export default function SoundEditPage() {
         }
 
         const records = (pageData.records || []).filter(item => item && item.id);
-        setVoices(records);
+        setAllRecommendVoices(records);
       }
       catch (error) {
         if (!alive) {
           return;
         }
         console.warn('load voice list failed', error);
-        setVoices(DEFAULT_RECOMMEND_VOICE_LIST);
+        setAllRecommendVoices(DEFAULT_RECOMMEND_VOICE_LIST);
       }
     };
 
@@ -369,7 +611,7 @@ export default function SoundEditPage() {
     return () => {
       alive = false;
     };
-  }, [genderFilter]);
+  }, []); // Run only once on mount
 
   useEffect(() => {
     let alive = true;
@@ -407,6 +649,61 @@ export default function SoundEditPage() {
     setSpeed(1);
   };
 
+  const resolvePreviewAudioObjectUrl = async (
+    cacheKey: string,
+    payload: {
+      voiceProfileId: number;
+      voiceId?: string;
+      previewText: string;
+      speed: number;
+      pitch: number;
+      volume: number;
+    },
+  ) => {
+    const memoryCache = previewMemoryCacheRef.current;
+    const cachedObjectUrl = await getCachedPreviewObjectUrl(cacheKey, memoryCache);
+    if (cachedObjectUrl) {
+      return cachedObjectUrl;
+    }
+
+    const inFlightTask = previewInFlightRef.current.get(cacheKey);
+    if (inFlightTask) {
+      return inFlightTask;
+    }
+
+    const task = (async () => {
+      const preview = await tsVoiceApi.previewVoiceProfile({
+        voiceProfileId: payload.voiceProfileId,
+        voiceId: payload.voiceId,
+        previewText: payload.previewText,
+        speed: payload.speed,
+        pitch: payload.pitch,
+        volume: payload.volume,
+      });
+      const audioUrl = preview.previewAudioUrl;
+      if (!audioUrl) {
+        throw new Error('\u8BD5\u542C\u751F\u6210\u6210\u529F\uFF0C\u4F46\u6682\u672A\u83B7\u53D6\u5230\u97F3\u9891\u5730\u5740');
+      }
+
+      const response = await fetch(audioUrl);
+      if (!response.ok) {
+        throw new Error('\u97F3\u9891\u4E0B\u8F7D\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5');
+      }
+      const blob = await response.blob();
+      return savePreviewBlobToCache({
+        cacheKey,
+        blob,
+        expiresAt: Date.now() + AUDIO_CACHE_TTL_MS,
+        memoryCache,
+      });
+    })().finally(() => {
+      previewInFlightRef.current.delete(cacheKey);
+    });
+
+    previewInFlightRef.current.set(cacheKey, task);
+    return task;
+  };
+
   const handleListen = async () => {
     if (isListening) {
       return;
@@ -422,32 +719,68 @@ export default function SoundEditPage() {
       return;
     }
 
-    setIsListening(true);
+    const normalizedPreviewText = previewText.trim() || DEFAULT_PREVIEW_TEXT;
+    const normalizedSpeed = toPreviewSpeedValue(speed);
+    const normalizedPitch = toPreviewPitchValue(pitch);
+    const normalizedVolume = 1.0;
+    const cacheKey = buildPreviewCacheKey({
+      voiceProfileId: selectedVoiceProfileId,
+      voiceId: providerVoiceId || undefined,
+      previewText: normalizedPreviewText,
+      speed: normalizedSpeed,
+      pitch: normalizedPitch,
+      volume: normalizedVolume,
+    });
+
+    const requestId = listenRequestIdRef.current + 1;
+    listenRequestIdRef.current = requestId;
+
+    stopCurrentAudio();
+    setListenPhase('loading');
+
     try {
-      const preview = await tsVoiceApi.previewVoiceProfile({
+      const audioObjectUrl = await resolvePreviewAudioObjectUrl(cacheKey, {
         voiceProfileId: selectedVoiceProfileId,
         voiceId: providerVoiceId || undefined,
-        previewText,
-        speed: Math.max(0.8, Math.min(1.2, Number(speed.toFixed(2)))),
-        pitch: Math.max(-6, Math.min(6, Number((pitch / 10).toFixed(2)))),
-        volume: 1.0,
+        previewText: normalizedPreviewText,
+        speed: normalizedSpeed,
+        pitch: normalizedPitch,
+        volume: normalizedVolume,
       });
+      if (listenRequestIdRef.current !== requestId) {
+        return;
+      }
 
-      const audioUrl = preview.previewAudioUrl;
-      if (audioUrl && typeof window !== 'undefined' && typeof window.Audio !== 'undefined') {
-        const audio = new window.Audio(audioUrl);
-        await audio.play();
+      if (typeof window === 'undefined' || typeof window.Audio === 'undefined') {
+        throw new Error('\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301\u8BD5\u542C\u64AD\u653E');
       }
-      else {
-        notifyMessage('\u8BD5\u542C\u751F\u6210\u6210\u529F\uFF0C\u4F46\u6682\u672A\u83B7\u53D6\u5230\u97F3\u9891\u5730\u5740');
-      }
+
+      const audio = new window.Audio(audioObjectUrl);
+      audioRef.current = audio;
+      audio.onended = () => {
+        if (listenRequestIdRef.current === requestId) {
+          setListenPhase('idle');
+        }
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        if (listenRequestIdRef.current === requestId) {
+          notifyMessage('\u8BD5\u542C\u64AD\u653E\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5');
+          setListenPhase('idle');
+        }
+        audioRef.current = null;
+      };
+
+      setListenPhase('playing');
+      await audio.play();
     }
     catch (error) {
+      if (listenRequestIdRef.current !== requestId) {
+        return;
+      }
       const message = error instanceof Error ? error.message : '\u8BD5\u542C\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5';
       notifyMessage(message);
-    }
-    finally {
-      setIsListening(false);
+      setListenPhase('idle');
     }
   };
 
@@ -477,8 +810,8 @@ export default function SoundEditPage() {
   };
 
   return (
-    <div className="flex min-h-screen justify-center bg-background font-['Noto_Sans_SC',sans-serif]">
-      <div className="flex w-full flex-col items-stretch gap-0 py-[8px] px-[12.5px]">
+    <div className="flex h-screen w-full flex-col bg-background font-['Noto_Sans_SC',sans-serif] overflow-hidden">
+      <div className="flex-1 w-full flex flex-col items-stretch gap-0 overflow-hidden py-[8px] px-[12.5px]">
           <div
             className={`flex flex-col border shadow-[0_0_20px_rgba(155,254,3,0.05)] transition-all duration-500 ${
               isSettingsCollapsed
@@ -490,13 +823,13 @@ export default function SoundEditPage() {
             <div className={`flex items-center justify-between transition-all duration-500 ${isSettingsCollapsed ? '' : 'pb-[4px]'}`}>
               <div className="flex items-center gap-[8px]">
                 <div
-                  className={`flex items-center justify-center rounded-full transition-all duration-500 ${isSettingsCollapsed ? 'size-8 text-[14px]' : 'size-[28px] text-[12px]'}`}
+                  className={`flex items-center justify-center rounded-full transition-all duration-500 ${isSettingsCollapsed ? 'size-8 text-[14px]' : 'size-[28px] text-[12px]'} ${!selectedVoice ? 'opacity-40 grayscale' : ''}`}
                   style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
                 >
                   <span className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)]">🎙️</span>
                 </div>
-                <span className={`text-white transition-all duration-500 ${isSettingsCollapsed ? 'text-[14px]' : 'text-[18px] tracking-[-0.45px]'}`} style={{ fontWeight: 700 }}>
-                  {selectedVoice?.name || '\u674E\u660E'}
+                <span className={`text-white transition-all duration-500 ${isSettingsCollapsed ? 'text-[14px]' : 'text-[18px] tracking-[-0.45px]'} ${!selectedVoice ? 'text-white/40' : ''}`} style={{ fontWeight: 700 }}>
+                  {selectedVoice?.name || '请选择'}
                 </span>
               </div>
               <div className="flex items-center gap-[8px]">
@@ -505,22 +838,41 @@ export default function SoundEditPage() {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleListen(); }}
-                      disabled={isListening}
-                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] transition-colors hover:bg-[rgba(155,254,3,0.3)] disabled:opacity-50"
+                      disabled={isListening || !selectedVoice}
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] transition-colors hover:bg-[rgba(155,254,3,0.3)] disabled:opacity-50 disabled:grayscale ${!selectedVoice ? 'bg-white/5' : ''}`}
                     >
-                      <img src={isListening ? imgWaveGreenTiny : imgPlay} alt="" className={`size-[16px] object-contain ${!isListening ? 'ml-[2px]' : ''}`} />
+                      {listenPhase === 'loading' ? (
+                        <Loader2 className="size-[16px] animate-spin text-[#9BFE03]" />
+                      ) : isListening ? (
+                        <img src={imgWaveGreenTiny} alt="" className="size-[16px] object-contain" />
+                      ) : (
+                        <img src={imgPlay} alt="" className="size-[16px] object-contain ml-[2px]" />
+                      )}
                     </button>
                   </div>
 
-                  <div className={`flex overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-0 opacity-0 ml-0' : 'ml-[4px] w-[100px] opacity-100'}`}>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditSoundTextOpen(true)}
-                      className="flex h-[32px] w-[100px] shrink-0 items-center justify-center gap-[6px] rounded-[8px] border border-[rgba(155,254,3,0.9)] bg-[#161616]"
-                    >
-                      <img src={imgEdit} alt="" className="size-[12px] shrink-0 object-contain" />
-                      <span className="whitespace-nowrap text-[12px] text-[rgba(155,254,3,0.8)]">{`\u8BD5\u542C\u6587\u6848\u7F16\u8F91`}</span>
-                    </button>
+                  <div className={`flex items-center overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-0 opacity-0 ml-0' : 'ml-[4px] w-auto opacity-100 gap-[10px]'}`}>
+                    {selectedVoice && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditSoundTextOpen(true)}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(155,254,3,0.9)] bg-[#161616] hover:bg-white/5 transition-colors"
+                          title="编辑试听文案"
+                        >
+                          <img src={imgEdit} alt="" className="size-[14px] object-contain" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setSelectedVoiceId(null); }}
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                          title="取消选择"
+                        >
+                          <X className="size-[14px] text-red-500" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -576,7 +928,7 @@ export default function SoundEditPage() {
                         x
                       </span>
                     </div>
-                    <Slider value={speed} onChange={setSpeed} min={0.5} max={2.0} step={0.1} />
+                    <Slider value={speed} onChange={v => setSpeed(Math.max(0.1, v))} min={0} max={2} step={0.1} />
                   </div>
                 </div>
 
@@ -584,12 +936,18 @@ export default function SoundEditPage() {
                   <button
                     type="button"
                     onClick={handleListen}
-                    disabled={isListening}
-                    className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-[rgba(155,254,3,0.9)] disabled:opacity-60"
+                    disabled={isListening || !selectedVoice}
+                    className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-[rgba(155,254,3,0.9)] disabled:opacity-50 disabled:grayscale transition-all"
                   >
-                    <img src={isListening ? imgWaveGreenTiny : imgListenHeadphone} alt="" className={`${isListening ? 'size-[24px]' : 'size-[19px]'} object-contain`} />
+                    {listenPhase === 'loading' ? (
+                      <Loader2 className="size-[19px] animate-spin text-[#9BFE03]" />
+                    ) : isListening ? (
+                      <img src={imgWaveGreenTiny} alt="" className="size-[24px] object-contain" />
+                    ) : (
+                      <img src={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
+                    )}
                     <span className="text-[16px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
-                      {isListening ? '\u8BD5\u542C\u4E2D...' : '\u8BD5\u542C\u97F3\u8272'}
+                      {isListening ? '试听中...' : '试听音色'}
                     </span>
                   </button>
                 </div>
@@ -597,7 +955,7 @@ export default function SoundEditPage() {
             </div>
           </div>
 
-        <div className="flex flex-col gap-[16px] pt-[20px] pb-[140px]">
+        <div className="flex-1 flex flex-col gap-[16px] pt-[20px] min-h-0 overflow-hidden">
           <div className="flex flex-row justify-center border-b border-[#1a1a1a] mb-[16px]">
             <AiNavigateTabs 
               options={[
@@ -637,41 +995,47 @@ export default function SoundEditPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-[16px]">
-                {voices.map(voice => (
-                  <VoiceCard
-                    key={voice.id}
-                    voice={voice}
-                    selected={selectedVoiceId === voice.id}
-                    onSelect={() => setSelectedVoiceId(voice.id)}
-                    isPlaying={isListening && selectedVoiceId === voice.id}
-                  />
-                ))}
+              <div className="flex-1 overflow-y-auto pb-[140px]">
+                <div className="flex flex-col gap-[16px]">
+                  {displayedRecommendVoices.map(voice => (
+                    <VoiceCard
+                      key={voice.id}
+                      voice={voice}
+                      selected={selectedVoiceId === voice.id}
+                      onSelect={() => setSelectedVoiceId(voice.id)}
+                      isPlaying={isPlaying && selectedVoiceId === voice.id}
+                      isLoading={listenPhase === 'loading' && selectedVoiceId === voice.id}
+                    />
+                  ))}
+                </div>
               </div>
             </>
           )}
 
           {activeLibraryTab === 'my' && (
-            <div className="flex flex-col gap-[16px]">
-              {myVoices.map(voice => (
-                <VoiceCard
-                  key={voice.id}
-                  voice={voice}
-                  isMyVoice
-                  selected={selectedVoiceId === voice.id}
-                  onSelect={() => setSelectedVoiceId(voice.id)}
-                  onRename={handleMyVoiceRename}
-                  onDelete={handleMyVoiceDelete}
-                  isPlaying={isListening && selectedVoiceId === voice.id}
-                />
-              ))}
-              {myVoices.length === 0 && (
-                <AiEmpty 
-                  title="还没有录音" 
-                  description="在推荐音色库中选择音色或开始您的创作" 
-                  style={{ marginTop: 40 }}
-                />
-              )}
+            <div className="flex-1 overflow-y-auto pb-[140px]">
+              <div className="flex flex-col gap-[16px]">
+                {myVoices.map(voice => (
+                  <VoiceCard
+                    key={voice.id}
+                    voice={voice}
+                    isMyVoice
+                    selected={selectedVoiceId === voice.id}
+                    onSelect={() => setSelectedVoiceId(voice.id)}
+                    onRename={handleMyVoiceRename}
+                    onDelete={handleMyVoiceDelete}
+                    isPlaying={isPlaying && selectedVoiceId === voice.id}
+                    isLoading={listenPhase === 'loading' && selectedVoiceId === voice.id}
+                  />
+                ))}
+                {myVoices.length === 0 && (
+                  <AiEmpty 
+                    title="还没有录音" 
+                    description="在推荐音色库中选择音色或开始您的创作" 
+                    style={{ marginTop: 40 }}
+                  />
+                )}
+              </div>
             </div>
           )}
         </div>

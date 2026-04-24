@@ -159,6 +159,9 @@ export type TsRoleOneClickVoiceGenerateResult = {
     providerVoiceId?: string;
     previewText?: string;
     previewAudioUrl?: string;
+    speed?: number;
+    pitch?: number;
+    volume?: number;
     selectionReason?: string;
     matchSource?: string;
     traceId?: string;
@@ -170,6 +173,9 @@ export type TsRoleOneClickVoiceGenerateResult = {
   recommendation?: string;
   previewText?: string;
   previewAudioUrl?: string;
+  speed?: number;
+  pitch?: number;
+  volume?: number;
   matchSource?: string;
   traceId?: string;
   schemaVersion?: string;

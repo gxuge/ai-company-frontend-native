@@ -208,7 +208,7 @@ export default function RoleDetail() {
   }, [params.id, params.roleId]);
 
   const { role, author, loading, loadError } = useRoleDetailData(roleId);
-  const backgroundSource = toRemoteSource(role?.coverUrl) ?? imgBg;
+  const backgroundSource = toRemoteSource(role?.avatarUrl) ?? toRemoteSource(role?.coverUrl) ?? imgBg;
   const authorAvatarSource = toRemoteSource(author?.avatar) ?? imgAuthorAvatarFallback;
   const displayRoleName = role?.roleName || '角色';
   const displayAuthorName = author?.displayName || '作者';
@@ -233,21 +233,18 @@ export default function RoleDetail() {
         >
           <SafeAreaView style={{ flex: 1 }}>
             <View style={styles.topNav}>
-              <AiCloseBtn
-                iconSource={imgClose}
-                customWidth="w-[40px]"
-                customHeight="h-[40px]"
-                iconWidth={16}
-                iconHeight={16}
-                onPress={() => router.back()}
-              />
-              <AiMoreBtn
-                iconSource={imgMore}
-                customWidth="w-[40px]"
-                customHeight="h-[40px]"
-                iconWidth={20}
-                iconHeight={20}
-              />
+              <Pressable style={styles.navButton} onPress={() => router.back()}>
+                <Image
+                  source={imgClose}
+                  style={[styles.navIcon, { width: 16, height: 16 }]}
+                />
+              </Pressable>
+              <Pressable style={styles.navButton}>
+                <Image
+                  source={imgMore}
+                  style={[styles.navIcon, { width: 20, height: 20 }]}
+                />
+              </Pressable>
             </View>
             <View style={{ flex: 1, justifyContent: 'center' }}>
               <RoleDetailBottomSection

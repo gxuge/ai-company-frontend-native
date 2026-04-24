@@ -1,5 +1,6 @@
 import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
+import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -8,6 +9,7 @@ import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
 import { tsRoleApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
+import { getItem, setItem } from '@/lib/storage';
 import { BasicInfoSection } from './basic-info';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
@@ -16,6 +18,14 @@ const imgChevronRightGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('..
 
 const fontBase = 'font-[\'Noto_Sans_SC\',sans-serif]';
 const DEFAULT_VOICE_PREVIEW_TEXT = '你好呀，很高兴认识你。';
+
+const VOICE_PREVIEW_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const VOICE_PREVIEW_CACHE_KEY_PREFIX = 'create-role:voice-preview:';
+
+type VoicePreviewCacheEntry = {
+  expireAt: number;
+  preview: TsVoiceProfilePreviewResult;
+};
 
 function showMessage(message: string) {
   if (!message) {
@@ -43,6 +53,41 @@ function normalizeGenderForSave(gender: Gender): 'male' | 'female' | 'unknown' {
   return 'unknown';
 }
 
+function roundVoiceParam(value: number, digits = 1) {
+  const base = 10 ** digits;
+  return Math.round(value * base) / base;
+}
+
+function buildVoicePreviewCacheKey(payload: TsVoiceProfilePreviewPayload) {
+  const voiceProfileId = payload.voiceProfileId ?? '';
+  const voiceId = payload.voiceId ?? '';
+  const previewText = payload.previewText ?? '';
+  const speed = payload.speed == null ? '' : roundVoiceParam(payload.speed, 2);
+  const pitch = payload.pitch == null ? '' : roundVoiceParam(payload.pitch, 2);
+  const volume = payload.volume == null ? '' : roundVoiceParam(payload.volume, 2);
+  return `${VOICE_PREVIEW_CACHE_KEY_PREFIX}${voiceProfileId}|${voiceId}|${speed}|${pitch}|${volume}|${previewText}`;
+}
+
+function getCachedVoicePreview(payload: TsVoiceProfilePreviewPayload): TsVoiceProfilePreviewResult | null {
+  const key = buildVoicePreviewCacheKey(payload);
+  const cache = getItem<VoicePreviewCacheEntry>(key);
+  if (!cache || !cache.expireAt || !cache.preview) {
+    return null;
+  }
+  if (cache.expireAt <= Date.now()) {
+    return null;
+  }
+  return cache.preview;
+}
+
+function setCachedVoicePreview(payload: TsVoiceProfilePreviewPayload, preview: TsVoiceProfilePreviewResult) {
+  const key = buildVoicePreviewCacheKey(payload);
+  const cache: VoicePreviewCacheEntry = {
+    expireAt: Date.now() + VOICE_PREVIEW_CACHE_TTL_MS,
+    preview,
+  };
+  void setItem(key, cache);
+}
 function Header({
   activeTab,
   onTabChange,
@@ -303,6 +348,9 @@ export function CreateCharacter() {
   const [voicePreviewText, setVoicePreviewText] = useState(DEFAULT_VOICE_PREVIEW_TEXT);
   const [avatarUrl, setAvatarUrl] = useState('');
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0);
+  const [voicePitch, setVoicePitch] = useState(0);
+  const [voiceVolume, setVoiceVolume] = useState(1.0);
 
   useEffect(() => {
     if (params.selectedImageUrl) {
@@ -323,7 +371,7 @@ export function CreateCharacter() {
   const [generatingSetting, setGeneratingSetting] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
-  const [previewingVoice, setPreviewingVoice] = useState(false);
+  const [voiceListenPhase, setVoiceListenPhase] = useState<'idle' | 'loading' | 'playing'>('idle');
   const imagePollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imagePollingInFlightRef = useRef(false);
   const imagePollingRecordIdRef = useRef<number | null>(null);
@@ -422,7 +470,7 @@ export function CreateCharacter() {
   };
 
   const handleGenerateSetting = async () => {
-    if (generatingSetting || generatingImage || generatingVoice || saving) {
+    if (generatingSetting || saving) {
       return;
     }
     setGeneratingSetting(true);
@@ -459,7 +507,7 @@ export function CreateCharacter() {
   };
 
   const handleGenerateImage = async () => {
-    if (generatingSetting || generatingImage || generatingVoice || saving) {
+    if (generatingImage || saving) {
       return;
     }
     setGeneratingImage(true);
@@ -548,7 +596,7 @@ export function CreateCharacter() {
   };
 
   const handleGenerateVoice = async () => {
-    if (generatingSetting || generatingImage || generatingVoice || saving) {
+    if (generatingVoice || saving) {
       return;
     }
     setGeneratingVoice(true);
@@ -568,6 +616,9 @@ export function CreateCharacter() {
       const resolvedProviderVoiceId = voice?.providerVoiceId || result?.providerVoiceId;
       const resolvedPreviewText = voice?.previewText || result?.previewText;
       const resolvedPreviewAudioUrl = voice?.previewAudioUrl || result?.previewAudioUrl;
+      const resolvedSpeed = voice?.speed ?? result?.speed ?? 1.0;
+      const resolvedPitch = voice?.pitch ?? result?.pitch ?? 0;
+      const resolvedVolume = voice?.volume ?? result?.volume ?? 1.0;
       if (resolvedVoiceName) {
         setVoiceName(resolvedVoiceName);
       }
@@ -580,8 +631,27 @@ export function CreateCharacter() {
       if (resolvedPreviewText) {
         setVoicePreviewText(resolvedPreviewText);
       }
+      setVoiceSpeed(roundVoiceParam(resolvedSpeed, 2));
+      setVoicePitch(roundVoiceParam(resolvedPitch, 2));
+      setVoiceVolume(roundVoiceParam(resolvedVolume, 2));
       if (resolvedPreviewAudioUrl) {
         setVoicePreviewAudioUrl(resolvedPreviewAudioUrl);
+      }
+
+      if ((typeof resolvedVoiceProfileId === 'number' && Number.isFinite(resolvedVoiceProfileId)) || resolvedProviderVoiceId) {
+        const previewPayload: TsVoiceProfilePreviewPayload = {
+          voiceProfileId: typeof resolvedVoiceProfileId === 'number' && Number.isFinite(resolvedVoiceProfileId)
+            ? resolvedVoiceProfileId
+            : undefined,
+          voiceId: resolvedProviderVoiceId || undefined,
+          previewText: resolvedPreviewText || DEFAULT_VOICE_PREVIEW_TEXT,
+          speed: roundVoiceParam(resolvedSpeed, 2),
+          pitch: roundVoiceParam(resolvedPitch, 2),
+          volume: roundVoiceParam(resolvedVolume, 2),
+        };
+        void fetchAndCacheVoicePreview(previewPayload).catch((error) => {
+          console.warn('warmup voice preview failed', error);
+        });
       }
       setAdvancedAiGenerated(true);
       showMessage('角色声音生成成功。');
@@ -604,8 +674,35 @@ export function CreateCharacter() {
     return true;
   };
 
+  const applyPreviewResult = (preview: TsVoiceProfilePreviewResult) => {
+    if (typeof preview?.voiceProfileId === 'number' && Number.isFinite(preview.voiceProfileId)) {
+      setVoiceProfileId(preview.voiceProfileId);
+    }
+    if (preview?.providerVoiceId) {
+      setProviderVoiceId(preview.providerVoiceId);
+    }
+    if (preview?.previewText) {
+      setVoicePreviewText(preview.previewText);
+    }
+    if (preview?.previewAudioUrl) {
+      setVoicePreviewAudioUrl(preview.previewAudioUrl);
+    }
+  };
+
+  const fetchAndCacheVoicePreview = async (payload: TsVoiceProfilePreviewPayload) => {
+    const cached = getCachedVoicePreview(payload);
+    if (cached) {
+      applyPreviewResult(cached);
+      return cached;
+    }
+    const preview = await tsVoiceApi.previewVoiceProfile(payload);
+    setCachedVoicePreview(payload, preview);
+    applyPreviewResult(preview);
+    return preview;
+  };
+
   const handlePreviewVoice = async () => {
-    if (saving || generatingSetting || generatingImage || generatingVoice || previewingVoice) {
+    if (saving || generatingSetting || generatingImage || generatingVoice || voiceListenPhase !== 'idle') {
       return;
     }
     const previewProfileId = voiceProfileId || undefined;
@@ -627,26 +724,17 @@ export function CreateCharacter() {
       return;
     }
 
-    setPreviewingVoice(true);
+    setVoiceListenPhase('loading');
     try {
-      const preview = await tsVoiceApi.previewVoiceProfile({
+      const previewPayload: TsVoiceProfilePreviewPayload = {
         voiceProfileId: previewProfileId,
         voiceId: previewProviderVoiceId,
         previewText: voicePreviewText || DEFAULT_VOICE_PREVIEW_TEXT,
-        speed: 1.0,
-        pitch: 0,
-        volume: 1.0,
-      });
-
-      if (typeof preview?.voiceProfileId === 'number' && Number.isFinite(preview.voiceProfileId)) {
-        setVoiceProfileId(preview.voiceProfileId);
-      }
-      if (preview?.providerVoiceId) {
-        setProviderVoiceId(preview.providerVoiceId);
-      }
-      if (preview?.previewText) {
-        setVoicePreviewText(preview.previewText);
-      }
+        speed: roundVoiceParam(voiceSpeed, 2),
+        pitch: roundVoiceParam(voicePitch, 2),
+        volume: roundVoiceParam(voiceVolume, 2),
+      };
+      const preview = await fetchAndCacheVoicePreview(previewPayload);
 
       const audioUrl = preview?.previewAudioUrl || voicePreviewAudioUrl;
       if (!audioUrl) {
@@ -654,6 +742,7 @@ export function CreateCharacter() {
         return;
       }
       setVoicePreviewAudioUrl(audioUrl);
+      setVoiceListenPhase('playing');
       const played = await playPreviewAudio(audioUrl);
       if (!played) {
         showMessage('试听生成成功，当前环境暂不支持直接播放。');
@@ -663,7 +752,7 @@ export function CreateCharacter() {
       showMessage(extractErrorMessage(error, '试听生成失败，请稍后重试。'));
     }
     finally {
-      setPreviewingVoice(false);
+      setVoiceListenPhase('idle');
     }
   };
 
@@ -763,7 +852,8 @@ export function CreateCharacter() {
                     generatingSetting={generatingSetting}
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}
-                    previewingVoice={previewingVoice}
+                    previewingVoice={voiceListenPhase !== 'idle'}
+                    voiceListenPhase={voiceListenPhase}
                   />
 
                 </div>

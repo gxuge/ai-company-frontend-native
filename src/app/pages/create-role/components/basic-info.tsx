@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import Svg, { Line } from 'react-native-svg';
 import { AiFormInput } from '@/components/ai-company/ai-form-input';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
@@ -34,6 +35,7 @@ type BasicInfoSectionProps = {
   generatingImage?: boolean;
   generatingVoice?: boolean;
   previewingVoice?: boolean;
+  voiceListenPhase?: 'idle' | 'loading' | 'playing';
   onSelectFromGallery?: () => void;
 };
 
@@ -70,8 +72,8 @@ export function BasicInfoSection({
   generatingImage = false,
   generatingVoice = false,
   previewingVoice = false,
+  voiceListenPhase = 'idle',
 }: BasicInfoSectionProps) {
-  const isAnyGenerating = generatingSetting || generatingImage || generatingVoice;
   const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
 
   return (
@@ -87,7 +89,7 @@ export function BasicInfoSection({
             <AiGenerateBtn
               loading={generatingImage}
               onClick={() => {
-                if (!isAnyGenerating) {
+                if (!generatingImage) {
                   onGenerateImage?.();
                 }
               }}
@@ -131,7 +133,7 @@ export function BasicInfoSection({
           <AiGenerateBtn
             loading={generatingSetting}
             onClick={() => {
-              if (!isAnyGenerating) {
+              if (!generatingSetting) {
                 onGenerateSetting?.();
               }
             }}
@@ -246,7 +248,7 @@ export function BasicInfoSection({
           <AiGenerateBtn
             loading={generatingVoice}
             onClick={() => {
-              if (!isAnyGenerating) {
+              if (!generatingVoice) {
                 onGenerateVoice?.();
               }
             }}
@@ -267,21 +269,23 @@ export function BasicInfoSection({
                       <span className="text-[14px] text-[rgba(155,254,3,0.9)]">{voiceName}</span>
                       <button
                         type="button"
-                        disabled={generatingVoice || previewingVoice}
-                        className={`flex size-8 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] ${generatingVoice || previewingVoice ? 'opacity-60' : ''}`}
+                        disabled={generatingVoice || voiceListenPhase !== 'idle'}
+                        className={`flex size-8 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] ${generatingVoice || voiceListenPhase !== 'idle' ? 'opacity-60' : ''}`}
                         onClick={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
-                          if (!generatingVoice && !previewingVoice) {
+                          if (!generatingVoice && voiceListenPhase === 'idle') {
                             onPreviewVoice?.();
                           }
                         }}
                       >
-                        <img
-                          src={previewingVoice ? imgWaveGreenTiny : imgPlay}
-                          alt=""
-                          className={`size-[18px] object-contain ${!previewingVoice ? 'translate-x-[1px]' : ''}`}
-                        />
+                        {voiceListenPhase === 'loading' ? (
+                          <Loader2 className="size-[18px] animate-spin text-[#9BFE03]" />
+                        ) : voiceListenPhase === 'playing' ? (
+                          <img src={imgWaveGreenTiny} alt="" className="size-[18px] object-contain" />
+                        ) : (
+                          <img src={imgPlay} alt="" className="size-[18px] translate-x-[1px] object-contain" />
+                        )}
                       </button>
                     </>
                   )

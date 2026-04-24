@@ -1,6 +1,6 @@
 ﻿# Frontend Integration Plan
 
-更新时间：2026-04-17
+更新时间：2026-04-21
 
 ## 0. 任务背景（user-setting 对接，2026-04-09）
 - 目标：完成 `pages/user-setting` 的“读取当前用户资料 + 提交保存”链路。
@@ -492,3 +492,44 @@
 | 2026-04-18 | T2 | 已完成 | 推荐请求引入 requestId 竞态保护与会话切换重置 | `src/app/pages/chat/index.tsx` |
 | 2026-04-18 | T3 | 已完成 | 建议列表映射与提示项点击保护已落地 | `src/app/pages/chat/index.tsx` |
 | 2026-04-18 | T4 | 已完成 | 定向 lint 与任务文档回填完成 | `pnpm exec eslint ...`、`docs/fe-be-integration/任务-chat页-ChatTip推荐回复对接-20260418-1049.md` |
+
+## 22. 任务背景（sound-edit 试听下载缓存与播放状态机，2026-04-21）
+- 目标：`pages/sound-edit` 试听链路改为“调用试听接口 -> 下载音频 -> 加载态 -> 播放态 -> 播放结束回到普通态”，并支持 1 天缓存复用。
+- 边界：仅改试听状态机、缓存策略、并发保护与资源清理，不改页面 UI 布局和视觉结构。
+- 非目标：不改推荐/我的音色列表展示结构，不改后端接口契约。
+
+### 22.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 缓存键与 TTL 设计 | 已完成 | 以 `voiceProfileId + voiceId + previewText + speed + pitch + volume` 作为缓存键，TTL=1天 | 相同参数可命中缓存 | `src/app/pages/sound-edit/index.tsx` |
+| T2 下载缓存接入 | 已完成 | 新增内存缓存 + CacheStorage + localStorage 元数据 | 同参数二次试听不重复下载 | `src/app/pages/sound-edit/index.tsx` |
+| T3 播放状态机改造 | 已完成 | `idle -> loading -> playing -> idle`，播放结束自动回退 | 试听按钮与卡片状态随流程切换 | `src/app/pages/sound-edit/index.tsx` |
+| T4 并发与清理 | 已完成 | 请求序号防乱序、同参数请求去重、卸载清理播放与对象 URL | 连续点击不卡死、不串播 | `src/app/pages/sound-edit/index.tsx` |
+| T5 验证与文档回填 | 已完成 | 执行定向 eslint 并回填任务文档/总表/日志 | 记录完整可追溯 | `pnpm exec eslint ...`、`docs/**` |
+
+### 22.2 风险与回退
+- 风险：
+  - `src/app/pages/sound-edit/index.tsx` 存在历史存量 lint 风格告警，定向 eslint 非 0 error。
+  - Web 端缓存能力受浏览器环境影响，异常时会回退到内存缓存行为。
+- 回退：
+  - 仅需回退 `src/app/pages/sound-edit/index.tsx` 即可恢复旧试听链路。
+
+## 23. 任务背景（select-role 用户角色列表对接，2026-04-21）
+- 目标：`pages/select-role` 从静态角色数组切换为当前用户角色接口数据展示。
+- 边界：仅改数据请求、状态管理与字段映射，不改页面布局与视觉结构。
+- 非目标：不新增后端接口，不改 `create-story` 页面结构。
+
+### 23.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 契约核对 | 已完成 | 复用 `tsRoleApi.getRoleList`，确认字段映射与回传字段 | 映射关系清晰 | `src/lib/api/ts-role.ts`、`src/app/pages/select-role/index.tsx` |
+| T2 页面数据对接 | 已完成 | 静态 `items` 改为接口加载，保留本地搜索过滤 | 页面显示用户真实角色列表 | `src/app/pages/select-role/index.tsx` |
+| T3 选择回传保持 | 已完成 | `from=create-story` 时回传 `selectedRoleId/Name/Avatar` | 创建故事页可接收并追加角色 | `src/app/pages/select-role/index.tsx` |
+| T4 验证与记录 | 已完成 | 执行定向 lint，并回填任务文档/总表/日志 | 记录完整可追溯 | `pnpm exec eslint ...`、`docs/**` |
+
+### 23.2 风险与回退
+- 风险：
+  - 角色列表接口失败时页面仅展示空态+错误文案。
+  - 后端 `docs/hardness-writing-spec.md` 在当前路径缺失，本轮按现有前端规范执行。
+- 回退：
+  - 仅回退 `src/app/pages/select-role/index.tsx` 可恢复静态展示链路。
