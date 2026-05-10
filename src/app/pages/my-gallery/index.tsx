@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { tsRoleImageApi } from '@/lib/api';
@@ -12,6 +12,7 @@ const imgCheckBlack = resolveAsset(require('@/assets/images/my-gallery/check_bla
 const imgCheckWhite = resolveAsset(require('@/assets/images/my-gallery/check_white.svg'));
 const imgTrashWhite = resolveAsset(require('@/assets/images/my-gallery/trash_white.svg'));
 const imgImagePlaceholder = resolveAsset(require('@/assets/images/my-gallery/image_placeholder.svg'));
+const imgFabAddRole = resolveAsset(require('@/assets/images/select-role/fab_add_role.svg'));
 
 const PAGE_SIZE = 60;
 
@@ -94,13 +95,13 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
             <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
               <View style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                borderRadius: 16, borderWidth: 2, borderColor: '#34d399',
+                borderRadius: 16, borderWidth: 2, borderColor: 'rgba(155,254,3,0.9)',
               }} />
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(52,211,153,0.06)' }} />
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(155,254,3,0.1)' }} />
               <View style={{
                 position: 'absolute', top: 10, right: 10,
                 width: 28, height: 28, borderRadius: 14,
-                backgroundColor: '#34d399', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'rgba(155,254,3,0.9)', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Image source={imgCheckBlack} style={{ width: 15, height: 15 }} resizeMode="contain" />
               </View>
@@ -146,6 +147,24 @@ export default function MyGallery() {
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const pulse = useSharedValue(1);
+  useEffect(() => {
+    pulse.value = withRepeat(withTiming(1.1, { duration: 1500 }), -1, true);
+  }, []);
+
+  const pulseStyle = useAnimatedStyle(() => {
+    const progress = (pulse.value - 1) * 10; // 0 -> 1 range
+    return {
+      transform: [{ scale: pulse.value }],
+      shadowColor: '#9bfe03',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6 + progress * 0.4,
+      shadowRadius: 10 + progress * 10,
+      elevation: 8 + progress * 4,
+      borderRadius: 28,
+    };
+  });
 
   useEffect(() => {
     let alive = true;
@@ -301,7 +320,7 @@ export default function MyGallery() {
       style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
     >
       <Text style={{
-        color: isManageMode ? '#34d399' : '#a1a1aa',
+        color: isManageMode ? 'rgba(155,254,3,0.9)' : '#a1a1aa',
         fontSize: 14,
         fontWeight: '500',
         fontFamily: 'Noto Sans SC',
@@ -313,7 +332,7 @@ export default function MyGallery() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#09090b' }}>
+      <View style={{ flex: 1, backgroundColor: '#000000' }}>
         <AiHeader title="我的图库" className="px-5 py-4" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#a1a1aa', fontSize: 14 }}>加载中...</Text>
@@ -324,7 +343,7 @@ export default function MyGallery() {
 
   if (images.length === 0) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#09090b' }}>
+      <View style={{ flex: 1, backgroundColor: '#000000' }}>
         <AiHeader title="我的图库" className="px-5 py-4" />
         <AiEmpty 
           title="你还没有图片" 
@@ -338,7 +357,7 @@ export default function MyGallery() {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#09090b' }}>
+    <View style={{ flex: 1, backgroundColor: '#000000' }}>
       <AiHeader title="我的图库" className="px-5 py-4" rightElement={manageButton} />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20, paddingBottom: 128 }}>
@@ -376,12 +395,12 @@ export default function MyGallery() {
             onPress={handleUseImage}
             style={{
               paddingVertical: 16, borderRadius: 16,
-              backgroundColor: 'rgba(16,185,129,0.9)',
+              backgroundColor: 'rgba(155,254,3,0.9)',
               alignItems: 'center',
               opacity: selectedImageItem?.url ? 1 : 0.6,
             }}
           >
-            <Text style={{ color: 'black', fontSize: 16, fontWeight: '600' }}>使用这张图片</Text>
+            <Text style={{ color: '#3b3f34', fontSize: 16, fontWeight: '600' }}>使用</Text>
           </Pressable>
         </Animated.View>
       )}
@@ -408,6 +427,34 @@ export default function MyGallery() {
           </Pressable>
         </Animated.View>
       )}
+
+      <Animated.View
+        entering={FadeIn.delay(300).duration(300)}
+        style={[{
+          position: 'absolute',
+          bottom: (!isManageMode && selectedImage) || (isManageMode && selectedForDelete.length > 0) ? 110 : 40,
+          right: 20,
+          zIndex: 10,
+        }, pulseStyle]}
+      >
+        <Pressable
+          onPress={() => router.push('/pages/create-character')}
+          style={({ pressed }) => ({
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            borderWidth: 1.5,
+            borderColor: 'rgba(155,254,3,0.9)',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.7 : 1,
+            transform: [{ scale: pressed ? 0.95 : 1 }],
+          })}
+        >
+          <Image source={imgFabAddRole} style={{ width: 32, height: 32 }} resizeMode="contain" />
+        </Pressable>
+      </Animated.View>
     </View>
   );
 }

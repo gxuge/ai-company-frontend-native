@@ -1,0 +1,13 @@
+**/node_modules
+node_modules
+.git
+.github
+.expo
+.turbo
+.vscode
+coverage
+tmp
+dist
+!dist
+!dist/**
+
