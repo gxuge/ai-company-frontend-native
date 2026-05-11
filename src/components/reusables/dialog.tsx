@@ -63,7 +63,7 @@ function DialogContent({
           className={cn(
             'bg-background border-border z-50 mx-auto flex w-full flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-lg',
             Platform.select({
-              web: 'animate-in fade-in-0 zoom-in-95 web:max-w-[calc(100%-2rem)] duration-200',
+              web: 'animate-in fade-in-0 zoom-in-95 web:w-[90%] web:max-w-lg duration-200',
             }),
             className
           )}

@@ -1,4 +1,5 @@
 import { AiHeader } from '@/components/ai-company/ai-header';
+import { useRouter } from 'expo-router';
 const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/feedback_blue.svg"));
 const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/about_purple.svg"));
 const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/account_green.svg"));
@@ -35,14 +36,16 @@ function MenuItem({
   label,
   rightText,
   showArrow = true,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   rightText?: string;
   showArrow?: boolean;
+  onClick?: () => void;
 }) {
   return (
-    <button className="flex items-center w-full px-4 py-3.5 gap-3 active:bg-white/5 transition-colors">
+    <button onClick={onClick} className="flex items-center w-full px-4 py-3.5 gap-3 active:bg-white/5 transition-colors">
       {icon}
       <span className="flex-1 text-left text-gray-100 font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
         {label}
@@ -75,6 +78,8 @@ function Divider() {
 }
 
 export function SettingsPage() {
+  const router = useRouter();
+
   return (
     <div className="relative min-h-full bg-black font-['Noto_Sans_SC',sans-serif] overflow-auto">
       {/* Background gradient blurs */}
@@ -156,6 +161,7 @@ export function SettingsPage() {
                 />
               }
               label="账号设置"
+              onClick={() => router.push('/pages/user-setting')}
             />
             <Divider />
             <MenuItem

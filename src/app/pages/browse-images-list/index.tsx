@@ -16,6 +16,7 @@ import type { StoryGridItem } from './components/StoryGrid';
 import { ImageCard } from './components/ImageCard';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
 
 type TabValue = 'story' | 'character';
 
@@ -84,20 +85,20 @@ function normalizeText(value: unknown, fallback: string) {
 
 function resolveStoryModeByCategory(index: number) {
   const map: Record<number, string> = {
-    3: '二次元',
-    4: '都市',
-    5: '古风',
-    6: '科幻',
+    3: '2D',
+    4: 'Urban',
+    5: 'Ancient',
+    6: 'Sci-Fi',
   };
   return map[index];
 }
 
 function resolveStyleByCategory(index: number) {
   const map: Record<number, string> = {
-    3: '二次元',
-    4: '都市',
-    5: '古风',
-    6: '科幻',
+    3: '2D',
+    4: 'Urban',
+    5: 'Ancient',
+    6: 'Sci-Fi',
   };
   return map[index];
 }
@@ -398,28 +399,44 @@ export default function BrowseImagesList() {
           flexGrow: 1 // Important for centering when empty
         }}
       >
-        {currentState.loading ? (
-          <Text style={{ color: '#9ca3af', fontSize: 12, marginBottom: 8 }}>加载中...</Text>
-        ) : null}
         {currentState.error ? (
           <Text style={{ color: '#fca5a5', fontSize: 12, marginBottom: 8 }}>{currentState.error}</Text>
         ) : null}
 
         {activeTab === 'story' ? (
           <>
-            <StoryGrid items={storyState.items} />
+            {currentState.loading && currentState.items.length === 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <View key={`story-skeleton-${i}`} style={{ width: '31.5%', aspectRatio: 208 / 292 }}>
+                    <AiSkeleton width="100%" height="100%" borderRadius={16} />
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <StoryGrid items={storyState.items} />
+            )}
             {!storyState.loading && !storyState.error && storyState.items.length === 0 ? (
-              <AiEmpty 
-                title="暂无故事" 
-                description="换个关键词搜索试试看？" 
-                style={{ marginTop: 60 }} 
+              <AiEmpty
+                title="No stories yet"
+                description="Try searching with a different keyword"
+                style={{ marginTop: 60 }}
               />
             ) : null}
           </>
         ) : (
           <>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-              {characterCards.map((card) => (
+            {currentState.loading && currentState.items.length === 0 ? (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <View key={`char-skeleton-${i}`} style={{ width: '47.4%', marginBottom: 18, aspectRatio: 3 / 4 }}>
+                    <AiSkeleton width="100%" height="100%" borderRadius={12} />
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                {characterCards.map((card) => (
                 <View key={card.id} style={{ width: '47.4%', marginBottom: 18 }}>
                   <ImageCard
                     imageUrl={card.imageUrl}
@@ -431,10 +448,11 @@ export default function BrowseImagesList() {
                 </View>
               ))}
             </View>
+            )}
             {!characterState.loading && !characterState.error && characterState.items.length === 0 ? (
-              <AiEmpty 
-                title="暂无角色" 
-                description="试试搜索其他的关键词" 
+              <AiEmpty
+                title="No characters yet"
+                description="Try searching with a different keyword"
                 style={{ marginTop: 60 }}
               />
             ) : null}

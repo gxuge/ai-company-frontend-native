@@ -16,6 +16,7 @@ import {
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
 import { router } from 'expo-router';
 import { tsRoleApi } from '@/lib/api/ts-role';
 import { tsStoryApi } from '@/lib/api/ts-story';
@@ -296,11 +297,16 @@ function MineGridSection(props: MineGridSectionProps) {
         />
       </View>
 
-      {loading ? <Text style={styles.dataHintText}>加载中...</Text> : null}
       {loadError ? <Text style={styles.dataErrorText}>{loadError}</Text> : null}
 
       <View style={styles.gridContainer}>
-        {activeGridItems.length > 0 ? (
+        {loading && activeGridItems.length === 0 ? (
+          Array.from({ length: 6 }).map((_, i) => (
+            <View key={`skeleton-${i}`} style={styles.gridCard}>
+              <AiSkeleton width="100%" height="100%" borderRadius={10} />
+            </View>
+          ))
+        ) : activeGridItems.length > 0 ? (
           activeGridItems.map(item => (
             <GridCard key={item.id} item={item} onPress={() => onItemPress(item)} />
           ))

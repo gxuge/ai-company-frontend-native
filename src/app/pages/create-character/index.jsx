@@ -105,7 +105,7 @@ function MyGalleryButton() {
   );
 }
 
-/** 主输入卡�?*/
+/** 主输入卡片?*/
 function InputCard({
   value,
   onChange,
@@ -211,7 +211,7 @@ function InputCard({
                 <path d={svgPaths.p6e49400} fill="rgba(155,254,3,0.9)" fillOpacity="0.9" />
               </svg>
               <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(155,254,3,0.9)]">
-                {generating ? '生成�?..' : 'AI 生成'}
+                {generating ? '生成中...' : 'AI 生成'}
               </span>
             </button>
           </div>
@@ -303,7 +303,7 @@ function Container() {
   const [previewSrc, setPreviewSrc] = useState('');
   const fileInputRef = useRef(null);
 
-  /** 调起文件系统选单张图�?*/
+  /** 调起文件系统选单张图片?*/
   const handlePickRefImage = () => {
     fileInputRef.current?.click();
   };
@@ -320,7 +320,7 @@ function Container() {
   const handleGenerate = async () => {
     const promptTextTrimmed = promptText.trim();
     if (!promptTextTrimmed && !referenceImageUrl) {
-      showMessage('Please enter description or select a reference image');
+      showMessage('请输入形象描述或选择参考图');
       return;
     }
 
@@ -342,12 +342,12 @@ function Container() {
       });
       const generatedText = generated?.generatedText?.trim();
       if (!generatedText) {
-        throw new Error('AI did not return usable text');
+        throw new Error('AI 未返回可用的文本');
       }
       setPromptText(generatedText);
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, 'AI generation failed, please retry'));
+      showMessage(extractErrorMessage(error, 'AI 生成失败，请重试'));
     }
     finally {
       setIsGenerating(false);
@@ -357,7 +357,7 @@ function Container() {
   const handleCreate = async () => {
     const promptTextTrimmed = promptText.trim();
     if (!referenceImageUrl && promptTextTrimmed.length < 15) {
-      showMessage('Please upload a reference image or enter at least 15 characters');
+      showMessage('请上传参考图或输入至少 15 个字符');
       return;
     }
 
@@ -371,7 +371,7 @@ function Container() {
 
       const imageUrl = generated?.imageUrl?.trim();
       if (!imageUrl) {
-        throw new Error('Create failed: image URL not returned');
+        throw new Error('创建失败：未返回图片地址');
       }
       setGeneratedImageUrl(imageUrl);
 
@@ -394,10 +394,10 @@ function Container() {
         status: 1,
         extJson,
       });
-      showMessage('Create character success');
+      showMessage('创建形象成功');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, 'Create character failed, please retry'));
+      showMessage(extractErrorMessage(error, '创建形象失败，请重试'));
     }
     finally {
       setIsCreating(false);
@@ -438,7 +438,7 @@ function Container() {
         />
       </div>
 
-      {/* 隐藏的文件选择�?*/}
+      {/* 隐藏的文件选择框?*/}
       <input
         ref={fileInputRef}
         type="file"

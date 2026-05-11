@@ -82,8 +82,7 @@ function HeaderContainer() {
 }
 
 /* ────────────────────────────────────────────
-   Card 1 — 新人物
-──────────────────────────────────────────── */
+   Card 1 �?新人�?──────────────────────────────────────────── */
 function Card1Background() {
   return (
     <div className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
@@ -122,13 +121,13 @@ function Card1Content() {
             className="flex flex-col h-[53.846px] justify-center leading-[0] relative shrink-0 text-[38.462px] text-white w-[190.442px]"
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新人物</p>
+            <p className="leading-[53.846px]">新形象</p>
           </div>
         </div>
       </div>
 
       {/* Middle: description */}
-      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-2.23px] right-[2.23px] top-[calc(50%+24.78px)]">
+      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-2.23px] right-[2.23px] top-1/2 mt-[24.78px]">
         <div
           className="flex flex-col h-[111.538px] justify-center leading-[40px] relative shrink-0 text-[#94a3b8] text-[27px] w-[367px]"
           style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 400 }}
@@ -185,8 +184,7 @@ function Card1() {
 }
 
 /* ────────────────────────────────────────────
-   Card 2 — 新剧情
-──────────────────────────────────────────── */
+   Card 2 �?新剧�?──────────────────────────────────────────── */
 function Card2Background() {
   return (
     <div className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
@@ -214,7 +212,7 @@ function Card2Content() {
               aria-hidden="true"
               className="absolute border-[#374151] border-[1.923px] border-solid inset-0 pointer-events-none rounded-[23.077px]"
             />
-            <div className="-translate-x-1/2 -translate-y-1/2 absolute h-[32.903px] left-[calc(50%+2px)] top-[calc(50%-3px)] w-[35.306px]">
+            <div className="-translate-x-1/2 -translate-y-1/2 absolute h-[32.903px] left-1/2 ml-[2px] top-1/2 -mt-[3px] w-[35.306px]">
               <img src={imgBookScript} alt="" className="absolute block size-full object-contain" />
             </div>
           </div>
@@ -223,18 +221,18 @@ function Card2Content() {
             className="flex flex-col h-[53.846px] justify-center leading-[0] relative shrink-0 text-[38.462px] text-white w-[190.442px]"
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新剧情</p>
+            <p className="leading-[53.846px]">新剧本</p>
           </div>
         </div>
       </div>
 
       {/* Middle: description */}
-      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-0.23px] right-[0.23px] top-[calc(50%+22.41px)]">
+      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-0.23px] right-[0.23px] top-1/2 mt-[22.41px]">
         <div
           className="flex flex-col h-[111.538px] justify-center leading-[40px] relative shrink-0 text-[#94a3b8] text-[27px] w-[367px]"
           style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 400 }}
         >
-          <p className="mb-0">编织有趣的互动叙事</p>
+          <p className="mb-0">打造引人入胜的互动叙事</p>
           <p>开启全新篇章</p>
         </div>
       </div>
@@ -273,7 +271,7 @@ function Card2() {
             <div className="flex items-center min-h-[inherit] p-[46.154px] relative w-full">
               <Card2Background />
               <Card2Content />
-              <div className="-translate-y-1/2 absolute bg-[rgba(155,254,3,0.05)] blur-[38.462px] right-[-30.77px] rounded-[9999px] size-[184.615px] top-[calc(50%+0.01px)]" />
+              <div className="-translate-y-1/2 absolute bg-[rgba(155,254,3,0.05)] blur-[38.462px] right-[-30.77px] rounded-[9999px] size-[184.615px] top-1/2 mt-[0.01px]" />
             </div>
           </div>
         </div>
@@ -298,7 +296,7 @@ function Main() {
           {/* 23px spacer */}
           <div className="h-[23px] shrink-0 w-[682px]" />
 
-          {/* Card1 — 淡入 + 上移，延迟 0.1s */}
+          {/* Card1 �?淡入 + 上移，延�?0.1s */}
           <motion.div
             className="w-full"
             initial={{ opacity: 0, y: 60 }}
@@ -311,7 +309,7 @@ function Main() {
           {/* 43px spacer */}
           <div className="h-[43px] shrink-0 w-[682px]" />
 
-          {/* Card2 — 淡入 + 上移，延迟 0.25s（错开产生层叠感） */}
+          {/* Card2 �?淡入 + 上移，延�?0.25s（错开产生层叠感） */}
           <motion.div
             className="w-full"
             initial={{ opacity: 0, y: 60 }}
@@ -350,7 +348,7 @@ function CloseButton() {
 }
 
 /* ────────────────────────────────────────────
-   Root — handles proportional scaling
+   Root �?handles proportional scaling
 ──────────────────────────────────────────── */
 export default function App() {
   const [scale, setScale] = useState(1);
@@ -381,7 +379,7 @@ export default function App() {
           zoom: scale,
         }}
       >
-        {/* Body — matches original Figma root structure */}
+        {/* Body �?matches original Figma root structure */}
         <div className="bg-[#0d0d11] flex flex-col items-start relative">
           <Main />
           <CloseButton />
@@ -390,3 +388,4 @@ export default function App() {
     </div>
   );
 }
+

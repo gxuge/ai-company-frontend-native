@@ -377,7 +377,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
         >
           <div className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
-            🎙️
+            🎙
           </div>
           {/* Figma node 150:3037 Play Button Overlay */}
           {selected && (

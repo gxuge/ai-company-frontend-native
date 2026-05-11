@@ -203,10 +203,11 @@ function CategoryIcon({ icon, color }: { icon: string; color: string }) {
 }
 
 function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
   return (
     <div className="flex size-[20px] items-center justify-center rounded-full border border-[#3e7df8] bg-[#ff4245]">
       <span className="text-[11px] text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
-        {count}
+        {count > 99 ? '99+' : count}
       </span>
     </div>
   );
@@ -236,7 +237,6 @@ function ConversationItem({
           alt={name}
           className="size-full rounded-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 size-[12px] rounded-full border-2 border-[#202020] bg-[#3B82F6]" />
       </div>
 
       <div className="min-w-0 flex-1">

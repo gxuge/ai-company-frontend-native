@@ -55,7 +55,7 @@ export function AiSelectTab<T extends string | number>({
               className={itemClassName}
             >
               <Text
-                className={`text-xs ${fontBase} transition-colors tracking-wide ${
+                className={`text-[15px] ${fontBase} transition-colors tracking-wide ${
                   isActive ? activeTextClassName : inactiveTextClassName
                 }`}
               >
