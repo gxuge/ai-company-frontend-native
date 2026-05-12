@@ -13,71 +13,75 @@ const DESIGN_WIDTH = 682;
 ──────────────────────────────────────────── */
 function Frame1() {
   return (
-    <div className="absolute h-[204px] left-[9.85px] top-0 w-[372px]">
-      <div
+    <View className="absolute h-[204px] left-[9.85px] top-0 w-[372px]">
+      <View
         className="-translate-y-1/2 absolute flex flex-col font-black h-[204px] justify-center leading-[101.538px] left-[9.85px] text-[92.308px] text-white top-[102px] tracking-[-2.3077px] w-[372px]"
+        // @ts-expect-error
         style={{ fontFamily: "'Noto Sans SC', sans-serif" }}
       >
-        <p className="mb-0">开启你的</p>
-        <p>&nbsp;</p>
-      </div>
-    </div>
+        <Text className="mb-0">开启你的</Text>
+        <Text>&nbsp;</Text>
+      </View>
+    </View>
   );
 }
 
 function Frame2() {
   return (
-    <div className="absolute h-[204px] left-[195.85px] top-0 w-[372px]">
-      <div
+    <View className="absolute h-[204px] left-[195.85px] top-0 w-[372px]">
+      <View
         className="-translate-y-1/2 absolute flex flex-col font-black h-[204px] justify-center leading-[101.538px] left-0 text-[92.308px] top-[102px] tracking-[-2.3077px] w-[372px]"
+        // @ts-expect-error
         style={{ fontFamily: "'Noto Sans SC', sans-serif" }}
       >
-        <p className="mb-0">&nbsp;</p>
-        <p className="bg-clip-text bg-gradient-to-r from-[#9bfe03] text-transparent to-white">
+        <Text className="mb-0">&nbsp;</Text>
+        <Text className="bg-clip-text bg-gradient-to-r from-[#9bfe03] text-transparent to-white">
           创作之旅
-        </p>
-      </div>
-    </div>
+        </Text>
+      </View>
+    </View>
   );
 }
 
 function Heading() {
   return (
-    <div className="h-[204px] relative shadow-[0px_7.692px_5.769px_0px_rgba(0,0,0,0.1),0px_19.231px_15.385px_0px_rgba(0,0,0,0.04)] shrink-0 w-full">
+    <View className="h-[204px] relative shadow-[0px_7.692px_5.769px_0px_rgba(0,0,0,0.1),0px_19.231px_15.385px_0px_rgba(0,0,0,0.04)] shrink-0 w-full">
       <Frame1 />
       <Frame2 />
-    </div>
+    </View>
   );
 }
 
 function VerticalBorder() {
   return (
-    <div className="relative shrink-0 w-full">
-      <div
-        aria-hidden="true"
+    <View className="relative shrink-0 w-full">
+      // @ts-expect-error
+      <View
+        accessibilityElementsHidden={true}
         className="absolute border-[rgba(155,254,3,0.5)] border-l-[3.846px] border-solid inset-0 pointer-events-none"
       />
-      <div className="flex flex-col items-start pl-[11.538px] relative w-full">
-        <div
+      <View className="flex flex-col items-start pl-[11.538px] relative w-full">
+        <View
           className="flex flex-col font-light h-[53.846px] justify-center leading-[0] relative shrink-0 text-[34.615px] text-[rgba(255,255,255,0.5)] tracking-[0.8654px] w-[434.519px]"
+          // @ts-expect-error
           style={{ fontFamily: "'Noto Sans SC', sans-serif" }}
         >
-          <p className="leading-[53.846px]">Advanced AI Creative Suite</p>
-        </div>
-      </div>
-    </div>
+          <Text className="leading-[53.846px]">Advanced AI Creative Suite</Text>
+        </View>
+      </View>
+    </View>
   );
 }
 
 function HeaderContainer() {
   return (
-    <div className="flex flex-col gap-[23.077px] items-start relative shrink-0 w-full">
-      <div
+    <View className="flex flex-col gap-[23.077px] items-start relative shrink-0 w-full">
+      <View
         className="absolute bg-[#9bfe03] blur-[57.692px] left-[-30.77px] opacity-20 rounded-[9999px] size-[153.846px] top-[-61.54px]"
       />
       <Heading />
       <VerticalBorder />
-    </div>
+    </View>
   );
 }
 
@@ -85,101 +89,108 @@ function HeaderContainer() {
    Card 1 �?新人�?──────────────────────────────────────────── */
 function Card1Background() {
   return (
-    <div className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
-      <div className="absolute inset-0 size-full">
-        <img
+    <View className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
+      <View className="absolute inset-0 size-full">
+        <Image
           alt=""
           className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-          src={imgFes5}
+          source={imgFes5}
         />
-      </div>
-      <div className="absolute bg-gradient-to-r from-[#050505] inset-0 to-[rgba(5,5,5,0)] via-[50%] via-[rgba(5,5,5,0.8)]" />
-    </div>
+      </View>
+      <View className="absolute bg-gradient-to-r from-[#050505] inset-0 to-[rgba(5,5,5,0)] via-[50%] via-[rgba(5,5,5,0.8)]" />
+    </View>
   );
 }
 
 function Card1Content() {
   return (
-    <div className="h-[236px] max-w-[457.692px] relative shrink-0 w-[393.058px]">
+    <View className="h-[236px] max-w-[457.692px] relative shrink-0 w-[393.058px]">
       {/* Top: icon + title */}
-      <div className="absolute flex flex-col items-start left-0 pb-[15.385px] right-0 top-0">
-        <div className="flex gap-[23.077px] items-center relative shrink-0 w-full">
+      <View className="absolute flex flex-col items-start left-0 pb-[15.385px] right-0 top-0">
+        <View className="flex gap-[23.077px] items-center relative shrink-0 w-full">
           {/* Icon tile */}
-          <div className="bg-[#1a1a24] relative rounded-[23.077px] shrink-0 size-[76.923px]">
-            <div
-              aria-hidden="true"
+          <View className="bg-[#1a1a24] relative rounded-[23.077px] shrink-0 size-[76.923px]">
+            // @ts-expect-error
+            <View
+              accessibilityElementsHidden={true}
               className="absolute border-[#374151] border-[1.923px] border-solid inset-0 pointer-events-none rounded-[23.077px]"
             />
-            <div className="absolute left-[21.77px] overflow-clip size-[42px] top-[16px]">
-              <div className="absolute inset-[10.42%_8.33%]">
-                <img src={imgAddUser} alt="" className="absolute block size-full object-contain" />
-              </div>
-            </div>
-          </div>
+            <View className="absolute left-[21.77px] overflow-clip size-[42px] top-[16px]">
+              <View className="absolute inset-[10.42%_8.33%]">
+                <Image source={imgAddUser} alt="" className="absolute block size-full object-contain" />
+              </View>
+            </View>
+          </View>
           {/* Title */}
-          <div
+          <View
             className="flex flex-col h-[53.846px] justify-center leading-[0] relative shrink-0 text-[38.462px] text-white w-[190.442px]"
+            // @ts-expect-error
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新形象</p>
-          </div>
-        </div>
-      </div>
+            <Text className="leading-[53.846px]">新形象</Text>
+          </View>
+        </View>
+      </View>
 
       {/* Middle: description */}
-      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-2.23px] right-[2.23px] top-1/2 mt-[24.78px]">
-        <div
+      <View className="-translate-y-1/2 absolute flex flex-col items-start left-[-2.23px] right-[2.23px] top-1/2 mt-[24.78px]">
+        <View
           className="flex flex-col h-[111.538px] justify-center leading-[40px] relative shrink-0 text-[#94a3b8] text-[27px] w-[367px]"
+          // @ts-expect-error
           style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 400 }}
         >
-          <p className="mb-0">给世界添个新面孔</p>
-          <p>写下人物特质, 开始塑造吧</p>
-        </div>
-      </div>
+          <Text className="mb-0">给世界添个新面孔</Text>
+          <Text>写下人物特质, 开始塑造吧</Text>
+        </View>
+      </View>
 
       {/* Bottom: CTA */}
-      <div className="absolute flex flex-col items-start left-0 pt-0 right-0 top-[204px]">
-        <div className="flex items-center gap-1 relative shrink-0 w-full">
-          <div
+      <View className="absolute flex flex-col items-start left-0 pt-0 right-0 top-[204px]">
+        <View className="flex items-center gap-1 relative shrink-0 w-full">
+          <View
             className="flex flex-col h-[39px] justify-center leading-[0] relative shrink-0 text-[#9bfe03] text-[28px] w-[117px]"
+            // @ts-expect-error
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[28px]">开始创建</p>
-          </div>
-          <div className="h-[24px] relative shrink-0 w-[25px]">
-            <img src={imgArrowRight} alt="" className="absolute block size-full object-contain" />
-          </div>
-        </div>
-      </div>
-    </div>
+            <Text className="leading-[28px]">开始创建</Text>
+          </View>
+          <View className="h-[24px] relative shrink-0 w-[25px]">
+            <Image source={imgArrowRight} alt="" className="absolute block size-full object-contain" />
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
 function Card1() {
   return (
-    <div
+    <View
       className="relative rounded-[46.154px] shrink-0 w-full cursor-pointer"
-      onClick={() => router.push("/pages/create-role")}
+      // @ts-expect-error
+      onPress={() => router.push("/pages/create-role")}
     >
-      <div className="flex flex-col items-start overflow-clip p-[1.923px] relative rounded-[inherit] w-full">
-        <div className="min-h-[269.231px] relative shrink-0 w-full">
-          <div
-            aria-hidden="true"
+      <View className="flex flex-col items-start overflow-clip p-[1.923px] relative rounded-[inherit] w-full">
+        <View className="min-h-[269.231px] relative shrink-0 w-full">
+          // @ts-expect-error
+          <View
+            accessibilityElementsHidden={true}
             className="absolute border-2 border-[#9bfe03] border-solid inset-0 pointer-events-none"
           />
-          <div className="flex flex-row items-center min-h-[inherit] size-full">
-            <div className="flex items-center min-h-[inherit] p-[46.154px] relative w-full">
+          <View className="flex flex-row items-center min-h-[inherit] size-full">
+            <View className="flex items-center min-h-[inherit] p-[46.154px] relative w-full">
               <Card1Background />
               <Card1Content />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        aria-hidden="true"
+            </View>
+          </View>
+        </View>
+      </View>
+      // @ts-expect-error
+      <View
+        accessibilityElementsHidden={true}
         className="absolute border-[#9bfe03] border-[1.923px] border-solid inset-0 pointer-events-none rounded-[46.154px]"
       />
-    </div>
+    </View>
   );
 }
 
@@ -187,100 +198,107 @@ function Card1() {
    Card 2 �?新剧�?──────────────────────────────────────────── */
 function Card2Background() {
   return (
-    <div className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
-      <div className="absolute inset-0 size-full">
-        <img
+    <View className="absolute bg-[#121212] flex flex-col inset-0 items-start justify-center overflow-hidden">
+      <View className="absolute inset-0 size-full">
+        <Image
           alt=""
           className="absolute inset-0 max-w-none object-cover pointer-events-none size-full"
-          src={imgN4Yr}
+          source={imgN4Yr}
         />
-      </div>
-      <div className="absolute bg-gradient-to-r from-[#050505] inset-0 to-[rgba(5,5,5,0)] via-[50%] via-[rgba(5,5,5,0.8)]" />
-    </div>
+      </View>
+      <View className="absolute bg-gradient-to-r from-[#050505] inset-0 to-[rgba(5,5,5,0)] via-[50%] via-[rgba(5,5,5,0.8)]" />
+    </View>
   );
 }
 
 function Card2Content() {
   return (
-    <div className="h-[236px] max-w-[457.692px] relative shrink-0 w-[393.058px]">
+    <View className="h-[236px] max-w-[457.692px] relative shrink-0 w-[393.058px]">
       {/* Top: icon + title */}
-      <div className="absolute flex flex-col items-start left-0 pb-[15.385px] right-0 top-0">
-        <div className="flex gap-[23.077px] items-center relative shrink-0 w-full">
+      <View className="absolute flex flex-col items-start left-0 pb-[15.385px] right-0 top-0">
+        <View className="flex gap-[23.077px] items-center relative shrink-0 w-full">
           {/* Icon tile */}
-          <div className="bg-[#1a1a24] relative rounded-[23.077px] shrink-0 size-[76.923px]">
-            <div
-              aria-hidden="true"
+          <View className="bg-[#1a1a24] relative rounded-[23.077px] shrink-0 size-[76.923px]">
+            // @ts-expect-error
+            <View
+              accessibilityElementsHidden={true}
               className="absolute border-[#374151] border-[1.923px] border-solid inset-0 pointer-events-none rounded-[23.077px]"
             />
-            <div className="-translate-x-1/2 -translate-y-1/2 absolute h-[32.903px] left-1/2 ml-[2px] top-1/2 -mt-[3px] w-[35.306px]">
-              <img src={imgBookScript} alt="" className="absolute block size-full object-contain" />
-            </div>
-          </div>
+            <View className="-translate-x-1/2 -translate-y-1/2 absolute h-[32.903px] left-1/2 ml-[2px] top-1/2 -mt-[3px] w-[35.306px]">
+              <Image source={imgBookScript} alt="" className="absolute block size-full object-contain" />
+            </View>
+          </View>
           {/* Title */}
-          <div
+          <View
             className="flex flex-col h-[53.846px] justify-center leading-[0] relative shrink-0 text-[38.462px] text-white w-[190.442px]"
+            // @ts-expect-error
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新剧本</p>
-          </div>
-        </div>
-      </div>
+            <Text className="leading-[53.846px]">新剧本</Text>
+          </View>
+        </View>
+      </View>
 
       {/* Middle: description */}
-      <div className="-translate-y-1/2 absolute flex flex-col items-start left-[-0.23px] right-[0.23px] top-1/2 mt-[22.41px]">
-        <div
+      <View className="-translate-y-1/2 absolute flex flex-col items-start left-[-0.23px] right-[0.23px] top-1/2 mt-[22.41px]">
+        <View
           className="flex flex-col h-[111.538px] justify-center leading-[40px] relative shrink-0 text-[#94a3b8] text-[27px] w-[367px]"
+          // @ts-expect-error
           style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 400 }}
         >
-          <p className="mb-0">打造引人入胜的互动叙事</p>
-          <p>开启全新篇章</p>
-        </div>
-      </div>
+          <Text className="mb-0">打造引人入胜的互动叙事</Text>
+          <Text>开启全新篇章</Text>
+        </View>
+      </View>
 
       {/* Bottom: CTA */}
-      <div className="absolute flex flex-col items-start left-0 pt-0 right-0 top-[204px]">
-        <div className="flex items-center gap-1 relative shrink-0 w-full">
-          <div
+      <View className="absolute flex flex-col items-start left-0 pt-0 right-0 top-[204px]">
+        <View className="flex items-center gap-1 relative shrink-0 w-full">
+          <View
             className="flex flex-col h-[39px] justify-center leading-[0] relative shrink-0 text-[#9bfe03] text-[28px] w-[117px]"
+            // @ts-expect-error
             style={{ fontFamily: "'Noto Sans SC', sans-serif", fontWeight: 700 }}
           >
-            <p className="leading-[28px]">开始创作</p>
-          </div>
-          <div className="h-[24px] relative shrink-0 w-[25px]">
-            <img src={imgArrowRight} alt="" className="absolute block size-full object-contain" />
-          </div>
-        </div>
-      </div>
-    </div>
+            <Text className="leading-[28px]">开始创作</Text>
+          </View>
+          <View className="h-[24px] relative shrink-0 w-[25px]">
+            <Image source={imgArrowRight} alt="" className="absolute block size-full object-contain" />
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
 function Card2() {
   return (
-    <div
+    <View
       className="relative rounded-[46.154px] shrink-0 w-full cursor-pointer"
-      onClick={() => router.push("/pages/create-story")}
+      // @ts-expect-error
+      onPress={() => router.push("/pages/create-story")}
     >
-      <div className="flex flex-col items-start overflow-clip p-[1.923px] relative rounded-[inherit] w-full">
-        <div className="min-h-[269.231px] relative shrink-0 w-full">
-          <div
-            aria-hidden="true"
+      <View className="flex flex-col items-start overflow-clip p-[1.923px] relative rounded-[inherit] w-full">
+        <View className="min-h-[269.231px] relative shrink-0 w-full">
+          // @ts-expect-error
+          <View
+            accessibilityElementsHidden={true}
             className="absolute border-2 border-[#9bfe03] border-solid inset-0 pointer-events-none"
           />
-          <div className="flex flex-row items-center min-h-[inherit] size-full">
-            <div className="flex items-center min-h-[inherit] p-[46.154px] relative w-full">
+          <View className="flex flex-row items-center min-h-[inherit] size-full">
+            <View className="flex items-center min-h-[inherit] p-[46.154px] relative w-full">
               <Card2Background />
               <Card2Content />
-              <div className="-translate-y-1/2 absolute bg-[rgba(155,254,3,0.05)] blur-[38.462px] right-[-30.77px] rounded-[9999px] size-[184.615px] top-1/2 mt-[0.01px]" />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        aria-hidden="true"
+              <View className="-translate-y-1/2 absolute bg-[rgba(155,254,3,0.05)] blur-[38.462px] right-[-30.77px] rounded-[9999px] size-[184.615px] top-1/2 mt-[0.01px]" />
+            </View>
+          </View>
+        </View>
+      </View>
+      // @ts-expect-error
+      <View
+        accessibilityElementsHidden={true}
         className="absolute border-[#9bfe03] border-[1.923px] border-solid inset-0 pointer-events-none rounded-[46.154px]"
       />
-    </div>
+    </View>
   );
 }
 
@@ -289,12 +307,12 @@ function Card2() {
 ──────────────────────────────────────────── */
 function Main() {
   return (
-    <div className="bg-[#0d0d11] relative shrink-0 w-full">
-      <div className="flex flex-col justify-center overflow-clip size-full">
-        <div className="flex flex-col items-start justify-center px-[46.154px] py-[180px] relative w-full">
+    <View className="bg-[#0d0d11] relative shrink-0 w-full">
+      <View className="flex flex-col justify-center overflow-clip size-full">
+        <View className="flex flex-col items-start justify-center px-[46.154px] py-[180px] relative w-full">
           <HeaderContainer />
           {/* 23px spacer */}
-          <div className="h-[23px] shrink-0 w-[682px]" />
+          <View className="h-[23px] shrink-0 w-[682px]" />
 
           {/* Card1 �?淡入 + 上移，延�?0.1s */}
           <motion.div
@@ -307,7 +325,7 @@ function Main() {
           </motion.div>
 
           {/* 43px spacer */}
-          <div className="h-[43px] shrink-0 w-[682px]" />
+          <View className="h-[43px] shrink-0 w-[682px]" />
 
           {/* Card2 �?淡入 + 上移，延�?0.25s（错开产生层叠感） */}
           <motion.div
@@ -318,14 +336,15 @@ function Main() {
           >
             <Card2 />
           </motion.div>
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 }
 
 import { AiCloseBtn } from "@/components/ai-company/ai-close-btn";
 import { router } from "expo-router";
+import { View, Text, Image } from 'react-native';
 
 const imgClose = require("../../../assets/images/quick-login/svg/p62a9900.svg");
 
@@ -334,7 +353,7 @@ const imgClose = require("../../../assets/images/quick-login/svg/p62a9900.svg");
 ──────────────────────────────────────────── */
 function CloseButton() {
   return (
-    <div className="absolute left-[46.15px] top-[46.15px] z-10">
+    <View className="absolute left-[46.15px] top-[46.15px] z-10">
       <AiCloseBtn
         iconSource={imgClose}
         customWidth="w-[77px]"
@@ -343,7 +362,7 @@ function CloseButton() {
         iconHeight={35}
         onPress={() => router.canGoBack() ? router.back() : router.navigate("../")}
       />
-    </div>
+    </View>
   );
 }
 
@@ -364,28 +383,30 @@ export default function App() {
 
   return (
     // Outer shell: full viewport, clips horizontal overflow
-    <div
+    <View
+      // @ts-expect-error
       style={{
         width: "100vw",
-        minHeight: "100vh",
+        minHeight: '100%',
         overflowX: "hidden",
         background: "#0d0d11",
       }}
     >
       {/* Inner design canvas at native 682px, then scaled with zoom */}
-      <div
+      <View
         style={{
           width: DESIGN_WIDTH,
+          // @ts-expect-error
           zoom: scale,
         }}
       >
         {/* Body �?matches original Figma root structure */}
-        <div className="bg-[#0d0d11] flex flex-col items-start relative">
+        <View className="bg-[#0d0d11] flex flex-col items-start relative">
           <Main />
           <CloseButton />
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 }
 

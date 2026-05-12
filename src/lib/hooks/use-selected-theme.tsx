@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { useMMKVString } from 'react-native-mmkv';
 import { Uniwind, useUniwind } from 'uniwind';
 
-import { storage } from '../storage';
+import { getStringAsync, useStoredString } from '../storage';
 
 const SELECTED_THEME = 'SELECTED_THEME';
 export type ColorSchemeType = 'light' | 'dark' | 'system';
@@ -15,14 +14,14 @@ export type ColorSchemeType = 'light' | 'dark' | 'system';
  */
 export function useSelectedTheme() {
   const { theme: _theme } = useUniwind();
-  const [theme, _setTheme] = useMMKVString(SELECTED_THEME, storage);
+  const [theme, setTheme] = useStoredString(SELECTED_THEME);
 
   const setSelectedTheme = React.useCallback(
     (t: ColorSchemeType) => {
       Uniwind.setTheme(t);
-      _setTheme(t);
+      setTheme(t);
     },
-    [_setTheme],
+    [setTheme],
   );
 
   const selectedTheme = (theme ?? 'system') as ColorSchemeType;
@@ -30,9 +29,9 @@ export function useSelectedTheme() {
 }
 // to be used in the root file to load the selected theme from MMKV
 export function loadSelectedTheme() {
-  const theme = storage.getString(SELECTED_THEME);
-  if (theme !== undefined) {
-    console.log('theme', theme);
-    Uniwind.setTheme(theme as ColorSchemeType);
-  }
+  void getStringAsync(SELECTED_THEME).then((theme) => {
+    if (theme !== undefined) {
+      Uniwind.setTheme(theme as ColorSchemeType);
+    }
+  });
 }

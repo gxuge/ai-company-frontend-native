@@ -1,5 +1,6 @@
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { useRouter } from 'expo-router';
+import { View, Text, Image, Pressable } from 'react-native';
 const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/feedback_blue.svg"));
 const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/about_purple.svg"));
 const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/account_green.svg"));
@@ -13,11 +14,11 @@ function GlowIcon({
   iconSource,
   bgColor,
 }: {
-  iconSource: string;
+  iconSource: any;
   bgColor: string;
 }) {
   return (
-    <div
+    <View
       className="flex items-center justify-center rounded-full shrink-0"
       style={{
         width: 40,
@@ -25,8 +26,9 @@ function GlowIcon({
         backgroundColor: bgColor,
       }}
     >
-      <img src={iconSource} alt="" className="w-[20px] h-[20px] object-contain" />
-    </div>
+      // @ts-expect-error
+      <Image source={iconSource} alt="" className="w-[20px] h-[20px] object-contain" />
+    </View>
   );
 }
 
@@ -45,89 +47,92 @@ function MenuItem({
   onClick?: () => void;
 }) {
   return (
-    <button onClick={onClick} className="flex items-center w-full px-4 py-3.5 gap-3 active:bg-white/5 transition-colors">
+    <Pressable onPress={onClick} className="flex items-center w-full px-4 py-3.5 gap-3 active:bg-white/5 transition-colors">
       {icon}
-      <span className="flex-1 text-left text-gray-100 font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
+      <Text className="flex-1 text-left text-gray-100 font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
         {label}
-      </span>
+      </Text>
       {rightText && (
-        <span className="text-gray-500 font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 14 }}>
+        <Text className="text-gray-500 font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 14 }}>
           {rightText}
-        </span>
+        </Text>
       )}
       {showArrow && (
-        <img src={imgMenuArrowGray} alt="" className="w-[6px] h-[10px] object-contain opacity-0" />
+        <Image source={imgMenuArrowGray} alt="" className="w-[6px] h-[10px] object-contain opacity-0" />
       )}
-    </button>
+    </Pressable>
   );
 }
 
 // Glass card section
 function SectionCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative rounded-2xl overflow-hidden backdrop-blur-xl">
-      <div className="bg-[rgba(30,35,40,0.6)] rounded-2xl border border-white/10 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3),0_4px_6px_-4px_rgba(0,0,0,0.3)]">
+    <View className="relative rounded-2xl overflow-hidden backdrop-blur-xl">
+      <View className="bg-[rgba(30,35,40,0.6)] rounded-2xl border border-white/10 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.3),0_4px_6px_-4px_rgba(0,0,0,0.3)]">
         {children}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
 
 function Divider() {
-  return <div className="h-px bg-white/10 mx-4" />;
+  return <View className="h-px bg-white/10 mx-4" />;
 }
 
 export function SettingsPage() {
   const router = useRouter();
 
   return (
-    <div className="relative min-h-full bg-black font-['Noto_Sans_SC',sans-serif] overflow-auto">
+    <View className="relative min-h-full bg-black font-['Noto_Sans_SC',sans-serif] overflow-auto">
       {/* Background gradient blurs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div
+      <View className="fixed inset-0 pointer-events-none overflow-hidden">
+        <View
           className="absolute rounded-full"
           style={{
             width: 240,
             height: 450,
             left: -40,
             top: -180,
+            // @ts-expect-error
             background: "rgba(88,28,135,0.1)",
             filter: "blur(45px)",
           }}
         />
-        <div
+        <View
           className="absolute rounded-full"
           style={{
             width: 240,
             height: 450,
             right: -40,
             bottom: -90,
+            // @ts-expect-error
             background: "rgba(30,58,138,0.1)",
             filter: "blur(55px)",
           }}
         />
-        <div
+        <View
           className="absolute rounded-full"
           style={{
             width: 160,
             height: 270,
             left: "20%",
             top: "40%",
+            // @ts-expect-error
             background: "rgba(54,83,20,0.1)",
             filter: "blur(50px)",
           }}
         />
-      </div>
+      </View>
 
       {/* Content */}
-      <div className="relative z-10 max-w-md mx-auto">
+      <View className="relative z-10 max-w-md mx-auto">
         {/* Header */}
-        <div className="px-5" style={{ paddingTop: 12, paddingBottom: 12 }}>
+        <View className="px-5" style={{ paddingTop: 12, paddingBottom: 12 }}>
           <AiHeader title="通用设置" />
-        </div>
+        </View>
 
         {/* Sections */}
-        <div className="px-5 pt-3 pb-6 flex flex-col gap-5">
+        <View className="px-5 pt-3 pb-6 flex flex-col gap-5">
           {/* Section 1: Feedback & About */}
           <SectionCard>
             <MenuItem
@@ -161,7 +166,8 @@ export function SettingsPage() {
                 />
               }
               label="账号设置"
-              onClick={() => router.push('/pages/user-setting')}
+              // @ts-expect-error
+              onPress={() => router.push('/pages/user-setting')}
             />
             <Divider />
             <MenuItem
@@ -189,31 +195,31 @@ export function SettingsPage() {
 
           {/* Section 3: Logout */}
           <SectionCard>
-            <button className="flex items-center justify-center w-full px-4 py-4 gap-2 active:bg-white/5 transition-colors">
-              <img src={imgLogoutRed} alt="" className="w-[16px] h-[17px] object-contain" />
-              <span className="text-[#f87171] font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
+            <Pressable className="flex items-center justify-center w-full px-4 py-4 gap-2 active:bg-white/5 transition-colors">
+              <Image source={imgLogoutRed} alt="" className="w-[16px] h-[17px] object-contain" />
+              <Text className="text-[#f87171] font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
                 退出登录
-              </span>
-            </button>
+              </Text>
+            </Pressable>
           </SectionCard>
-        </div>
+        </View>
 
         {/* Footer */}
-        <div className="flex flex-col items-center gap-2 pt-12 pb-8 opacity-60">
-          <span
+        <View className="flex flex-col items-center gap-2 pt-12 pb-8 opacity-60">
+          <Text
             className="text-gray-500 tracking-wide font-['Inter','Noto_Sans_SC',sans-serif]"
             style={{ fontSize: 12 }}
           >
             应用版本 1.0.0
-          </span>
-          <span
+          </Text>
+          <Text
             className="text-gray-600 font-['Noto_Sans_SC',sans-serif]"
             style={{ fontSize: 10 }}
           >
             探拾AI伴侣
-          </span>
-        </div>
-      </div>
-    </div>
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 }

@@ -111,6 +111,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+    'expo-secure-store',
     'expo-localization',
     'expo-router',
     ['app-icon-badge', appIconBadgeConfig],

@@ -1,7 +1,7 @@
 import type { TsStoryChapter, TsStoryOneClickOutlineChapter, TsStorySavePayload } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, ScrollView } from 'react-native';
+import { Alert, Platform, ScrollView, View, Text, Image, Pressable } from 'react-native';
 import { AiFormTextarea } from '../../../components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
 import { AiHeader } from '../../../components/ai-company/ai-header';
@@ -135,7 +135,7 @@ function ChevronRight({ color = '#9CA3AF' }: { color?: string }) {
         ? imgChevronRightDarkGray
         : imgChevronRightGray;
   return (
-    <img src={src} alt="" className="h-[10px] w-[6px] shrink-0 object-contain" />
+    <Image source={src} alt="" className="h-[10px] w-[6px] shrink-0 object-contain" />
   );
 }
 
@@ -195,10 +195,11 @@ function SectionHeader({
   onGenerate?: () => void;
 }) {
   return (
-    <div className="flex w-full items-center justify-between pl-[4px]">
-      <div className="flex items-baseline gap-[2px]">
-        <span
+    <View className="flex w-full items-center justify-between pl-[4px]">
+      <View className="flex items-baseline gap-[2px]">
+        <Text
           className="text-white"
+          // @ts-expect-error
           style={{
             fontFamily: '\'Noto Sans SC\', sans-serif',
             fontSize: large ? '20px' : '16px',
@@ -207,10 +208,11 @@ function SectionHeader({
           }}
         >
           {title}
-        </span>
+        </Text>
         {required && (
-          <span
+          <Text
             className="ml-[2px] text-[rgba(155,254,3,0.9)]"
+            // @ts-expect-error
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
               fontSize: large ? '20px' : '16px',
@@ -218,29 +220,30 @@ function SectionHeader({
             }}
           >
             *
-          </span>
+          </Text>
         )}
         {optional && (
-          <span
+          <Text
             className="ml-[2px] text-[#4b5563]"
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
-              fontSize: '14px',
+              fontSize: 14,
               fontWeight: 400,
             }}
           >
             (选填)
-          </span>
+          </Text>
         )}
-      </div>
+      </View>
       {showGenerate && (
         <AiGenerateBtn 
-          onClick={onGenerate} 
+          // @ts-expect-error
+          onPress={onGenerate} 
           loading={generateLoading} 
           disabled={generateDisabled}
         />
       )}
-    </div>
+    </View>
   );
 }
 
@@ -257,7 +260,7 @@ function StorySettingsSection({
   generateLoading: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-[12px]">
+    <View className="flex flex-col gap-[12px]">
       <SectionHeader
         title="故事设定"
         required
@@ -270,7 +273,7 @@ function StorySettingsSection({
         value={text}
         onChange={e => onChange(e.target.value)}
       />
-    </div>
+    </View>
   );
 }
 
@@ -283,43 +286,43 @@ function CharacterListSection({
   onAddRole: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-[12px]">
+    <View className="flex flex-col gap-[12px]">
       <SectionHeader title="角色列表" required showGenerate={false} />
-      <div className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
-        <div className="flex flex-wrap items-start gap-[24px]">
-          <div className="flex shrink-0 flex-col items-center">
-            <div className="relative">
-              <div className="flex size-[61px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
-                <img src={imgUserDefault} alt="" className="h-[34px] w-[27px] object-contain" />
-              </div>
-              <div className="absolute -right-[2px] -bottom-[2px] flex size-[24px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-black">
-                <img src={imgUserEdit} alt="" className="size-[13px] object-contain" />
-              </div>
-            </div>
-            <span className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">用户</span>
-          </div>
+      <View className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
+        <View className="flex flex-wrap items-start gap-[24px]">
+          <View className="flex shrink-0 flex-col items-center">
+            <View className="relative">
+              <View className="flex size-[61px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
+                <Image source={imgUserDefault} alt="" className="h-[34px] w-[27px] object-contain" />
+              </View>
+              <View className="absolute -right-[2px] -bottom-[2px] flex size-[24px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.2)] bg-black">
+                <Image source={imgUserEdit} alt="" className="size-[13px] object-contain" />
+              </View>
+            </View>
+            <Text className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">用户</Text>
+          </View>
           
           {roles.map((role, idx) => (
-            <div key={`${role.id}-${idx}`} className="flex shrink-0 flex-col items-center">
-              <div className="size-[61px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] overflow-hidden">
-                <img src={role.avatar || imgUserDefault} alt="" className="w-full h-full object-cover" />
-              </div>
-              <span className="mt-[12px] text-white text-[12px] font-medium truncate w-[60px] text-center">{role.name}</span>
-            </div>
+            <View key={`${role.id}-${idx}`} className="flex shrink-0 flex-col items-center">
+              <View className="size-[61px] rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] overflow-hidden">
+                <Image source={role.avatar || imgUserDefault} alt="" className="w-full h-full object-cover" />
+              </View>
+              <Text className="mt-[12px] text-white text-[12px] font-medium truncate w-[60px] text-center">{role.name}</Text>
+            </View>
           ))}
 
-          <div className="flex shrink-0 flex-col items-center">
-            <button
-              onClick={onAddRole}
+          <View className="flex shrink-0 flex-col items-center">
+            <Pressable
+              onPress={onAddRole}
               className="flex size-[61px] cursor-pointer items-center justify-center rounded-full border border-dashed border-neutral-500 bg-transparent p-0"
             >
-              <img src={imgAddRoleGray} alt="" className="h-[23px] w-[22px] object-contain" />
-            </button>
-            <span className="mt-[12px] text-[#4b5563] text-[12px]">添加</span>
-          </div>
-        </div>
-      </div>
-    </div>
+              <Image source={imgAddRoleGray} alt="" className="h-[23px] w-[22px] object-contain" />
+            </Pressable>
+            <Text className="mt-[12px] text-[#4b5563] text-[12px]">添加</Text>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -336,7 +339,7 @@ function LocationSection({
   generateLoading: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-[12px]">
+    <View className="flex flex-col gap-[12px]">
       <SectionHeader
         title="场所设定"
         required
@@ -350,14 +353,14 @@ function LocationSection({
         value={text}
         onChange={e => onChange(e.target.value)}
       />
-    </div>
+    </View>
   );
 }
 
 /* —— Glow Dot —— */
 function GlowDot() {
   return (
-    <div className="size-[6px] shrink-0 rounded-full bg-white shadow-[0px_0px_4px_0px_#9bfe03]" />
+    <View className="size-[6px] shrink-0 rounded-full bg-white shadow-[0px_0px_4px_0px_#9bfe03]" />
   );
 }
 
@@ -375,71 +378,73 @@ function ChapterCard({
   onChange: (next: ChapterForm) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-[8px] border border-[#494949] bg-black">
-      <div className="flex flex-col gap-[15px] p-[20px]">
-        <div className="flex flex-col gap-[8px]">
-          <span
+    <View className="overflow-hidden rounded-[8px] border border-[#494949] bg-black">
+      <View className="flex flex-col gap-[15px] p-[20px]">
+        <View className="flex flex-col gap-[8px]">
+          <Text
             className="text-[#fffdfd]"
+            // @ts-expect-error
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
-              fontSize: '18px',
+              fontSize: 18,
               fontWeight: 700,
               letterSpacing: '0.9px',
               textShadow: '0px 0px 8px rgba(155,254,3,0.5)',
             }}
           >
             {chapter.chapterTitle || `第${index + 1}章`}
-          </span>
-        </div>
+          </Text>
+        </View>
 
-        <div className="border-l-2 border-[rgba(155,254,3,0.9)] pl-[14px]">
-          <p
+        <View className="border-l-2 border-[rgba(155,254,3,0.9)] pl-[14px]">
+          <Text
             className="m-0 text-[#9ca3af]"
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
-              fontSize: '12px',
+              fontSize: 12,
               fontWeight: 400,
-              lineHeight: '20px',
+              lineHeight: 20,
             }}
           >
             {chapter.chapterDesc || '描述主要情节，包括用户在故事中和其他角色的互动'}
-          </p>
-        </div>
+          </Text>
+        </View>
 
-        <div className="h-px w-full bg-linear-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
+        <View className="h-px w-full bg-linear-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
 
-        <div className="flex flex-col gap-[8px]">
-          <div className="flex items-center justify-between px-[4px]">
-            <div className="flex items-center gap-[8px]">
+        <View className="flex flex-col gap-[8px]">
+          <View className="flex items-center justify-between px-[4px]">
+            <View className="flex items-center gap-[8px]">
               <GlowDot />
-              <span
+              <Text
                 className="text-white"
+                // @ts-expect-error
                 style={{
                   fontFamily: '\'Noto Sans SC\', sans-serif',
-                  fontSize: '12px',
+                  fontSize: 12,
                   fontWeight: 700,
                   letterSpacing: '0.6px',
                   textTransform: 'uppercase' as const,
                 }}
               >
                 开场白
-              </span>
-            </div>
-            <button className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
-              <span
+              </Text>
+            </View>
+            <Pressable className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
+              <Text
                 className="text-white underline decoration-[rgba(155,254,3,0.3)]"
                 style={{
                   fontFamily: '\'Noto Sans SC\', sans-serif',
-                  fontSize: '12px',
+                  fontSize: 12,
                   fontWeight: 400,
-                  textDecorationSkipInk: 'none',
+                  
                 }}
               >
                 选择角色
-              </span>
+              </Text>
               <ChevronRight color="white" />
-            </button>
-          </div>
+            </Pressable>
+          </View>
           <AiFormTextarea
             skeletonLines={3}
             isGenerating={isGenerating}
@@ -450,24 +455,25 @@ function ChapterCard({
             value={chapter.openingContent}
             onChange={e => onChange({ ...chapter, openingContent: e.target.value })}
           />
-        </div>
+        </View>
 
-        <div className="flex flex-col gap-[8px] pt-[8px]">
-          <div className="flex items-center gap-[8px] px-[4px]">
+        <View className="flex flex-col gap-[8px] pt-[8px]">
+          <View className="flex items-center gap-[8px] px-[4px]">
             <GlowDot />
-            <span
+            <Text
               className="text-white"
+              // @ts-expect-error
               style={{
                 fontFamily: '\'Noto Sans SC\', sans-serif',
-                fontSize: '12px',
+                fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: '0.6px',
                 textTransform: 'uppercase' as const,
               }}
             >
               任务目标
-            </span>
-          </div>
+            </Text>
+          </View>
           <AiFormTextarea
             skeletonLines={3}
             isGenerating={isGenerating}
@@ -478,36 +484,36 @@ function ChapterCard({
             value={chapter.missionTarget}
             onChange={e => onChange({ ...chapter, missionTarget: e.target.value })}
           />
-        </div>
+        </View>
 
-        <div className="relative flex items-center justify-between pr-[3px] pl-[12px]">
-          <div className="absolute top-1/2 left-0 h-[16px] w-[2px] -translate-y-1/2 rounded-full bg-[rgba(155,254,3,0.3)]" />
-          <span
+        <View className="relative flex items-center justify-between pr-[3px] pl-[12px]">
+          <View className="absolute top-1/2 left-0 h-[16px] w-[2px] -translate-y-1/2 rounded-full bg-[rgba(155,254,3,0.3)]" />
+          <Text
             className="text-[#6b7280]"
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
-              fontSize: '14px',
+              fontSize: 14,
               fontWeight: 500,
             }}
           >
             禁止出场角色
-          </span>
-          <button className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
-            <span
+          </Text>
+          <Pressable className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
+            <Text
               className="text-[#6b7280]"
               style={{
                 fontFamily: '\'Noto Sans SC\', sans-serif',
-                fontSize: '12px',
+                fontSize: 12,
                 fontWeight: 400,
               }}
             >
               选择角色
-            </span>
+            </Text>
             <ChevronRight color="#6B7280" />
-          </button>
-        </div>
-      </div>
-    </div>
+          </Pressable>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -533,7 +539,7 @@ function PlotOutlineSection({
 }) {
   if (activeTab === 'normal') {
     return (
-      <div className="flex flex-col gap-[12px]">
+      <View className="flex flex-col gap-[12px]">
         <SectionHeader
           title="剧情大纲"
           large
@@ -546,12 +552,12 @@ function PlotOutlineSection({
           value={outlineText}
           onChange={e => onOutlineChange(e.target.value)}
         />
-      </div>
+      </View>
     );
   }
 
   return (
-    <div className="flex w-full flex-col gap-[10px]">
+    <View className="flex w-full flex-col gap-[10px]">
       <SectionHeader
         title="剧情大纲"
         large
@@ -567,23 +573,23 @@ function PlotOutlineSection({
           onChange={next => onChapterChange(index, next)}
         />
       ))}
-      <button
-        onClick={onAddChapter}
+      <Pressable
+        onPress={onAddChapter}
         className="mt-[4px] flex w-full cursor-pointer items-center justify-center gap-[8px] rounded-[16px] border border-dashed border-[rgba(155,254,3,0.5)] bg-transparent py-[18px]"
       >
-        <img src={imgAddChapterGreen} alt="" className="size-[20px] shrink-0 object-contain" />
-        <span
+        <Image source={imgAddChapterGreen} alt="" className="size-[20px] shrink-0 object-contain" />
+        <Text
           className="text-[rgba(155,254,3,0.9)]"
           style={{
             fontFamily: '\'Noto Sans SC\', sans-serif',
-            fontSize: '14px',
+            fontSize: 14,
             fontWeight: 400,
           }}
         >
           添加下一章
-        </span>
-      </button>
-    </div>
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -596,8 +602,8 @@ function BottomButton({
   onNext: () => void;
 }) {
   return (
-    <div className="sticky bottom-0 z-50 shrink-0">
-      <div className="bg-linear-to-t from-black via-[rgba(0,0,0,0.95)] to-transparent px-[16px] pt-[36px] pb-[20px]">
+    <View className="sticky bottom-0 z-50 shrink-0">
+      <View className="bg-linear-to-t from-black via-[rgba(0,0,0,0.95)] to-transparent px-[16px] pt-[36px] pb-[20px]">
         <AiLoginBtn
           label={loading ? '保存中...' : '下一步'}
           customWidth="w-full"
@@ -607,8 +613,8 @@ function BottomButton({
           onPress={onNext}
           disabled={loading}
         />
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
 
@@ -915,11 +921,11 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-full justify-center bg-background">
-      <div className="flex min-h-full w-full max-w-[420px] flex-col bg-black">
+    <View className="flex min-h-full justify-center bg-background">
+      <View className="flex min-h-full w-full max-w-[420px] flex-col bg-black">
         <Header />
         <ScrollView className="flex-1">
-          <div className="flex flex-col gap-[32px] px-[16px] pt-[10px] pb-[8px]">
+          <View className="flex flex-col gap-[32px] px-[16px] pt-[10px] pb-[8px]">
             <TabToggle activeTab={activeTab} onChange={setActiveTab} />
             <StorySettingsSection
               text={storySettingText}
@@ -951,11 +957,11 @@ export default function App() {
               onGenerate={handleGenerateOutline}
               generateLoading={generatingOutline}
             />
-            <div className="h-[20px] shrink-0" />
-          </div>
+            <View className="h-[20px] shrink-0" />
+          </View>
         </ScrollView>
         <BottomButton loading={saving || loadingDetail} onNext={handleSaveAndNext} />
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }

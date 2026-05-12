@@ -86,6 +86,27 @@ const button = tv({
 });
 
 type ButtonVariants = VariantProps<typeof button>;
+
+export function buttonVariants({
+  className = '',
+  variant = 'default',
+  disabled = false,
+  fullWidth = true,
+  size = 'default',
+}: ButtonVariants & { className?: string } = {}) {
+  return button({ variant, disabled, fullWidth, size }).container({ className });
+}
+
+export function buttonTextVariants({
+  className = '',
+  variant = 'default',
+  disabled = false,
+  fullWidth = true,
+  size = 'default',
+}: ButtonVariants & { className?: string } = {}) {
+  return button({ variant, disabled, fullWidth, size }).label({ className });
+}
+
 type Props = {
   label?: string;
   loading?: boolean;

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, View, Text, Image, Pressable } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiInput } from '@/components/ai-company/ai-input';
 import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
@@ -110,7 +110,8 @@ export default function VerificationCodeLoginPage() {
   };
 
   return (
-    <div
+    <View
+      // @ts-expect-error
       style={{
         width: '100vw',
         height: `${DESIGN_H * scale}px`,
@@ -118,7 +119,8 @@ export default function VerificationCodeLoginPage() {
         background: '#020202',
       }}
     >
-      <div
+      <View
+        // @ts-expect-error
         style={{
           width: `${DESIGN_W}px`,
           height: `${DESIGN_H}px`,
@@ -130,7 +132,7 @@ export default function VerificationCodeLoginPage() {
         }}
       >
 
-        <div style={{ position: 'absolute', top: 114, left: 52 }}>
+        <View style={{ position: 'absolute', top: 114, left: 52 }}>
           <AiCloseBtn
             iconSource={imgClose}
             customWidth="w-[87px]"
@@ -139,9 +141,9 @@ export default function VerificationCodeLoginPage() {
             iconHeight={32}
             onPress={() => router.back()}
           />
-        </div>
+        </View>
 
-        <div
+        <View
           style={{
             position: 'absolute',
             top: 255,
@@ -153,8 +155,9 @@ export default function VerificationCodeLoginPage() {
             gap: 22,
           }}
         >
-          <div
+          <View
             style={{
+              // @ts-expect-error
               fontSize: 45,
               fontWeight: 700,
               color: '#ffffff',
@@ -165,9 +168,9 @@ export default function VerificationCodeLoginPage() {
             }}
           >
             欢迎登录 探拾
-          </div>
+          </View>
 
-          <div
+          <View
             style={{
               width: 632,
               minHeight: 58,
@@ -176,20 +179,21 @@ export default function VerificationCodeLoginPage() {
               justifyContent: 'center',
             }}
           >
-            <span style={{ color: '#666668', textAlign: 'center', width: '100%' }}>
+            <Text style={{ color: '#666668', textAlign: 'center', width: '100%' }}>
               未注册的手机号验证通过后将自动注册
-            </span>
-          </div>
+            </Text>
+          </View>
 
-          <div style={{ height: 12 }} />
+          <View style={{ height: 12 }} />
 
           {/* 手机号输入框 + 行内错误提示 */}
-          <div
+          <View
             style={{
               position: 'relative',
               width: 634,
               height: 84,
               marginBottom: phoneError ? 16 : 0,
+              // @ts-expect-error
               transition: 'margin-bottom 0.2s ease-in-out',
             }}
           >
@@ -221,7 +225,7 @@ export default function VerificationCodeLoginPage() {
               }}
               leftNode={
                 <>
-                  <span
+                  <Text
                     style={{
                       color: '#e7e7e7',
                       fontSize: 29,
@@ -231,23 +235,24 @@ export default function VerificationCodeLoginPage() {
                     }}
                   >
                     +86
-                  </span>
-                  <img
-                    src={imgBackground}
+                  </Text>
+                  <Image
+                    source={imgBackground}
                     alt=""
-                    style={{ width: 1.1, height: 24, objectFit: 'cover', marginRight: 20, opacity: 0.6 }}
+                    style={{ width: 1.1, height: 24,  marginRight: 20, opacity: 0.6 }}
                   />
                 </>
               }
             />
             {phoneError
               ? (
-                  <div style={{ position: 'absolute', top: 90, left: 36, color: '#f56c6c', fontSize: 16, fontFamily: 'sans-serif' }}>
+                  // @ts-expect-error
+                  <View style={{ position: 'absolute', top: 90, left: 36, color: '#f56c6c', fontSize: 16, fontFamily: 'sans-serif' }}>
                     {phoneError}
-                  </div>
+                  </View>
                 )
               : null}
-          </div>
+          </View>
 
           <AiInput
             value={code}
@@ -275,11 +280,12 @@ export default function VerificationCodeLoginPage() {
               gap: 16,
             }}
             rightNode={
-              <button
+              <Pressable
                 type="button"
-                onClick={handleSendCode}
+                onPress={handleSendCode}
                 disabled={countdown > 0}
                 style={{
+                  // @ts-expect-error
                   border: 'none',
                   background: 'transparent',
                   color: countdown > 0 ? '#7a7a7c' : '#5c5c5e',
@@ -289,11 +295,11 @@ export default function VerificationCodeLoginPage() {
                 }}
               >
                 {countdown > 0 ? `${countdown}s` : '获取验证码'}
-              </button>
+              </Pressable>
             }
           />
 
-          <div style={{ height: 60 }} />
+          <View style={{ height: 60 }} />
 
           <AiLoginBtn
             onPress={handleLogin}
@@ -314,24 +320,26 @@ export default function VerificationCodeLoginPage() {
             }}
             textClassName="text-[30px] font-bold font-sans text-[#141414]"
           />
-        </div>
+        </View>
 
         {/* 协议勾选区域 */}
-        <div style={{ position: 'absolute', top: 849, left: 79 }}>
+        <View style={{ position: 'absolute', top: 849, left: 79 }}>
           {agreementError
             ? (
-                <div style={{ color: '#f56c6c', fontSize: 18, fontFamily: 'sans-serif', marginBottom: 6, paddingLeft: 2 }}>
+                // @ts-expect-error
+                <View style={{ color: '#f56c6c', fontSize: 18, fontFamily: 'sans-serif', marginBottom: 6, paddingLeft: 2 }}>
                   {agreementError}
-                </div>
+                </View>
               )
             : null}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 17 }}>
-            <button
+          <View style={{ display: 'flex', alignItems: 'center', gap: 17 }}>
+            <Pressable
               type="button"
-              onClick={() => { setAgreed(value => !value); setAgreementError(''); }}
-              style={{ border: 'none', background: 'transparent', padding: 0, margin: 0, cursor: 'pointer' }}
+              onPress={() => { setAgreed(value => !value); setAgreementError(''); }}
+              // @ts-expect-error
+              style={{ border: 'none', background: 'transparent', padding: 0, margin: 0,  }}
             >
-              <div
+              <View
                 style={{
                   width: 32,
                   height: 32,
@@ -342,11 +350,12 @@ export default function VerificationCodeLoginPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  // @ts-expect-error
                   transition: 'all 0.2s',
                   backgroundColor: 'transparent',
                 }}
               >
-                <div
+                <View
                   style={{
                     width: 16,
                     height: 16,
@@ -354,25 +363,26 @@ export default function VerificationCodeLoginPage() {
                     backgroundColor: '#9bfe03',
                     opacity: agreed ? 1 : 0,
                     transform: agreed ? 'scale(1)' : 'scale(0.5)',
+                    // @ts-expect-error
                     transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
                   }}
                 />
-              </div>
-            </button>
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
-              <span style={{ color: '#646466', fontSize: 22, fontFamily: 'Microsoft YaHei, sans-serif' }}>
+              </View>
+            </Pressable>
+            <View style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+              <Text style={{ color: '#646466', fontSize: 22, fontFamily: 'Microsoft YaHei, sans-serif' }}>
                 已阅读并同意
-              </span>
-              <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
+              </Text>
+              <Text style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
                 《用户协议》
-              </span>
-              <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
+              </Text>
+              <Text style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
                 《隐私政策》
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }

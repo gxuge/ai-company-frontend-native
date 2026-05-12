@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, ViewStyle, StyleProp } from 'react-native';
+import { ViewStyle, StyleProp, type DimensionValue } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,8 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 
 export interface AiSkeletonProps {
-  width?: number | string;
-  height?: number | string;
+  width?: DimensionValue;
+  height?: DimensionValue;
   borderRadius?: number;
   style?: StyleProp<ViewStyle>;
   containerClassName?: string;
@@ -44,16 +44,18 @@ export function AiSkeleton({
     };
   });
 
+  const baseStyle: ViewStyle = {
+    width: width as DimensionValue,
+    height: height as DimensionValue,
+    borderRadius,
+    backgroundColor: baseColor,
+  };
+
   return (
     <Animated.View
       className={containerClassName}
       style={[
-        {
-          width,
-          height,
-          borderRadius,
-          backgroundColor: baseColor,
-        },
+        baseStyle,
         style,
         animatedStyle,
       ]}

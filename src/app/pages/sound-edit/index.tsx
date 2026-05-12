@@ -5,11 +5,11 @@ import EditSoundText from './components/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { Check, Play, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
-import { router } from 'expo-router';
-
-const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/play.svg'));
-const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/edit.svg'));
-const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/chevron_down.svg'));
+import { router, useLocalSearchParams } from 'expo-router';
+import RNSlider from '@react-native-community/slider';
+import { View, Text, Image, Pressable } from 'react-native';
+const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/edit.svg'));
+const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/sound-edit/chevron_down.svg'));
 const imgListenHeadphone = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/listen_headphone.svg'));
 const imgWaveGreenTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-green-tiny.gif'));
 
@@ -288,36 +288,33 @@ function notifyMessage(message: string) {
 }
 
 function Slider({ value, onChange, min, max, step }: { value: number; onChange: (v: number) => void; min: number; max: number; step: number }) {
-  const pct = ((value - min) / (max - min)) * 100;
   return (
-    <div className="relative flex h-[16px] w-full items-center">
-      <div className="pointer-events-none absolute inset-x-0 z-0 h-[3px] rounded-full bg-[#333]" />
-      <div className="pointer-events-none absolute inset-0 z-0">
+    <View className="relative flex h-[16px] w-full items-center justify-center">
+      <View className="pointer-events-none absolute inset-x-0 z-0 h-[3px] rounded-full bg-[#333]" />
+      <View className="pointer-events-none absolute inset-0 z-0">
         {[...Array.from({ length: 5 })].map((_, i) => {
           const p = i * 25;
           return (
-            <div
+            <View
               key={`dot-${p}`}
               className="absolute top-1/2 h-[5px] w-[3px] -translate-y-1/2 rounded-full bg-[#555]"
-              style={{ left: `calc(${p}% - ${p * 0.14}px + 5.5px)` }}
+              style={{ left: `${p}%`, marginLeft: -1.5 }}
             />
           );
         })}
-      </div>
-      <div
-        className="pointer-events-none absolute top-1/2 z-10 size-[14px] -translate-y-1/2 rounded-full border-2 border-background bg-[rgba(155,254,3,0.9)] shadow-[0_0_8px_rgba(155,254,3,0.4)]"
-        style={{ left: `calc(${pct}% - ${pct * 0.14}px)` }}
-      />
-      <input
-        type="range"
-        min={min}
-        max={max}
+      </View>
+      <RNSlider
+        style={{ width: '100%', height: 40, position: 'absolute', zIndex: 20 }}
+        minimumValue={min}
+        maximumValue={max}
         step={step}
         value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="absolute inset-0 z-20 m-0 size-full cursor-pointer p-0 opacity-0"
+        onValueChange={onChange}
+        minimumTrackTintColor="transparent"
+        maximumTrackTintColor="transparent"
+        thumbTintColor="rgba(155,254,3,0.9)"
       />
-    </div>
+    </View>
   );
 }
 
@@ -346,8 +343,10 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
   };
 
   return (
-    <div
-      onClick={handleCardClick}
+    <View
+      // @ts-expect-error
+      onPress={handleCardClick}
+      // @ts-expect-error
       onMouseDown={(e) => {
         if ((e.target as HTMLElement).closest('[data-no-select="true"]')) return;
         setIsPressed(true);
@@ -355,6 +354,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
       onMouseUp={() => setIsPressed(false)}
       onMouseLeave={() => setIsPressed(false)}
       onTouchStart={(e) => {
+        // @ts-expect-error
         if ((e.target as HTMLElement).closest('[data-no-select="true"]')) return;
         setIsPressed(true);
       }}
@@ -365,10 +365,11 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
       }`}
     >
-      <div className="flex items-center gap-[12px]">
-        <div
+      <View className="flex items-center gap-[12px]">
+        <View
           data-no-select={selected ? 'true' : undefined}
-          onClick={(e) => {
+          // @ts-expect-error
+          onPress={(e) => {
             if (selected) {
               e.stopPropagation();
             }
@@ -376,34 +377,34 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden"
           style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
         >
-          <div className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
+          <View className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
             🎙
-          </div>
+          </View>
           {/* Figma node 150:3037 Play Button Overlay */}
           {selected && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
+            <View className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
               {isLoading ? (
                 <Loader2 className="size-6 animate-spin text-[#9BFE03]" />
               ) : isPlaying ? (
-                <img src={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
+                <Image source={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
               ) : (
                 <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
               )}
-            </div>
+            </View>
           )}
-        </div>
-        <div className="flex flex-col gap-[6px]">
-          <span className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</span>
-          <div className="flex gap-[4px]">
+        </View>
+        <View className="flex flex-col gap-[6px]">
+          <Text className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</Text>
+          <View className="flex gap-[4px]">
             {tags.map(tag => (
-              <span key={tag} className="rounded-[5px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.05)] px-[7px] py-[3px] text-[10px] text-[#9ca3af]">{tag}</span>
+              <Text key={tag} className="rounded-[5px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.05)] px-[7px] py-[3px] text-[10px] text-[#9ca3af]">{tag}</Text>
             ))}
-          </div>
-        </div>
-      </div>
+          </View>
+        </View>
+      </View>
 
-      <div className="ml-auto flex items-center gap-6">
-        <div
+      <View className="ml-auto flex items-center gap-6">
+        <View
           className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
             selected
               ? "bg-[#9BFE03] scale-100"
@@ -416,14 +417,15 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
             }`}
             strokeWidth={3.5}
           />
-        </div>
+        </View>
 
         {/* My Voice More Menu - Figma 517:1105 */}
         {isMyVoice && (
-          <div className="relative flex items-center justify-center" data-no-select="true">
-            <button
+          <View className="relative flex items-center justify-center" data-no-select="true">
+            <Pressable
+              // @ts-expect-error
               type="button"
-              onClick={(e) => {
+              onPress={(e) => {
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
@@ -431,19 +433,20 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
               className="flex size-8 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
             >
               <MoreVertical className="size-5 text-[#9CA3AF] group-hover:text-white" />
-            </button>
+            </Pressable>
             
             {showMenu && (
               <>
-                <div 
+                <View 
                   data-no-select="true"
                   className="fixed inset-0 z-[100]" 
-                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); }} 
+                  // @ts-expect-error
+                  onPress={(e) => { e.stopPropagation(); setShowMenu(false); }} 
                 />
-                <div data-no-select="true" className="absolute right-0 top-10 z-[110] w-28 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl">
-                  <div className="flex flex-col">
-                    <button
-                      onClick={(e) => {
+                <View data-no-select="true" className="absolute right-0 top-10 z-[110] w-28 overflow-hidden rounded-xl border border-white/10 bg-[#1e1e1e] shadow-2xl">
+                  <View className="flex flex-col">
+                    <Pressable
+                      onPress={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
                         onRename?.(voice.id);
@@ -451,11 +454,11 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
                     >
                       <Pencil className="size-3 text-white/70" />
-                      <span>重命名</span>
-                    </button>
-                    <div className="h-px w-full bg-white/5" />
-                    <button
-                      onClick={(e) => {
+                      <Text>重命名</Text>
+                    </Pressable>
+                    <View className="h-px w-full bg-white/5" />
+                    <Pressable
+                      onPress={(e) => {
                         e.stopPropagation();
                         setShowMenu(false);
                         onDelete?.(voice.id);
@@ -463,16 +466,16 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500/90 hover:bg-red-500/5 active:bg-red-500/10 transition-colors"
                     >
                       <Trash2 className="size-3 text-red-500/70" />
-                      <span>删除</span>
-                    </button>
-                  </div>
-                </div>
+                      <Text>删除</Text>
+                    </Pressable>
+                  </View>
+                </View>
               </>
             )}
-          </div>
+          </View>
         )}
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }
 
@@ -810,85 +813,94 @@ export default function SoundEditPage() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-background font-['Noto_Sans_SC',sans-serif] overflow-hidden">
-      <div className="flex-1 w-full flex flex-col items-stretch gap-0 overflow-hidden py-[8px] px-[12.5px]">
-          <div
+    <View className="flex h-screen w-full flex-col bg-background font-['Noto_Sans_SC',sans-serif] overflow-hidden">
+      <View className="flex-1 w-full flex flex-col items-stretch gap-0 overflow-hidden py-[8px] px-[12.5px]">
+          <View
             className={`flex flex-col border shadow-[0_0_20px_rgba(155,254,3,0.05)] transition-all duration-500 ${
               isSettingsCollapsed
                 ? 'cursor-pointer rounded-xl border-[#4c4c4c] bg-[#161616] p-3'
                 : 'rounded-[21px] border-[#4c4c4c] bg-[#161616] p-[16px]'
             }`}
-            onClick={isSettingsCollapsed ? () => setIsSettingsCollapsed(false) : undefined}
+            // @ts-expect-error
+            onPress={isSettingsCollapsed ? () => setIsSettingsCollapsed(false) : undefined}
           >
-            <div className={`flex items-center justify-between transition-all duration-500 ${isSettingsCollapsed ? '' : 'pb-[4px]'}`}>
-              <div className="flex items-center gap-[8px]">
-                <div
+            <View className={`flex items-center justify-between transition-all duration-500 ${isSettingsCollapsed ? '' : 'pb-[4px]'}`}>
+              <View className="flex items-center gap-[8px]">
+                <View
                   className={`flex items-center justify-center rounded-full transition-all duration-500 ${isSettingsCollapsed ? 'size-8 text-[14px]' : 'size-[28px] text-[12px]'} ${!selectedVoice ? 'opacity-40 grayscale' : ''}`}
                   style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
                 >
-                  <span className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)]">🎙️</span>
-                </div>
-                <span className={`text-white transition-all duration-500 ${isSettingsCollapsed ? 'text-[14px]' : 'text-[18px] tracking-[-0.45px]'} ${!selectedVoice ? 'text-white/40' : ''}`} style={{ fontWeight: 700 }}>
+                  <Text className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)]">🎙️</Text>
+                </View>
+                <Text className={`text-white transition-all duration-500 ${isSettingsCollapsed ? 'text-[14px]' : 'text-[18px] tracking-[-0.45px]'} ${!selectedVoice ? 'text-white/40' : ''}`} style={{ fontWeight: 700 }}>
                   {selectedVoice?.name || '请选择'}
-                </span>
-              </div>
-              <div className="flex items-center gap-[8px]">
-                <div className="relative flex h-[32px] items-center justify-end">
-                  <div className={`flex overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-[32px] opacity-100' : 'w-0 opacity-0'}`}>
-                    <button
+                </Text>
+              </View>
+              <View className="flex items-center gap-[8px]">
+                <View className="relative flex h-[32px] items-center justify-end">
+                  <View className={`flex overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-[32px] opacity-100' : 'w-0 opacity-0'}`}>
+                    <Pressable
+                      // @ts-expect-error
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); handleListen(); }}
+                      onPress={(e) => { e.stopPropagation(); handleListen(); }}
                       disabled={isListening || !selectedVoice}
                       className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] transition-colors hover:bg-[rgba(155,254,3,0.3)] disabled:opacity-50 disabled:grayscale ${!selectedVoice ? 'bg-white/5' : ''}`}
                     >
                       {listenPhase === 'loading' ? (
                         <Loader2 className="size-[16px] animate-spin text-[#9BFE03]" />
                       ) : isListening ? (
-                        <img src={imgWaveGreenTiny} alt="" className="size-[16px] object-contain" />
+                        <Image source={imgWaveGreenTiny} alt="" className="size-[16px] object-contain" />
                       ) : (
-                        <img src={imgPlay} alt="" className="size-[16px] object-contain ml-[2px]" />
+                        // @ts-expect-error
+                        <Image source={imgPlay} alt="" className="size-[16px] object-contain ml-[2px]" />
                       )}
-                    </button>
-                  </div>
+                    </Pressable>
+                  </View>
 
-                  <div className={`flex items-center overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-0 opacity-0 ml-0' : 'ml-[4px] w-auto opacity-100 gap-[10px]'}`}>
+                  <View className={`flex items-center overflow-hidden transition-all duration-500 ${isSettingsCollapsed ? 'w-0 opacity-0 ml-0' : 'ml-[4px] w-auto opacity-100 gap-[10px]'}`}>
                     {selectedVoice && (
                       <>
-                        <button
+                        <Pressable
+                          // @ts-expect-error
                           type="button"
-                          onClick={() => setIsEditSoundTextOpen(true)}
+                          onPress={() => setIsEditSoundTextOpen(true)}
                           className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(155,254,3,0.9)] bg-[#161616] hover:bg-white/5 transition-colors"
                           title="编辑试听文案"
                         >
-                          <img src={imgEdit} alt="" className="size-[14px] object-contain" />
-                        </button>
+                          // @ts-expect-error
+                          <Image source={imgEdit} alt="" className="size-[14px] object-contain" />
+                        </Pressable>
 
-                        <button
+                        <Pressable
+                          // @ts-expect-error
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); setSelectedVoiceId(null); }}
+                          onPress={(e) => { e.stopPropagation(); setSelectedVoiceId(null); }}
                           className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
                           title="取消选择"
                         >
                           <X className="size-[14px] text-red-500" />
-                        </button>
+                        </Pressable>
                       </>
                     )}
-                  </div>
-                </div>
+                  </View>
+                </View>
 
-                <button
+                <Pressable
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); setIsSettingsCollapsed(!isSettingsCollapsed); }}
+                  onPress={(e) => { e.stopPropagation(); setIsSettingsCollapsed(!isSettingsCollapsed); }}
                   className="p-[4px]"
+                  // @ts-expect-error
                   style={{ marginLeft: isSettingsCollapsed ? '4px' : '4px' }}
                 >
-                  <img src={imgChevronDown} alt="" className={`w-[14px] h-[8px] object-contain opacity-50 transition-transform duration-500 ${isSettingsCollapsed ? 'rotate-0' : 'rotate-180'}`} />
-                </button>
-              </div>
-            </div>
+                  // @ts-expect-error
+                  <Image source={imgChevronDown} alt="" className={`w-[14px] h-[8px] object-contain opacity-50 transition-transform duration-500 ${isSettingsCollapsed ? 'rotate-0' : 'rotate-180'}`} />
+                </Pressable>
+              </View>
+            </View>
 
-            <div
+            <View
               className="overflow-hidden transition-all duration-500 ease-in-out"
+              // @ts-expect-error
               style={{
                 display: 'grid',
                 gridTemplateRows: isSettingsCollapsed ? '0fr' : '1fr',
@@ -896,67 +908,69 @@ export default function SoundEditPage() {
                 marginTop: isSettingsCollapsed ? 0 : 8,
               }}
             >
-              <div className="flex min-h-0 flex-col gap-[12px] overflow-hidden">
-                <div className="flex items-center justify-between py-[4px]">
-                  <span className="text-[12px] tracking-[0.6px] text-[#9ca3af] uppercase" style={{ fontWeight: 700 }}>{`\u53C2\u6570\u8C03\u6574`}</span>
-                  <button
+              <View className="flex min-h-0 flex-col gap-[12px] overflow-hidden">
+                <View className="flex items-center justify-between py-[4px]">
+                  <Text className="text-[12px] tracking-[0.6px] text-[#9ca3af] uppercase" style={{ fontWeight: 700 }}>{`\u53C2\u6570\u8C03\u6574`}</Text>
+                  <Pressable
+                    // @ts-expect-error
                     type="button"
-                    onClick={handleReset}
+                    onPress={handleReset}
                     className="rounded-[5px] border border-[rgba(155,254,3,0.9)] px-[9px] py-[3px] text-[10px] text-[rgba(155,254,3,0.9)]"
                   >
                     {`\u91CD\u7F6E`}
-                  </button>
-                </div>
+                  </Pressable>
+                </View>
 
-                <div className="flex gap-[32px] pt-[8px] pb-[16px]">
-                  <div className="flex flex-1 flex-col gap-[8px]">
-                    <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u97F3\u8C03`}</span>
-                      <span className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                <View className="flex gap-[32px] pt-[8px] pb-[16px]">
+                  <View className="flex flex-1 flex-col gap-[8px]">
+                    <View className="flex items-end justify-between">
+                      <Text className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u97F3\u8C03`}</Text>
+                      <Text className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
                         {pitch > 0 ? '+' : ''}
                         {pitch}
                         %
-                      </span>
-                    </div>
+                      </Text>
+                    </View>
                     <Slider value={pitch} onChange={setPitch} min={-50} max={50} step={5} />
-                  </div>
-                  <div className="flex flex-1 flex-col gap-[8px]">
-                    <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u8BED\u901F`}</span>
-                      <span className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                  </View>
+                  <View className="flex flex-1 flex-col gap-[8px]">
+                    <View className="flex items-end justify-between">
+                      <Text className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u8BED\u901F`}</Text>
+                      <Text className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
                         {speed.toFixed(1)}
                         x
-                      </span>
-                    </div>
+                      </Text>
+                    </View>
                     <Slider value={speed} onChange={v => setSpeed(Math.max(0.1, v))} min={0} max={2} step={0.1} />
-                  </div>
-                </div>
+                  </View>
+                </View>
 
-                <div className="flex flex-col items-center justify-center">
-                  <button
+                <View className="flex flex-col items-center justify-center">
+                  <Pressable
+                    // @ts-expect-error
                     type="button"
-                    onClick={handleListen}
+                    onPress={handleListen}
                     disabled={isListening || !selectedVoice}
                     className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-[rgba(155,254,3,0.9)] disabled:opacity-50 disabled:grayscale transition-all"
                   >
                     {listenPhase === 'loading' ? (
                       <Loader2 className="size-[19px] animate-spin text-[#9BFE03]" />
                     ) : isListening ? (
-                      <img src={imgWaveGreenTiny} alt="" className="size-[24px] object-contain" />
+                      <Image source={imgWaveGreenTiny} alt="" className="size-[24px] object-contain" />
                     ) : (
-                      <img src={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
+                      <Image source={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
                     )}
-                    <span className="text-[16px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                    <Text className="text-[16px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
                       {isListening ? '试听中...' : '试听音色'}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </View>
 
-        <div className="flex-1 flex flex-col gap-[16px] pt-[20px] min-h-0 overflow-hidden">
-          <div className="flex flex-row justify-center border-b border-[#1a1a1a] mb-[16px]">
+        <View className="flex-1 flex flex-col gap-[16px] pt-[20px] min-h-0 overflow-hidden">
+          <View className="flex flex-row justify-center border-b border-[#1a1a1a] mb-[16px]">
             <AiNavigateTabs 
               options={[
                 { label: '推荐音色库', value: 'recommend' },
@@ -968,35 +982,36 @@ export default function SoundEditPage() {
               inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
               indicatorClassName="absolute bottom-[-1px] h-[4px] bg-[rgba(155,254,3,0.9)] rounded-[2px]"
             />
-          </div>
+          </View>
 
           {activeLibraryTab === 'recommend' && (
             <>
-              <div className="flex items-center justify-between px-[4px]">
-                <div className="flex items-center gap-[8px]">
-                  <span className="pr-[4px] text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{`\u6027\u522B`}</span>
-                  <div className="relative flex h-[31px] w-[150px] rounded-[8px] border border-[rgba(255,255,255,0.05)] bg-[#222] p-[3.5px]">
-                    <div
-                      className="absolute top-[3.5px] bottom-[3.5px] w-[calc((100%-7px)/3)] rounded-[5px] bg-[rgba(155,254,3,0.2)] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
-                      style={{ transform: `translateX(${GENDERS.indexOf(genderFilter) * 100}%)` }}
+              <View className="flex items-center justify-between px-[4px]">
+                <View className="flex items-center gap-[8px]">
+                  <Text className="pr-[4px] text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{`\u6027\u522B`}</Text>
+                  <View className="relative flex h-[31px] w-[150px] rounded-[8px] border border-[rgba(255,255,255,0.05)] bg-[#222] p-[3.5px]">
+                    <View
+                      className="absolute top-[3.5px] bottom-[3.5px] rounded-[5px] bg-[rgba(155,254,3,0.2)] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all duration-300 ease-in-out"
+                      style={{ width: 47.66, left: 3.5 + GENDERS.indexOf(genderFilter) * 47.66 }}
                     />
                     {GENDERS.map(g => (
-                      <button
+                      <Pressable
                         type="button"
                         key={g}
-                        onClick={() => setGenderFilter(g)}
+                        onPress={() => setGenderFilter(g)}
                         className={`relative z-10 flex h-full flex-1 items-center justify-center rounded-[5px] text-[11px] transition-colors duration-300 ${genderFilter === g ? 'text-[#9bfe03]' : 'text-[#9ca3af]'}`}
+                        // @ts-expect-error
                         style={{ fontWeight: 500 }}
                       >
                         {g}
-                      </button>
+                      </Pressable>
                     ))}
-                  </div>
-                </div>
-              </div>
+                  </View>
+                </View>
+              </View>
 
-              <div className="flex-1 overflow-y-auto pb-[140px]">
-                <div className="flex flex-col gap-[16px]">
+              <View className="flex-1 overflow-y-auto pb-[140px]">
+                <View className="flex flex-col gap-[16px]">
                   {displayedRecommendVoices.map(voice => (
                     <VoiceCard
                       key={voice.id}
@@ -1007,14 +1022,14 @@ export default function SoundEditPage() {
                       isLoading={listenPhase === 'loading' && selectedVoiceId === voice.id}
                     />
                   ))}
-                </div>
-              </div>
+                </View>
+              </View>
             </>
           )}
 
           {activeLibraryTab === 'my' && (
-            <div className="flex-1 overflow-y-auto pb-[140px]">
-              <div className="flex flex-col gap-[16px]">
+            <View className="flex-1 overflow-y-auto pb-[140px]">
+              <View className="flex flex-col gap-[16px]">
                 {myVoices.map(voice => (
                   <VoiceCard
                     key={voice.id}
@@ -1035,11 +1050,11 @@ export default function SoundEditPage() {
                     style={{ marginTop: 40 }}
                   />
                 )}
-              </div>
-            </div>
+              </View>
+            </View>
           )}
-        </div>
-      </div>
+        </View>
+      </View>
 
       {isEditSoundTextOpen && (
         <EditSoundText
@@ -1053,15 +1068,16 @@ export default function SoundEditPage() {
       )}
 
       {/* Done Button Group */}
-      <div className="fixed bottom-0 left-0 right-0 z-[50] p-[20px] pb-[34px] bg-background/60 backdrop-blur-xl border-t border-white/5">
-        <button
+      <View className="fixed bottom-0 left-0 right-0 z-[50] p-[20px] pb-[34px] bg-background/60 backdrop-blur-xl border-t border-white/5">
+        <Pressable
+          // @ts-expect-error
           type="button"
-          onClick={handleDone}
+          onPress={handleDone}
           className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#9BFE03] shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 transition-all outline-none"
         >
-          <span className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</span>
-        </button>
-      </div>
-    </div>
+          <Text className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }

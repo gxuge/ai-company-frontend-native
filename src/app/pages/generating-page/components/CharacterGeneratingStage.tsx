@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { User, Sparkles } from "lucide-react";
 import { FloatingParticles } from "./FloatingParticles";
 import { useEffect, useState } from "react";
+import { View, Image } from 'react-native';
 
 const imgCharacterRings = ((m: any) => m?.default ?? m?.uri ?? m)(require("@/assets/images/generating-page/character-rings.svg"));
 
@@ -55,10 +56,10 @@ export function CharacterGeneratingStage() {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-between h-full px-5 py-8">
+    <View className="relative flex flex-col items-center justify-between h-full px-5 py-8">
       <FloatingParticles count={30} />
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-10 w-full max-w-sm relative z-10">
+      <View className="flex-1 flex flex-col items-center justify-center gap-10 w-full max-w-sm relative z-10">
         <motion.div
           className="relative w-48 h-48"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -77,8 +78,8 @@ export function CharacterGeneratingStage() {
               ease: "easeInOut",
             }}
           />
-          <div className="relative w-full h-full rounded-full flex items-center justify-center">
-            <img src={imgCharacterRings} className="w-full h-full" alt="" />
+          <View className="relative w-full h-full rounded-full flex items-center justify-center">
+            <Image source={imgCharacterRings} className="w-full h-full" alt="" />
 
             <motion.div
               className="absolute"
@@ -108,13 +109,13 @@ export function CharacterGeneratingStage() {
             >
               <Sparkles className="w-5 h-5 text-[var(--ai-cyan)]" />
             </motion.div>
-          </div>
+          </View>
         </motion.div>
 
-        <div className="flex flex-col items-center gap-3 text-center px-4">
+        <View className="flex flex-col items-center gap-3 text-center px-4">
           <motion.h1
             className="text-white"
-            style={{ fontSize: '28px', fontWeight: 500, lineHeight: 1.3 }}
+            style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.3 }}
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -123,28 +124,28 @@ export function CharacterGeneratingStage() {
           </motion.h1>
           <motion.p
             className="text-white/60 max-w-xs"
-            style={{ fontSize: '15px', lineHeight: 1.5 }}
+            style={{ fontSize: 15, lineHeight: 1.5 }}
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             正在塑造角色性格、身份设定与互动风格
           </motion.p>
-        </div>
+        </View>
 
-        <div className="w-full space-y-6">
-          <div className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
+        <View className="w-full space-y-6">
+          <View className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
             <motion.div
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--ai-purple)] via-[var(--ai-blue)] to-[var(--ai-cyan)] rounded-full"
               initial={{ width: "0%" }}
               animate={{ width: `${Math.min(progress, 100)}%` }}
               transition={{ duration: 0.3 }}
             />
-          </div>
+          </View>
 
           <motion.div
             className="flex items-center justify-center gap-2 text-white/70 min-h-[24px]"
-            style={{ fontSize: '14px' }}
+            style={{ fontSize: 14 }}
             key={currentMessage}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -164,7 +165,7 @@ export function CharacterGeneratingStage() {
             />
             {statusMessages[currentMessage]}
           </motion.div>
-        </div>
+        </View>
 
         <motion.div
           className="w-full rounded-3xl bg-white/5 backdrop-blur-sm border border-white/10 p-6 space-y-4"
@@ -172,20 +173,20 @@ export function CharacterGeneratingStage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-white/20 to-white/5 animate-pulse" />
-            <div className="flex-1 space-y-2">
-              <div className="w-24 h-3 bg-white/10 rounded-full animate-pulse" />
-              <div className="w-32 h-2 bg-white/10 rounded-full animate-pulse" />
-            </div>
-          </div>
+          <View className="flex items-center gap-4">
+            <View className="w-16 h-16 rounded-full bg-gradient-to-br from-white/20 to-white/5 animate-pulse" />
+            <View className="flex-1 space-y-2">
+              <View className="w-24 h-3 bg-white/10 rounded-full animate-pulse" />
+              <View className="w-32 h-2 bg-white/10 rounded-full animate-pulse" />
+            </View>
+          </View>
 
-          <div className="flex flex-wrap gap-2">
+          <View className="flex flex-wrap gap-2">
             {personalityTags.map((tag, index) => (
               <motion.div
                 key={tag}
                 className="px-3 py-2 rounded-full bg-gradient-to-r from-[var(--ai-purple)]/20 to-[var(--ai-blue)]/20 border border-white/10 text-white/80"
-                style={{ fontSize: '13px' }}
+                style={{ fontSize: 13 }}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{
                   opacity: visibleTags.includes(index) ? 1 : 0,
@@ -196,25 +197,25 @@ export function CharacterGeneratingStage() {
                 {tag}
               </motion.div>
             ))}
-          </div>
+          </View>
 
-          <div className="space-y-2 pt-2">
-            <div className="w-full h-2 bg-white/10 rounded-full animate-pulse" />
-            <div className="w-5/6 h-2 bg-white/10 rounded-full animate-pulse" />
-            <div className="w-4/6 h-2 bg-white/10 rounded-full animate-pulse" />
-          </div>
+          <View className="space-y-2 pt-2">
+            <View className="w-full h-2 bg-white/10 rounded-full animate-pulse" />
+            <View className="w-5/6 h-2 bg-white/10 rounded-full animate-pulse" />
+            <View className="w-4/6 h-2 bg-white/10 rounded-full animate-pulse" />
+          </View>
         </motion.div>
-      </div>
+      </View>
 
       <motion.p
         className="text-white/50 text-center max-w-xs relative z-10 px-4"
-        style={{ fontSize: '13px', lineHeight: 1.5 }}
+        style={{ fontSize: 13, lineHeight: 1.5 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
         一个更贴近你设定的角色正在形成
       </motion.p>
-    </div>
+    </View>
   );
 }

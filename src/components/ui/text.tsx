@@ -12,6 +12,8 @@ type Props = {
   tx?: TxKeyPath;
 } & TextProps;
 
+export const TextClassContext = React.createContext<string | undefined>(undefined);
+
 export function Text({
   className = '',
   style,
@@ -19,13 +21,15 @@ export function Text({
   children,
   ...props
 }: Props) {
+  const contextClassName = React.useContext(TextClassContext);
   const textStyle = React.useMemo(
     () =>
       twMerge(
         'font-inter text-base font-normal text-black dark:text-white',
+        contextClassName,
         className,
       ),
-    [className],
+    [className, contextClassName],
   );
 
   const nStyle = React.useMemo(

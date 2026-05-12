@@ -1,8 +1,10 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
 import { tsRoleApi, tsRoleImageApi } from '@/lib/api';
+import { View, Text, Image, Pressable } from 'react-native';
 
 const asset = m => m?.default ?? m?.uri ?? m;
 const imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1 = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
@@ -43,7 +45,7 @@ function extractErrorMessage(error, fallback) {
 function ImagePreviewModal({ src, onClose }) {
   if (!src) return null;
   return (
-    <div
+    <View
       style={{
         position: 'fixed',
         inset: 0,
@@ -53,16 +55,16 @@ function ImagePreviewModal({ src, onClose }) {
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      onClick={onClose}
+      onPress={onClose}
     >
-      <img
-        src={src}
+      <Image
+        source={src}
         alt="预览"
-        style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 12 }}
-        onClick={e => e.stopPropagation()}
+        style={{ maxWidth: '90vw', maxHeight: '90vh',  borderRadius: 12 }}
+        onPress={e => e.stopPropagation()}
       />
-      <button
-        onClick={onClose}
+      <Pressable
+        onPress={onClose}
         style={{
           position: 'absolute',
           top: 20,
@@ -72,7 +74,7 @@ function ImagePreviewModal({ src, onClose }) {
           borderRadius: '50%',
           width: 36,
           height: 36,
-          cursor: 'pointer',
+          
           color: '#fff',
           fontSize: 20,
           display: 'flex',
@@ -81,27 +83,27 @@ function ImagePreviewModal({ src, onClose }) {
         }}
       >
         ×
-      </button>
-    </div>
+      </Pressable>
+    </View>
   );
 }
 
 /** 顶部"我的图库"按钮 */
 function MyGalleryButton() {
   return (
-    <div className="mb-4 flex justify-end px-4">
-      <button
-        onClick={() => router.push('/pages/my-gallery')}
+    <View className="mb-4 flex justify-end px-4">
+      <Pressable
+        onPress={() => router.push('/pages/my-gallery')}
         className="flex h-10 items-center justify-center gap-2 rounded-xl border border-[#b2b2b2] bg-[rgba(22,22,30,0.6)] px-4 py-2 backdrop-blur-sm transition-transform active:scale-95"
       >
         <svg className="size-5" fill="none" viewBox="0 0 33 33">
           <path d={svgPaths.p498d400} fill="#6B7280" />
         </svg>
-        <span className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
+        <Text className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
           我的图库
-        </span>
-      </button>
-    </div>
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -126,36 +128,36 @@ function InputCard({
   };
 
   return (
-    <div className="mx-4 overflow-hidden rounded-3xl border border-[#b2b2b2] bg-[#16161e]">
-      <div className="relative flex flex-col" style={{ minHeight: '320px' }}>
-        <div className="absolute inset-0 z-0">
-          <img
+    <View className="mx-4 overflow-hidden rounded-3xl border border-[#b2b2b2] bg-[#16161e]">
+      <View className="relative flex flex-col" style={{ minHeight: '320px' }}>
+        <View className="absolute inset-0 z-0">
+          <Image
             alt=""
             className="size-full object-cover object-center"
-            src={backgroundImage || imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1}
+            source={backgroundImage || imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1}
           />
-          <div className="absolute inset-0 bg-[rgba(22,22,30,0.88)]" />
-        </div>
+          <View className="absolute inset-0 bg-[rgba(22,22,30,0.88)]" />
+        </View>
 
-        <div className="relative z-10 flex flex-1 flex-col gap-4 p-6">
-          <div className="h-2" />
+        <View className="relative z-10 flex flex-1 flex-col gap-4 p-6">
+          <View className="h-2" />
 
           {showHint
             ? (
-                <div
+                <View
                   className="flex flex-1 cursor-text flex-col items-center justify-center gap-2"
-                  onClick={handleHintClick}
+                  onPress={handleHintClick}
                 >
                   <h2 className="text-center font-['Noto_Sans_SC',sans-serif] text-xl font-bold text-[#e7e7e7]">
                     输入你想要的形象
                   </h2>
-                  <p className="px-2 text-center font-['Noto_Sans_SC',sans-serif] text-sm leading-relaxed text-[rgba(231,231,231,0.6)]">
+                  <Text className="px-2 text-center font-['Noto_Sans_SC',sans-serif] text-sm leading-relaxed text-[rgba(231,231,231,0.6)]">
                     如性别、外貌、性格、身材、衣着以及其他特征
-                  </p>
-                </div>
+                  </Text>
+                </View>
               )
             : (
-                <div className="flex-1">
+                <View className="flex-1">
                   <textarea
                     ref={textareaRef}
                     className="size-full min-h-[160px] resize-none border-none bg-transparent font-['Noto_Sans_SC',sans-serif] text-sm leading-relaxed text-[rgba(231,231,231,0.85)] placeholder-[rgba(231,231,231,0.3)] outline-none"
@@ -167,22 +169,22 @@ function InputCard({
                       if (value.trim() === '') setFocused(false);
                     }}
                   />
-                </div>
+                </View>
               )}
 
-          <div className="flex items-center justify-center gap-5 pt-1 pb-2">
+          <View className="flex items-center justify-center gap-5 pt-1 pb-2">
             {/* 参考图按钮：已选图片则显示缩略图，可点击预览；未选则显示图标 */}
-            <button
-              onClick={referenceImageUrl ? onPreviewRefImage : onPickRefImage}
+            <Pressable
+              onPress={referenceImageUrl ? onPreviewRefImage : onPickRefImage}
               className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.45)] bg-[rgba(22,22,30,0.6)] px-5 py-3 backdrop-blur-sm transition-transform active:scale-95 overflow-hidden"
               title={referenceImageUrl ? '点击预览参考图' : '选择参考图'}
             >
               {referenceImageUrl
                 ? (
-                    <img
-                      src={referenceImageUrl}
+                    <Image
+                      source={referenceImageUrl}
                       alt="参考图"
-                      style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: 4 }}
+                      style={{ width: 22, height: 22,  borderRadius: 4 }}
                     />
                   )
                 : (
@@ -197,65 +199,65 @@ function InputCard({
                       </defs>
                     </svg>
                   )}
-              <span className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
+              <Text className="font-['Inter',sans-serif] text-sm font-medium whitespace-nowrap text-white">
                 参考图
-              </span>
-            </button>
+              </Text>
+            </Pressable>
 
-            <button
-              onClick={onGenerate}
+            <Pressable
+              onPress={onGenerate}
               disabled={generating}
               className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(155,254,3,0.9)] bg-[rgba(22,22,30,0.6)] px-5 py-3 shadow-[0px_0px_15px_0px_rgba(155,254,3,0.2)] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="size-5 shrink-0" fill="none" viewBox="0 0 38 40">
                 <path d={svgPaths.p6e49400} fill="rgba(155,254,3,0.9)" fillOpacity="0.9" />
               </svg>
-              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(155,254,3,0.9)]">
+              <Text className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(155,254,3,0.9)]">
                 {generating ? '生成中...' : 'AI 生成'}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
 function StyleCard({ image, label, selected = false, onClick }) {
   return (
-    <button
-      onClick={onClick}
+    <Pressable
+      onPress={onClick}
       className={`flex shrink-0 flex-col items-center gap-2 ${!selected ? 'opacity-60' : ''} transition-all active:scale-95`}
       style={{ minWidth: '72px' }}
     >
-      <div className={`size-[72px] overflow-hidden rounded-2xl ${selected ? 'border-2 border-white' : 'border border-[rgba(255,255,255,0.1)]'}`}>
-        <img
-          src={image}
+      <View className={`size-[72px] overflow-hidden rounded-2xl ${selected ? 'border-2 border-white' : 'border border-[rgba(255,255,255,0.1)]'}`}>
+        <Image
+          source={image}
           alt={label}
           className="size-full object-cover"
           draggable={false}
         />
-      </div>
-      <p className={`font-['Noto_Sans_SC',sans-serif] ${selected ? 'font-bold' : 'font-medium'} text-xs ${selected ? 'text-white' : 'text-[rgba(255,255,255,0.8)]'} whitespace-nowrap`}>
+      </View>
+      <Text className={`font-['Noto_Sans_SC',sans-serif] ${selected ? 'font-bold' : 'font-medium'} text-xs ${selected ? 'text-white' : 'text-[rgba(255,255,255,0.8)]'} whitespace-nowrap`}>
         {label}
-      </p>
-    </button>
+      </Text>
+    </Pressable>
   );
 }
 
 function StyleSelector({ selectedStyle, onSelectStyle }) {
   return (
-    <div className="mx-4 rounded-3xl border-1 border-[#b2b2b2] bg-[#1d1d1d] p-5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
-      <div className="mb-4 flex items-center justify-between">
+    <View className="mx-4 rounded-3xl border-1 border-[#b2b2b2] bg-[#1d1d1d] p-5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
+      <View className="mb-4 flex items-center justify-between">
         <h3 className="font-['Noto_Sans_SC',sans-serif] text-base font-bold text-[#b3b3b3]">
           风格
         </h3>
-        <button className="rounded-lg border border-[#b2b2b2] bg-[rgba(178,178,178,0.2)] px-3 py-1 transition-transform active:scale-95">
-          <span className="font-['Noto_Sans_SC',sans-serif] text-xs font-medium tracking-wide text-[#b3b3b3]">
+        <Pressable className="rounded-lg border border-[#b2b2b2] bg-[rgba(178,178,178,0.2)] px-3 py-1 transition-transform active:scale-95">
+          <Text className="font-['Noto_Sans_SC',sans-serif] text-xs font-medium tracking-wide text-[#b3b3b3]">
             更多
-          </span>
-        </button>
-      </div>
+          </Text>
+        </Pressable>
+      </View>
 
       <style>
         {`
@@ -269,10 +271,10 @@ function StyleSelector({ selectedStyle, onSelectStyle }) {
       `}
       </style>
       {/* eslint-disable better-tailwindcss/no-unknown-classes */}
-      <div
+      <View
         className="hide-scrollbar flex gap-4 overflow-x-auto pb-1"
         style={{
-          WebkitOverflowScrolling: 'touch',
+          
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
         }}
@@ -283,12 +285,12 @@ function StyleSelector({ selectedStyle, onSelectStyle }) {
             image={style.image}
             label={style.label}
             selected={selectedStyle === style.value}
-            onClick={() => onSelectStyle(style.value)}
+            onPress={() => onSelectStyle(style.value)}
           />
         ))}
-      </div>
+      </View>
       {/* eslint-enable better-tailwindcss/no-unknown-classes */}
-    </div>
+    </View>
   );
 }
 
@@ -301,162 +303,31 @@ function Container() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [previewSrc, setPreviewSrc] = useState('');
-  const fileInputRef = useRef(null);
 
   /** 调起文件系统选单张图片?*/
-  const handlePickRefImage = () => {
-    fileInputRef.current?.click();
-  };
+  const handlePickRefImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    setReferenceImageUrl(objectUrl);
-    // reset file input so same file can be selected again
-    e.target.value = '';
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setReferenceImageUrl(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.warn("pick image failed", error);
+    }
   };
 
   const handleGenerate = async () => {
     const promptTextTrimmed = promptText.trim();
-    if (!promptTextTrimmed && !referenceImageUrl) {
-      showMessage('请输入形象描述或选择参考图');
-      return;
-    }
-
     setIsGenerating(true);
-    try {
-      const generated = await tsRoleApi.generateTextByTemplate({
-        promptCode: 'role_ai_generate_text',
-        promptVersion: 'v1',
-        variables: {
-          idea_input: promptTextTrimmed || null,
-          style_hint: selectedStyle || null,
-          keywords: selectedStyle || null,
-          reference_image_url: referenceImageUrl || null,
-          role_name: null,
-          gender: null,
-          occupation: null,
-          background_story: null,
-        },
-      });
-      const generatedText = generated?.generatedText?.trim();
-      if (!generatedText) {
-        throw new Error('AI 未返回可用的文本');
-      }
-      setPromptText(generatedText);
-    }
-    catch (error) {
-      showMessage(extractErrorMessage(error, 'AI 生成失败，请重试'));
-    }
-    finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    const promptTextTrimmed = promptText.trim();
-    if (!referenceImageUrl && promptTextTrimmed.length < 15) {
-      showMessage('请上传参考图或输入至少 15 个字符');
-      return;
-    }
-
-    setIsCreating(true);
-    try {
-      const generated = await tsRoleImageApi.generateRoleImage({
-        backgroundStory: promptTextTrimmed || undefined,
-        styleName: selectedStyle || undefined,
-        referenceImageUrl: referenceImageUrl || undefined,
-      });
-
-      const imageUrl = generated?.imageUrl?.trim();
-      if (!imageUrl) {
-        throw new Error('创建失败：未返回图片地址');
-      }
-      setGeneratedImageUrl(imageUrl);
-
-      const extJson = JSON.stringify({
-        promptCode: generated.promptCode,
-        promptVersion: generated.promptVersion,
-        snapshotKey: generated.snapshotKey,
-        generateRecordId: generated.generateRecordId,
-        imagePrompt: generated.imagePrompt,
-      });
-
-      await tsRoleImageApi.createRoleImageProfile({
-        profileName: (promptTextTrimmed || 'new-profile').slice(0, PROFILE_NAME_MAX_LENGTH),
-        promptText: promptTextTrimmed || generated.imagePrompt || '',
-        styleName: selectedStyle || undefined,
-        selectedImageAssetId: generated.imageAssetId,
-        selectedImageUrl: imageUrl,
-        sourceType: 'ai_generate',
-        isPublic: 1,
-        status: 1,
-        extJson,
-      });
-      showMessage('创建形象成功');
-    }
-    catch (error) {
-      showMessage(extractErrorMessage(error, '创建形象失败，请重试'));
-    }
-    finally {
-      setIsCreating(false);
-    }
-  };
-
-  return (
-    <div className="flex min-h-screen w-full flex-col bg-black">
-      <AiHeader title="创建形象" className="h-16 bg-black px-4" />
-      <MyGalleryButton />
-      <InputCard
-        value={promptText}
-        onChange={setPromptText}
-        onPickRefImage={handlePickRefImage}
-        referenceImageUrl={referenceImageUrl}
-        onPreviewRefImage={() => setPreviewSrc(referenceImageUrl)}
-        onGenerate={handleGenerate}
-        generating={isGenerating}
-        backgroundImage={generatedImageUrl}
-      />
-      <div className="mt-4 mb-4">
-        <StyleSelector
-          selectedStyle={selectedStyle}
-          onSelectStyle={setSelectedStyle}
-        />
-      </div>
-
-      {/* 创建形象按钮 */}
-      <div className="px-4 pb-8">
-        <AiLoginBtn
-          label="创建形象"
-          onPress={handleCreate}
-          disabled={isCreating}
-          customWidth="w-full"
-          customHeight="h-14"
-          radius="rounded-2xl"
-          textClassName="text-base font-bold text-black"
-        />
-      </div>
-
-      {/* 隐藏的文件选择框?*/}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-      />
-
-      {/* 图片预览弹层 */}
-      <ImagePreviewModal src={previewSrc} onClose={() => setPreviewSrc('')} />
-    </div>
-  );
-}
-
 export default function App() {
   return (
-    <div className="min-h-screen w-full bg-black">
+    <View className="min-h-screen w-full bg-black">
       <Container />
-    </div>
+    </View>
   );
 }

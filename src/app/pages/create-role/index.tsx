@@ -1,9 +1,10 @@
 import { CreateCharacter } from "./components/create-character";
+import { View } from 'react-native';
 
 export default function App() {
   return (
-    <div className="size-full bg-black">
+    <View className="size-full bg-black">
       <CreateCharacter />
-    </div>
+    </View>
   );
 }

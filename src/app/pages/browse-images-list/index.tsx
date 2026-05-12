@@ -464,9 +464,9 @@ export default function BrowseImagesList() {
         ) : null}
       </ScrollView>
 
-      <div className="fixed bottom-0 left-0 right-0 z-[1000]">
+      <View className="fixed bottom-0 left-0 right-0 z-[1000]">
         <AiBottomTabs activeTab="search" />
-      </div>
+      </View>
     </View>
   );
 }

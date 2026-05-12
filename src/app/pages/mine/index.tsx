@@ -77,6 +77,8 @@ type MineGridSectionProps = {
 
 const FALLBACK_GRID_ITEMS: GridItem[] = Array.from({ length: 6 }, (_, i) => ({
   id: `fallback-${i}`,
+  originalId: i + 1,
+  type: 'story',
   image: imgGridImage,
   views: '--',
   author: '@用户',

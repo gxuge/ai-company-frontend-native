@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+// @ts-expect-error
 import { Image, Sparkles } from "lucide-react";
+// @ts-expect-error
+import { View, Text, Image } from 'react-native';
 
 const statusMessages = [
   "匹配外观风格中",
@@ -51,9 +54,9 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
   }, []);
 
   return (
-    <div className="relative size-full overflow-hidden bg-black/95">
+    <View className="relative size-full overflow-hidden bg-black/95">
       {/* 1. Glow Background Layers */}
-      <div className="absolute inset-0 z-0">
+      <View className="absolute inset-0 z-0">
         <motion.div
           className="absolute -top-1/4 -left-1/4 size-full rounded-full bg-[var(--ai-blue)] blur-[40px] opacity-30"
           animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
@@ -64,10 +67,10 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
            animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
            transition={{ duration: 5, repeat: Infinity }}
         />
-      </div>
+      </View>
 
       {/* 2. Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none z-10">
+      <View className="absolute inset-0 pointer-events-none z-10">
         {particles.map((p) => (
           <motion.div
             key={p.id}
@@ -77,10 +80,10 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
             transition={{ duration: p.duration, delay: p.delay, repeat: Infinity }}
           />
         ))}
-      </div>
+      </View>
 
       {/* 3. Central AI Scanning Container */}
-      <div className="relative z-20 flex size-full flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] p-2">
+      <View className="relative z-20 flex size-full flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] p-2">
         
         {/* The Grid Box (Mini AvatarGeneratingStage Grid) */}
         <motion.div 
@@ -90,7 +93,7 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
           transition={{ duration: 0.5 }}
         >
           {/* Animated Matrix Squares */}
-          <div className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-0.5 p-1 opacity-20">
+          <View className="absolute inset-0 grid grid-cols-4 grid-rows-4 gap-0.5 p-1 opacity-20">
              {[...Array(16)].map((_, i) => (
                <motion.div
                  key={i}
@@ -99,7 +102,7 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
                  transition={{ delay: (i % 4) * 0.1 + Math.floor(i / 4) * 0.15, duration: 1.5, repeat: Infinity }}
                />
              ))}
-          </div>
+          </View>
 
           {/* Scaning Line */}
           <motion.div
@@ -108,14 +111,14 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
           />
 
           {/* Central Icons */}
-          <div className="absolute inset-0 flex items-center justify-center z-20">
+          <View className="absolute inset-0 flex items-center justify-center z-20">
              <motion.div
                 animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 2, repeat: Infinity }}
              >
                 <Image className="size-10 text-white/90" strokeWidth={1.5} />
              </motion.div>
-          </div>
+          </View>
 
           <motion.div
              className="absolute top-2 right-2 z-30"
@@ -127,12 +130,12 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
         </motion.div>
 
         {/* 4. Text & Progress Info */}
-        <div className="mt-4 flex flex-col items-center gap-1">
+        <View className="mt-4 flex flex-col items-center gap-1">
           <Text className="font-['Noto_Sans_SC'] text-[13px] font-bold text-white tracking-wider">
             生成形象中
           </Text>
           
-          <div className="h-4 flex items-center">
+          <View className="h-4 flex items-center">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentMessage}
@@ -142,35 +145,35 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
                 transition={{ duration: 0.4 }}
                 className="flex items-center gap-1.5"
               >
-                <div className="size-1 rounded-full bg-[var(--ai-cyan)] shadow-[0_0_8px_var(--ai-cyan)]" />
+                <View className="size-1 rounded-full bg-[var(--ai-cyan)] shadow-[0_0_8px_var(--ai-cyan)]" />
                 <Text className="font-['Noto_Sans_SC'] text-[10px] text-white/40">
                   {statusMessages[currentMessage]}
                 </Text>
               </motion.div>
             </AnimatePresence>
-          </div>
+          </View>
 
           {/* Progress Bar Container */}
-          <div className="mt-2 w-24">
-             <div className="relative h-1 w-full rounded-full bg-white/10 overflow-hidden">
+          <View className="mt-2 w-24">
+             <View className="relative h-1 w-full rounded-full bg-white/10 overflow-hidden">
                 <motion.div
                   className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--ai-blue)] to-[var(--ai-cyan)]"
                   initial={{ width: "0%" }}
                   animate={{ width: `${Math.floor(progress)}%` }}
                   transition={{ duration: 0.3 }}
                 />
-             </div>
+             </View>
              <Text className="mt-1 text-center font-mono text-[9px] text-white/20">
                 {Math.floor(progress)}%
              </Text>
-          </div>
-        </div>
-      </div>
-    </div>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
 // Simple Text shim if Native-web mapping isn't perfect
 function Text({ children, className, style }: any) {
-  return <span className={className} style={style}>{children}</span>;
+  return <Text className={className} style={style}>{children}</Text>;
 }

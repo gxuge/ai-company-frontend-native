@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi } from '@/lib/api';
+import { View, Text, Image } from 'react-native';
 
 const imgCategoryBgBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_blue.svg'));
 const imgCategoryBgOrange = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_orange.svg'));
@@ -193,23 +194,23 @@ function CategoryIcon({ icon, color }: { icon: string; color: string }) {
   const iconHeight = icon === 'addUser' ? 20 : icon === 'frame' ? 16 : icon === 'heart' ? 19 : 19;
 
   return (
-    <div className="relative size-[48px] overflow-hidden">
-      <img src={bgSrc} alt="" className="absolute inset-0 size-full object-contain" />
-      <div className="absolute inset-0 flex items-center justify-center">
-        <img src={iconSrc} alt="" className="object-contain" style={{ width: iconWidth, height: iconHeight }} />
-      </div>
-    </div>
+    <View className="relative size-[48px] overflow-hidden">
+      <Image source={bgSrc} alt="" className="absolute inset-0 size-full object-contain" />
+      <View className="absolute inset-0 flex items-center justify-center">
+        <Image source={iconSrc} alt="" className="object-contain" style={{ width: iconWidth, height: iconHeight }} />
+      </View>
+    </View>
   );
 }
 
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
   return (
-    <div className="flex size-[20px] items-center justify-center rounded-full border border-[#3e7df8] bg-[#ff4245]">
-      <span className="text-[11px] text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+    <View className="flex size-[20px] items-center justify-center rounded-full border border-[#3e7df8] bg-[#ff4245]">
+      <Text className="text-[11px] text-white" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
         {count > 99 ? '99+' : count}
-      </span>
-    </div>
+      </Text>
+    </View>
   );
 }
 
@@ -230,31 +231,32 @@ function ConversationItem({
 }) {
   const avatarSrc = isSystemSession ? imgSystemAvatar : imgAvatar;
   return (
-    <div className="flex items-center border-t border-[#5d5d5d] px-4 py-3" onClick={onPress}>
-      <div className="relative mr-3 size-[56px] shrink-0">
-        <img
-          src={avatarSrc}
+    // @ts-expect-error
+    <View className="flex items-center border-t border-[#5d5d5d] px-4 py-3" onPress={onPress}>
+      <View className="relative mr-3 size-[56px] shrink-0">
+        <Image
+          source={avatarSrc}
           alt={name}
           className="size-full rounded-full object-cover"
         />
-      </div>
+      </View>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] text-[#e1e1e1]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+      <View className="min-w-0 flex-1">
+        <Text className="truncate text-[15px] text-[#e1e1e1]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
           {name}
-        </p>
-        <p className="mt-0.5 truncate text-[12px] text-[#9c9c9c]" style={{ fontFamily: 'Inter, sans-serif' }}>
+        </Text>
+        <Text className="mt-0.5 truncate text-[12px] text-[#9c9c9c]" style={{ fontFamily: 'Inter, sans-serif' }}>
           {message}
-        </p>
-      </div>
+        </Text>
+      </View>
 
-      <div className="ml-2 flex shrink-0 flex-col items-end gap-1">
+      <View className="ml-2 flex shrink-0 flex-col items-end gap-1">
         <Badge count={badge} />
-        <span className="text-[11px] text-[#989898]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
+        <Text className="text-[11px] text-[#989898]" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 700 }}>
           {time}
-        </span>
-      </div>
-    </div>
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -270,9 +272,9 @@ export default function App() {
   };
 
   return (
-    <div className="flex min-h-screen w-full justify-center bg-[#111]">
-      <div className="flex min-h-screen w-full max-w-[430px] flex-col bg-[#1e1e1e]">
-        <div className="flex items-center justify-between bg-[rgba(0,0,0,0.5)] px-4 pt-3 pb-2">
+    <View className="flex min-h-screen w-full justify-center bg-[#111]">
+      <View className="flex min-h-screen w-full max-w-[430px] flex-col bg-[#1e1e1e]">
+        <View className="flex items-center justify-between bg-[rgba(0,0,0,0.5)] px-4 pt-3 pb-2">
           <AiNavigateTabs
             options={tabs}
             activeValue={activeTab}
@@ -282,29 +284,29 @@ export default function App() {
             inactiveTextClassName="text-[18px] text-[#e7e7e7] pb-1"
             indicatorClassName="absolute bottom-[-2px] h-[3px] bg-[rgba(155,254,3,0.9)] rounded-full"
           />
-          <div className="size-[22px]">
-            <img src={imgImage} alt="search" className="size-full object-contain" />
-          </div>
-        </div>
+          <View className="size-[22px]">
+            <Image source={imgImage} alt="search" className="size-full object-contain" />
+          </View>
+        </View>
 
-        <div className="flex items-center justify-around bg-[#202020] px-4 py-5">
+        <View className="flex items-center justify-around bg-[#202020] px-4 py-5">
           {categories.map(cat => (
-            <div key={cat.label} className="flex flex-col items-center gap-2">
+            <View key={cat.label} className="flex flex-col items-center gap-2">
               <CategoryIcon icon={cat.icon} color={cat.color} />
-              <span
+              <Text
                 className="text-[14px] tracking-tight text-[#9ca3af]"
                 style={{ fontFamily: 'sans-serif', fontWeight: 700 }}
               >
                 {cat.label}
-              </span>
-            </div>
+              </Text>
+            </View>
           ))}
-        </div>
+        </View>
 
-        <div className="flex-1 overflow-y-auto pb-[90px]">
-          {loading ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">加载中...</div> : null}
-          {loadError ? <div className="px-4 py-3 text-[12px] text-[#fca5a5]">{loadError}</div> : null}
-          {!loading && conversations.length === 0 ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">暂无会话</div> : null}
+        <View className="flex-1 overflow-y-auto pb-[90px]">
+          {loading ? <View className="px-4 py-3 text-[12px] text-[#9ca3af]">加载中...</View> : null}
+          {loadError ? <View className="px-4 py-3 text-[12px] text-[#fca5a5]">{loadError}</View> : null}
+          {!loading && conversations.length === 0 ? <View className="px-4 py-3 text-[12px] text-[#9ca3af]">暂无会话</View> : null}
           {conversations.map(conv => (
             <ConversationItem
               key={conv.id}
@@ -316,13 +318,13 @@ export default function App() {
               onPress={() => handleOpenConversation(conv)}
             />
           ))}
-        </div>
+        </View>
 
         {/* Bottom Tabs */}
-        <div className="fixed bottom-0 left-0 right-0 z-[100] w-full max-w-[430px] self-center">
+        <View className="fixed bottom-0 left-0 right-0 z-[100] w-full max-w-[430px] self-center">
           <AiBottomTabs activeTab="chat" />
-        </div>
-      </div>
-    </div>
+        </View>
+      </View>
+    </View>
   );
 }

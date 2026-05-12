@@ -584,7 +584,6 @@ export default function App() {
                 fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
                 fontSize: 30,
                 color: "white",
-                outlineStyle: 'none' // Remove focus outline on web
               }}
             />
 

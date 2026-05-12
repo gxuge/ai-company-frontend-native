@@ -1,7 +1,7 @@
 import type { TokenType } from '@/lib/auth/utils';
 
 import { create } from 'zustand';
-import { getToken, removeToken, setToken } from '@/lib/auth/utils';
+import { getTokenAsync, removeToken, setToken } from '@/lib/auth/utils';
 import { createSelectors } from '@/lib/utils';
 
 type AuthState = {
@@ -23,14 +23,14 @@ const _useAuthStore = create<AuthState>((set, get) => ({
     removeToken();
     set({ status: 'signOut', token: null });
   },
-  hydrate: () => {
+  hydrate: async () => {
     try {
-      const userToken = getToken();
+      const userToken = await getTokenAsync();
       if (userToken !== null) {
-        get().signIn(userToken);
+        set({ status: 'signIn', token: userToken });
       }
       else {
-        get().signOut();
+        set({ status: 'signOut', token: null });
       }
     }
     catch (e) {
@@ -46,4 +46,4 @@ export const useAuthStore = createSelectors(_useAuthStore);
 
 export const signOut = () => _useAuthStore.getState().signOut();
 export const signIn = (token: TokenType) => _useAuthStore.getState().signIn(token);
-export const hydrateAuth = () => _useAuthStore.getState().hydrate();
+export const hydrateAuth = () => void _useAuthStore.getState().hydrate();

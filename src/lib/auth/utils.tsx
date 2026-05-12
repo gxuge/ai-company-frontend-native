@@ -1,4 +1,4 @@
-import { getItem, removeItem, setItem } from '@/lib/storage';
+import { getItem, getItemAsync, removeItem, setItem } from '@/lib/storage';
 
 const TOKEN = 'token';
 
@@ -11,6 +11,7 @@ export type TokenType = {
 };
 
 export const getToken = () => getItem<TokenType>(TOKEN);
+export const getTokenAsync = () => getItemAsync<TokenType>(TOKEN);
 export const removeToken = () => removeItem(TOKEN);
 export const setToken = (value: TokenType) => setItem<TokenType>(TOKEN, value);
 

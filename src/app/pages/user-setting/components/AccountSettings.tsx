@@ -1,9 +1,11 @@
 import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
+import * as ImagePicker from "expo-image-picker";
 import { AiFormInput } from "@/components/ai-company/ai-form-input";
 import { AiDateInput } from "@/components/ai-company/ai-date-input";
 import { AiSelectTab } from "@/components/ai-company/ai-select-tab";
 import { userApi } from "@/lib/api";
+import { View, Text, Image, Pressable } from 'react-native';
 
 const imgAvatarEditButton = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/avatar_edit_button.svg"));
 const imgCalendarIcon = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/calendar_icon.svg"));
@@ -79,7 +81,6 @@ export default function AccountSettings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const genderOptions: { value: Gender; label: string }[] = [
     { value: "male", label: "男生" },
@@ -166,82 +167,90 @@ export default function AccountSettings() {
     }
   };
 
-  const handleTriggerUpload = () => {
+  const handleTriggerUpload = async () => {
     if (isUploading || isSaving) return;
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
     try {
-      const serverPath = await userApi.uploadFile(file);
-      if (serverPath) {
-        setAvatarUrl(serverPath);
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 1,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setIsUploading(true);
+        const asset = result.assets[0];
+        const fileObj = {
+          uri: asset.uri,
+          name: asset.fileName || 'avatar.jpg',
+          type: asset.mimeType || 'image/jpeg',
+        } as any;
+        const serverPath = await userApi.uploadFile(fileObj);
+        if (serverPath) {
+          setAvatarUrl(serverPath);
+        }
       }
     } catch (error) {
       console.warn("avatar upload failed", error);
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   return (
-    <div className="bg-[#0a0a0a] min-h-screen w-full flex flex-col text-white max-w-[480px] mx-auto relative overflow-x-hidden">
+    <View className="bg-[#0a0a0a] min-h-screen w-full flex flex-col text-white max-w-[480px] mx-auto relative overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-[5vw] pt-2 pb-5">
-        <button onClick={handleCancel} className="text-[16px] text-white/90 active:opacity-60 transition-opacity" style={{ fontFamily: "sans-serif" }}>
+      <View className="flex items-center justify-between px-[5vw] pt-2 pb-5">
+        // @ts-expect-error
+        <Pressable onPress={handleCancel} className="text-[16px] text-white/90 active:opacity-60 transition-opacity">
           取消
-        </button>
-        <span className="text-[18px] tracking-[0.5px]" style={{ fontFamily: "sans-serif", fontWeight: 500 }}>
+        </Pressable>
+        <Text className="text-[18px] tracking-[0.5px]" style={{ fontFamily: "sans-serif", fontWeight: 500 }}>
           账号设置
-        </span>
-        <button
-          onClick={handleSave}
+        </Text>
+        <Pressable
+          onPress={handleSave}
           disabled={isSaving || isLoading}
           className="text-[16px] text-[rgba(155,254,3,0.9)] active:opacity-60 transition-opacity disabled:opacity-50"
+          // @ts-expect-error
           style={{ fontFamily: "sans-serif" }}
         >
           保存
-        </button>
-      </div>
+        </Pressable>
+      </View>
 
       {/* Profile Picture */}
-      <div className="flex justify-center pt-4 pb-8">
-        <div className="relative cursor-pointer group" onClick={handleTriggerUpload}>
-          <div
+      <View className="flex justify-center pt-4 pb-8">
+        <Pressable className="relative cursor-pointer group" onPress={handleTriggerUpload}>
+          <View
             className="w-[120px] h-[120px] rounded-full border-[2.5px] border-[rgba(155,254,3,0.9)] overflow-hidden p-[7px] relative"
             style={{ boxShadow: "0 0 20px rgba(155,254,3,0.3)" }}
           >
             {isUploading && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 rounded-full">
-                <div className="w-5 h-5 border-2 border-[rgba(155,254,3,0.9)] border-t-transparent rounded-full animate-spin" />
-              </div>
+              <View className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 rounded-full">
+                <View className="w-5 h-5 border-2 border-[rgba(155,254,3,0.9)] border-t-transparent rounded-full animate-spin" />
+              </View>
             )}
-            <img
-              src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8080/jeecg-boot/sys/common/static/${avatarUrl}`) : imgProfilePicture}
+            <Image
+              source={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8080/jeecg-boot/sys/common/static/${avatarUrl}`) : imgProfilePicture}
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             />
-          </div>
+          </View>
           {/* Edit Button */}
-          <div className="absolute -bottom-1 -right-1 w-[32px] h-[32px] group-hover:scale-110 transition-transform">
-            <img src={imgAvatarEditButton} alt="" className="w-[32px] h-[32px] object-contain" />
-          </div>
-        </div>
-      </div>
+          <View className="absolute -bottom-1 -right-1 w-[32px] h-[32px] group-hover:scale-110 transition-transform">
+            <Image source={imgAvatarEditButton} alt="" className="w-[32px] h-[32px] object-contain" />
+          </View>
+        </Pressable>
+      </View>
 
       {/* Form */}
-      <div className="flex flex-col gap-[32px] px-[6vw] pb-10">
+      <View className="flex flex-col gap-[32px] px-[6vw] pb-10">
         {/* Nickname */}
-        <div className="flex flex-col gap-2">
+        <View className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
             昵称
           </label>
-          <div className="relative">
+          <View className="relative">
             <AiFormInput
               value={nickname}
               onChangeText={setNickname}
@@ -251,26 +260,26 @@ export default function AccountSettings() {
               className="w-full h-[56px] px-5 bg-transparent border-0 outline-none text-white text-[16px]"
               customContainerClass="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px]"
             />
-          </div>
-        </div>
+          </View>
+        </View>
 
         {/* ID */}
-        <div className="flex flex-col gap-2">
-          <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1" style={{ fontFamily: "Inter, sans-serif", fontWeight: 500 }}>
+        <View className="flex flex-col gap-2">
+          <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1" style={{ fontWeight: 500 }}>
             ID
           </label>
-          <div className="relative">
+          <View className="relative">
             <AiFormInput
               value={userCode}
               editable={false}
               className="w-full h-[56px] px-5 bg-transparent border-0 outline-none text-white text-[16px]"
               customContainerClass="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px] opacity-60"
             />
-          </div>
-        </div>
+          </View>
+        </View>
 
         {/* Gender */}
-        <div className="flex flex-col gap-2">
+        <View className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
             性别
           </label>
@@ -287,10 +296,10 @@ export default function AccountSettings() {
             activeBgClassName="bg-[rgba(155,254,3,0.2)] rounded-[16px]"
             itemClassName="flex-1 py-4 items-center justify-center z-10"
           />
-        </div>
+        </View>
 
         {/* Birthday */}
-        <div className="flex flex-col gap-2">
+        <View className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
             生日
           </label>
@@ -301,46 +310,34 @@ export default function AccountSettings() {
             placeholder="mm/dd/yyyy"
             iconSource={imgCalendarIcon}
           />
-        </div>
+        </View>
 
         {/* Content Preferences */}
-        <div className="flex flex-col gap-2">
+        <View className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
             内容偏好
           </label>
-          <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px] px-5 py-5 flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-wrap">
+          <View className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px] px-5 py-5 flex items-center justify-between">
+            <View className="flex items-center gap-2 flex-wrap">
               {tags.map((tag) => (
-                <span
+                <Text
                   key={tag}
                   className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[15px] px-3 py-1 text-[#d1d5db] text-[13px]"
                 >
                   {tag}
-                </span>
+                </Text>
               ))}
-              <span className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[15px] px-2.5 py-1 text-white text-[13px]" style={{ fontFamily: "Inter, sans-serif", fontWeight: 500 }}>
+              <Text className="bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-[15px] px-2.5 py-1 text-white text-[13px]" style={{ fontWeight: 500 }}>
                 +2
-              </span>
-            </div>
+              </Text>
+            </View>
             {/* Arrow */}
-            <img src={imgArrowRightGray} alt="" className="ml-3 shrink-0 w-[10px] h-[16px] object-contain" />
-          </div>
-        </div>
-      </div>
-
-      {/* Hidden File Input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        accept="image/*"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-    </div>
+            <Image source={imgArrowRightGray} alt="" className="ml-3 shrink-0 w-[10px] h-[16px] object-contain" />
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
-
-
-
 
 

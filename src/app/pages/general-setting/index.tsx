@@ -1,9 +1,10 @@
 import { SettingsPage } from "./components/settings-page";
+import { View } from 'react-native';
 
 export default function App() {
   return (
-    <div className="size-full">
+    <View className="size-full">
       <SettingsPage />
-    </div>
+    </View>
   );
 }

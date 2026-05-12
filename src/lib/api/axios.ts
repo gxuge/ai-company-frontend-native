@@ -38,9 +38,9 @@ export class VAxios {
       (config) => {
         const next = config as ApiRequestConfig;
         if (requestInterceptors) {
-          return requestInterceptors(next, this.options);
+          return requestInterceptors(next, this.options) as typeof config;
         }
-        return next;
+        return config;
       },
       requestInterceptorsCatch ? error => requestInterceptorsCatch(error) : undefined,
     );

@@ -1,9 +1,9 @@
 import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
-import { useEffect, useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ScrollView, View, Text, Image, Pressable } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, router } from 'expo-router';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
@@ -96,7 +96,7 @@ function Header({
   onTabChange: (tab: 'basic' | 'advanced') => void;
 }) {
   return (
-    <div className="sticky top-0 z-10 border-b border-white/10 bg-black px-4 py-3">
+    <View className="sticky top-0 z-10 border-b border-white/10 bg-black px-4 py-3">
       <AiHeader title="创建角色" className="mb-4" />
       <AiTopTabs
         tabs={[
@@ -110,7 +110,7 @@ function Header({
         activeTextClassName="text-[#3b3f34] font-bold"
         inactiveTextClassName="text-[#9ca3af]"
       />
-    </div>
+    </View>
   );
 }
 
@@ -126,13 +126,13 @@ function PublicStatusSection({
       <h2 className={`text-base text-white ${fontBase} px-1 font-bold tracking-wide`}>
         公开状态
       </h2>
-      <div className="flex items-center justify-between rounded-2xl border border-[#494949] bg-black p-5">
-        <div>
-          <p className={`text-sm text-white ${fontBase} font-medium`}>是否公开角色</p>
-          <p className={`text-xs text-[#6b7280] ${fontBase} mt-1`}>公开后其他用户可以与该角色对话</p>
-        </div>
+      <View className="flex items-center justify-between rounded-2xl border border-[#494949] bg-black p-5">
+        <View>
+          <Text className={`text-sm text-white ${fontBase} font-medium`}>是否公开角色</Text>
+          <Text className={`text-xs text-[#6b7280] ${fontBase} mt-1`}>公开后其他用户可以与该角色对话</Text>
+        </View>
         <AiSwitch checked={isPublic} onCheckedChange={onPublicChange} checkedColorClassName="bg-[#a3e635]" />
-      </div>
+      </View>
     </section>
   );
 }
@@ -147,8 +147,8 @@ function TagChip({
   onToggle: () => void;
 }) {
   return (
-    <button
-      onClick={onToggle}
+    <Pressable
+      onPress={onToggle}
       className={`rounded-full px-4 py-2 text-sm ${fontBase} font-medium transition-colors ${
         selected
           ? 'border border-black bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
@@ -156,7 +156,7 @@ function TagChip({
       }`}
     >
       {label}
-    </button>
+    </Pressable>
   );
 }
 
@@ -173,20 +173,20 @@ function TagsSection({
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-center justify-between px-1">
+      <View className="flex items-center justify-between px-1">
         <h2 className={`text-base text-white ${fontBase} font-bold tracking-wide`}>角色标签</h2>
-        <button
-          onClick={onSmartRecommend}
+        <Pressable
+          onPress={onSmartRecommend}
           className="flex items-center gap-1.5 rounded-full border border-[rgba(155,254,3,0.2)] px-3 py-1.5 shadow-[0px_0px_6px_0px_rgba(155,254,3,0.2),0px_0px_12px_0px_rgba(155,254,3,0.1)]"
         >
-          <img src={imgSparkle} alt="" className="size-[14px] shrink-0 object-contain" />
-          <span className={`text-sm text-[rgba(155,254,3,0.9)] ${fontBase} font-medium`}>
+          <Image source={imgSparkle} alt="" className="size-[14px] shrink-0 object-contain" />
+          <Text className={`text-sm text-[rgba(155,254,3,0.9)] ${fontBase} font-medium`}>
             智能推荐
-          </span>
-        </button>
-      </div>
-      <div className="rounded-2xl border border-[#494949] bg-black p-5">
-        <div className="flex flex-wrap gap-3">
+          </Text>
+        </Pressable>
+      </View>
+      <View className="rounded-2xl border border-[#494949] bg-black p-5">
+        <View className="flex flex-wrap gap-3">
           {tagOptions.map(tag => (
             <TagChip
               key={tag}
@@ -195,12 +195,12 @@ function TagsSection({
               onToggle={() => onToggleTag(tag)}
             />
           ))}
-          <button className="flex items-center gap-1 rounded-full border border-dashed border-neutral-500 px-4 py-2">
-            <img src={imgPlusGray} alt="" className="size-[16px] object-contain" />
-            <span className={`text-sm text-[#9ca3af] ${fontBase} font-medium`}>自定义</span>
-          </button>
-        </div>
-      </div>
+          <Pressable className="flex items-center gap-1 rounded-full border border-dashed border-neutral-500 px-4 py-2">
+            <Image source={imgPlusGray} alt="" className="size-[16px] object-contain" />
+            <Text className={`text-sm text-[#9ca3af] ${fontBase} font-medium`}>自定义</Text>
+          </Pressable>
+        </View>
+      </View>
     </section>
   );
 }
@@ -215,8 +215,8 @@ function OptionButton({
   onClick: () => void;
 }) {
   return (
-    <button
-      onClick={onClick}
+    <Pressable
+      onPress={onClick}
       className={`rounded-xl px-3.5 py-1 text-xs ${fontBase} transition-colors ${
         selected
           ? 'border border-[rgba(155,254,3,0.9)] bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
@@ -224,7 +224,7 @@ function OptionButton({
       }`}
     >
       {label}
-    </button>
+    </Pressable>
   );
 }
 
@@ -248,66 +248,70 @@ function DialogueStyleSection({
       <h2 className={`text-base text-white ${fontBase} px-1 font-bold tracking-wide`}>
         对话风格设定
       </h2>
-      <div className="overflow-hidden rounded-2xl border border-[#494949] bg-black">
-        <div className="p-5">
-          <div className="mb-4 flex items-center">
-            <div className="mr-3 h-5 w-[2.5px] rounded-full bg-[rgba(155,254,3,0.9)]" />
-            <span className={`text-sm text-white ${fontBase} font-bold tracking-wide`}>对话风格预览</span>
-          </div>
+      <View className="overflow-hidden rounded-2xl border border-[#494949] bg-black">
+        <View className="p-5">
+          <View className="mb-4 flex items-center">
+            <View className="mr-3 h-5 w-[2.5px] rounded-full bg-[rgba(155,254,3,0.9)]" />
+            <Text className={`text-sm text-white ${fontBase} font-bold tracking-wide`}>对话风格预览</Text>
+          </View>
           <AiFormTextarea
             containerClassName="bg-[#111] rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className={`w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[16px] text-[#d1d5db] placeholder-[#6b7280] text-sm ${fontBase} leading-relaxed`}
             value={previewText}
             onChange={e => setPreviewText(e.target.value)}
           />
-        </div>
+        </View>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <View className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
 
-        <div className="flex items-center justify-between px-5 py-4">
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>对话长度</span>
-          <div className="flex gap-2">
+        <View className="flex items-center justify-between px-5 py-4">
+          <Text className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>对话长度</Text>
+          <View className="flex gap-2">
             <OptionButton
               label="简短"
               selected={dialogLength === '简短'}
-              onClick={() => onDialogLengthChange('简短')}
+              // @ts-expect-error
+              onPress={() => onDialogLengthChange('简短')}
             />
             <OptionButton
               label="详细"
               selected={dialogLength === '详细'}
-              onClick={() => onDialogLengthChange('详细')}
+              // @ts-expect-error
+              onPress={() => onDialogLengthChange('详细')}
             />
-          </div>
-        </div>
+          </View>
+        </View>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <View className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
 
-        <div className="flex items-center justify-between px-5 py-4">
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>语气倾向</span>
-          <div className="flex items-center gap-1.5">
-            <span className={`text-xs text-[rgba(155,254,3,0.9)] ${fontBase}`}>{toneTendency}</span>
-            <img src={imgChevronRightGreen} alt="" className="h-[10px] w-[6px] object-contain" />
-          </div>
-        </div>
+        <View className="flex items-center justify-between px-5 py-4">
+          <Text className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>语气倾向</Text>
+          <View className="flex items-center gap-1.5">
+            <Text className={`text-xs text-[rgba(155,254,3,0.9)] ${fontBase}`}>{toneTendency}</Text>
+            <Image source={imgChevronRightGreen} alt="" className="h-[10px] w-[6px] object-contain" />
+          </View>
+        </View>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <View className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
 
-        <div className="flex items-center justify-between px-5 py-4">
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>互动性</span>
-          <div className="flex gap-2">
+        <View className="flex items-center justify-between px-5 py-4">
+          <Text className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>互动性</Text>
+          <View className="flex gap-2">
             <OptionButton
               label="主动引导"
               selected={interactivity === '主动引导'}
-              onClick={() => onInteractivityChange('主动引导')}
+              // @ts-expect-error
+              onPress={() => onInteractivityChange('主动引导')}
             />
             <OptionButton
               label="被动回应"
               selected={interactivity === '被动回应'}
-              onClick={() => onInteractivityChange('被动回应')}
+              // @ts-expect-error
+              onPress={() => onInteractivityChange('被动回应')}
             />
-          </div>
-        </div>
-      </div>
+          </View>
+        </View>
+      </View>
     </section>
   );
 }
@@ -320,15 +324,15 @@ function SaveButton({
   saving: boolean;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 bg-linear-to-t from-black via-black/95 to-transparent px-4 pt-6 pb-5">
-      <button
-        onClick={onSave}
+    <View className="sticky bottom-0 z-10 bg-linear-to-t from-black via-black/95 to-transparent px-4 pt-6 pb-5">
+      <Pressable
+        onPress={onSave}
         disabled={saving}
         className={`w-full rounded-full bg-[rgba(155,254,3,0.9)] py-4 text-lg text-[#3b3f34] ${fontBase} font-bold tracking-wider ${saving ? 'opacity-60' : ''}`}
       >
         {saving ? '保存中...' : '完成并保存'}
-      </button>
-    </div>
+      </Pressable>
+    </View>
   );
 }
 
@@ -388,6 +392,42 @@ export function CreateCharacter() {
   useEffect(() => () => {
     stopImagePolling();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let alive = true;
+      const syncVoiceConfig = async () => {
+        try {
+          const config = await tsVoiceApi.getCurrentVoiceConfig();
+          if (!alive) {
+            return;
+          }
+          if (typeof config.selectedVoiceProfileId === 'number' && Number.isFinite(config.selectedVoiceProfileId)) {
+            setVoiceProfileId(config.selectedVoiceProfileId);
+          }
+          if (config.selectedVoiceProfile?.providerVoiceId) {
+            setProviderVoiceId(config.selectedVoiceProfile.providerVoiceId);
+          }
+          if (config.selectedVoiceProfile?.name) {
+            setVoiceName(config.selectedVoiceProfile.name);
+          }
+          if (typeof config.pitchPercent === 'number' && Number.isFinite(config.pitchPercent)) {
+            setVoicePitch(roundVoiceParam(config.pitchPercent, 2));
+          }
+          if (typeof config.speedRate === 'number' && Number.isFinite(config.speedRate)) {
+            setVoiceSpeed(roundVoiceParam(config.speedRate, 2));
+          }
+        }
+        catch {
+          // Ignore sync failures; local state remains usable.
+        }
+      };
+      void syncVoiceConfig();
+      return () => {
+        alive = false;
+      };
+    }, []),
+  );
 
   useEffect(() => {
     let alive = true;
@@ -806,10 +846,10 @@ export function CreateCharacter() {
   };
 
   return (
-    <div className="mx-auto flex size-full max-w-[480px] flex-col bg-black">
+    <View className="mx-auto flex size-full max-w-[480px] flex-col bg-black">
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 112 }}>
-        <div className="flex flex-col gap-8 px-4 pt-5">
+        <View className="flex flex-col gap-8 px-4 pt-5">
           {activeTab === 'advanced'
             ? (
                 <>
@@ -830,13 +870,17 @@ export function CreateCharacter() {
                 </>
               )
             : (
-                <div className="relative">
+                <View className="relative">
                   <BasicInfoSection
                     name={name}
                     gender={gender}
                     job={job}
                     background={background}
                     voiceName={voiceName}
+                    voiceProfileId={voiceProfileId}
+                    providerVoiceId={providerVoiceId}
+                    voiceSpeed={voiceSpeed}
+                    voicePitch={voicePitch}
                     avatarUrl={avatarUrl}
                     onNameChange={setName}
                     onGenderChange={setGender}
@@ -856,11 +900,11 @@ export function CreateCharacter() {
                     voiceListenPhase={voiceListenPhase}
                   />
 
-                </div>
+                </View>
               )}
-        </div>
+        </View>
       </ScrollView>
       <SaveButton onSave={handleSave} saving={saving} />
-    </div>
+    </View>
   );
 }

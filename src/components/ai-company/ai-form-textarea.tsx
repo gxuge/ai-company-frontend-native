@@ -46,28 +46,28 @@ export function AiFormTextarea({
   ...props
 }: AiFormTextareaProps) {
   return (
-    <div className={`relative w-full ${containerClassName}`}>
+    <View className={`relative w-full ${containerClassName}`}>
       {isGenerating && (
-        <div className={`absolute inset-0 z-10 w-full h-full flex flex-col gap-[6px] overflow-hidden bg-black ${skeletonPaddingClassName}`}>
+        <View className={`absolute inset-0 z-10 w-full h-full flex flex-col gap-[6px] overflow-hidden bg-black ${skeletonPaddingClassName}`}>
           {Array.from({ length: skeletonLines }).map((_, i) => (
              <ShimmerLine 
                key={i} 
                className="h-[14px] w-full bg-[#2a2a2a] rounded-[4px]" 
              />
           ))}
-        </div>
+        </View>
       )}
       <textarea
         className={className}
         style={{
           fontFamily: "'Noto Sans SC', sans-serif",
-          fontSize: "14px",
+          fontSize: 14,
           fontWeight: 400,
-          lineHeight: "20px",
+          lineHeight: 20,
           ...style
         }}
         {...props}
       />
-    </div>
+    </View>
   );
 }

@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { BookOpen, Sparkles } from "lucide-react";
 import { FloatingParticles } from "./FloatingParticles";
 import { useEffect, useState } from "react";
+import { View } from 'react-native';
 
 const statusMessages = [
   "分析你的偏好中",
@@ -33,10 +34,10 @@ export function StoryGeneratingStage() {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center justify-between h-full px-5 py-8">
+    <View className="relative flex flex-col items-center justify-between h-full px-5 py-8">
       <FloatingParticles count={25} />
 
-      <div className="flex-1 flex flex-col items-center justify-center gap-10 w-full max-w-sm relative z-10">
+      <View className="flex-1 flex flex-col items-center justify-center gap-10 w-full max-w-sm relative z-10">
         <motion.div
           className="relative w-64 h-48"
           initial={{ scale: 0.8, opacity: 0 }}
@@ -55,7 +56,7 @@ export function StoryGeneratingStage() {
               ease: "easeInOut",
             }}
           />
-          <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[var(--ai-purple)]/20 to-[var(--ai-blue)]/20 backdrop-blur-sm border border-white/10 p-6 flex flex-col justify-center gap-3 overflow-hidden">
+          <View className="relative w-full h-full rounded-2xl bg-gradient-to-br from-[var(--ai-purple)]/20 to-[var(--ai-blue)]/20 backdrop-blur-sm border border-white/10 p-6 flex flex-col justify-center gap-3 overflow-hidden">
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={i}
@@ -98,13 +99,13 @@ export function StoryGeneratingStage() {
             >
               <Sparkles className="w-5 h-5 text-[var(--ai-cyan)]" />
             </motion.div>
-          </div>
+          </View>
         </motion.div>
 
-        <div className="flex flex-col items-center gap-3 text-center px-4">
+        <View className="flex flex-col items-center gap-3 text-center px-4">
           <motion.h1
             className="text-white"
-            style={{ fontSize: '28px', fontWeight: 500, lineHeight: 1.3 }}
+            style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.3 }}
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
@@ -113,17 +114,17 @@ export function StoryGeneratingStage() {
           </motion.h1>
           <motion.p
             className="text-white/60 max-w-xs"
-            style={{ fontSize: '15px', lineHeight: 1.5 }}
+            style={{ fontSize: 15, lineHeight: 1.5 }}
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             正在整理世界观、人物关系与情节走向
           </motion.p>
-        </div>
+        </View>
 
-        <div className="w-full space-y-6">
-          <div className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
+        <View className="w-full space-y-6">
+          <View className="relative w-full h-1.5 bg-white/5 rounded-full overflow-hidden backdrop-blur-sm">
             <motion.div
               className="absolute inset-y-0 left-0 bg-gradient-to-r from-[var(--ai-purple)] via-[var(--ai-blue)] to-[var(--ai-cyan)] rounded-full"
               initial={{ width: "0%" }}
@@ -136,11 +137,11 @@ export function StoryGeneratingStage() {
               animate={{ opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 1.5, repeat: Infinity }}
             />
-          </div>
+          </View>
 
           <motion.div
             className="flex items-center justify-center gap-2 text-white/70 min-h-[24px]"
-            style={{ fontSize: '14px' }}
+            style={{ fontSize: 14 }}
             key={currentMessage}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -160,9 +161,9 @@ export function StoryGeneratingStage() {
             />
             {statusMessages[currentMessage]}
           </motion.div>
-        </div>
+        </View>
 
-        <div className="grid grid-cols-1 gap-3 w-full mt-4">
+        <View className="grid grid-cols-1 gap-3 w-full mt-4">
           {[1, 2, 3].map((_, index) => (
             <motion.div
               key={index}
@@ -171,25 +172,25 @@ export function StoryGeneratingStage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1 }}
             >
-              <div className="w-full h-full p-3 flex flex-col gap-2">
-                <div className="w-3/4 h-2 bg-white/10 rounded-full animate-pulse" />
-                <div className="w-full h-2 bg-white/10 rounded-full animate-pulse" />
-                <div className="w-1/2 h-2 bg-white/10 rounded-full animate-pulse" />
-              </div>
+              <View className="w-full h-full p-3 flex flex-col gap-2">
+                <View className="w-3/4 h-2 bg-white/10 rounded-full animate-pulse" />
+                <View className="w-full h-2 bg-white/10 rounded-full animate-pulse" />
+                <View className="w-1/2 h-2 bg-white/10 rounded-full animate-pulse" />
+              </View>
             </motion.div>
           ))}
-        </div>
-      </div>
+        </View>
+      </View>
 
       <motion.p
         className="text-white/50 text-center max-w-xs relative z-10 px-4"
-        style={{ fontSize: '13px', lineHeight: 1.5 }}
+        style={{ fontSize: 13, lineHeight: 1.5 }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
       >
         我们正在为你组合更连贯、更有代入感的剧情
       </motion.p>
-    </div>
+    </View>
   );
 }

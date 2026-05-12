@@ -35,6 +35,13 @@ SplashScreen.setOptions({
 });
 
 export default function RootLayout() {
+  React.useEffect(() => {
+    // Hide splash screen after layout mounts
+    setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 100);
+  }, []);
+
   return (
     <Providers>
       <Stack screenOptions={{ headerShown: false }} />

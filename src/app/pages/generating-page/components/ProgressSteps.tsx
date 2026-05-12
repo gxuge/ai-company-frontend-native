@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { View, Text } from 'react-native';
 
 interface Step {
   id: string;
@@ -12,10 +13,10 @@ interface ProgressStepsProps {
 
 export function ProgressSteps({ steps, currentStep }: ProgressStepsProps) {
   return (
-    <div className="flex items-center justify-center gap-2 px-4">
+    <View className="flex items-center justify-center gap-2 px-4">
       {steps.map((step, index) => (
-        <div key={step.id} className="flex items-center gap-2">
-          <div className="flex flex-col items-center gap-2">
+        <View key={step.id} className="flex items-center gap-2">
+          <View className="flex flex-col items-center gap-2">
             <motion.div
               className={`relative flex items-center justify-center w-11 h-11 rounded-full border-2 transition-all duration-500 touch-manipulation ${
                 index === currentStep
@@ -40,16 +41,16 @@ export function ProgressSteps({ steps, currentStep }: ProgressStepsProps) {
                   }}
                 />
               )}
-              <span
+              <Text
                 className={`z-10 ${
                   index <= currentStep ? "text-white" : "text-white/40"
                 }`}
-                style={{ fontSize: '15px', fontWeight: 500 }}
+                style={{ fontSize: 15, fontWeight: 500 }}
               >
                 {index + 1}
-              </span>
+              </Text>
             </motion.div>
-            <span
+            <Text
               className={`transition-colors duration-300 ${
                 index === currentStep
                   ? "text-white"
@@ -57,23 +58,23 @@ export function ProgressSteps({ steps, currentStep }: ProgressStepsProps) {
                   ? "text-white/60"
                   : "text-white/30"
               }`}
-              style={{ fontSize: '12px' }}
+              style={{ fontSize: 12 }}
             >
               {step.label}
-            </span>
-          </div>
+            </Text>
+          </View>
           {index < steps.length - 1 && (
-            <div className="w-12 h-0.5 bg-white/10 rounded-full overflow-hidden -mb-8">
+            <View className="w-12 h-0.5 bg-white/10 rounded-full overflow-hidden -mb-8">
               <motion.div
                 className="h-full bg-gradient-to-r from-[var(--ai-purple)] to-[var(--ai-blue)]"
                 initial={{ width: "0%" }}
                 animate={{ width: index < currentStep ? "100%" : "0%" }}
                 transition={{ duration: 0.5, delay: 0.2 }}
               />
-            </div>
+            </View>
           )}
-        </div>
+        </View>
       ))}
-    </div>
+    </View>
   );
 }

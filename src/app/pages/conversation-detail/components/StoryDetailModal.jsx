@@ -1,8 +1,10 @@
+// @ts-nocheck
 import svgPaths from '../../../../assets/images/story-detail/svg-m13tfs0op9';
+import { View, Text, Pressable } from 'react-native';
 
 function GlowText({ children }) {
   return (
-    <span
+    <Text
       className="inline text-white font-['Noto_Sans_SC',sans-serif]"
       style={{
         borderBottom: '2px solid rgba(155,254,3,0.5)',
@@ -10,13 +12,13 @@ function GlowText({ children }) {
       }}
     >
       {children}
-    </span>
+    </Text>
   );
 }
 
 function TagPill({ children }) {
   return (
-    <span
+    <Text
       className="mx-[1px] inline-flex items-center rounded-full px-[8px] py-[1px] align-baseline font-['Noto_Sans_SC',sans-serif] text-[14px] md:mx-[2px] md:px-[13px] md:py-[2px] md:text-[25.6px]"
       style={{
         background: 'rgba(255,255,255,0.05)',
@@ -26,27 +28,27 @@ function TagPill({ children }) {
       }}
     >
       {children}
-    </span>
+    </Text>
   );
 }
 
 function BoldWhite({ children }) {
-  return <span className="font-['Noto_Sans_SC',sans-serif] font-medium text-white">{children}</span>;
+  return <Text className="font-['Noto_Sans_SC',sans-serif] font-medium text-white">{children}</Text>;
 }
 
 function SectionHeading({ title }) {
   return (
-    <div className="flex items-center overflow-hidden rounded-tr-[15px] rounded-br-[15px] py-[6px] md:rounded-tr-[30px] md:rounded-br-[30px] md:py-[11px]">
-      <div
+    <View className="flex items-center overflow-hidden rounded-tr-[15px] rounded-br-[15px] py-[6px] md:rounded-tr-[30px] md:rounded-br-[30px] md:py-[11px]">
+      <View
         className="w-[3px] shrink-0 self-stretch md:w-[4px]"
         style={{ background: 'rgba(155,254,3,0.9)' }}
       />
-      <span
+      <Text
         className="pl-3 font-['Noto_Sans_SC',sans-serif] text-[18px] font-bold leading-[26px] text-white md:pl-5 md:text-[30px] md:leading-[44px]"
       >
         {title}
-      </span>
-    </div>
+      </Text>
+    </View>
   );
 }
 
@@ -95,18 +97,18 @@ export default function StoryDetailModal({
   const chapterList = Array.isArray(chapters) ? chapters : [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-[30px]">
-      <div
+    <View className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-[30px]">
+      <View
         className="absolute inset-0"
         style={{
           background: 'rgba(0,0,0,0.9)',
           backdropFilter: 'blur(4px)',
         }}
-        onClick={onClose}
+        onPress={onClose}
       />
 
-      <button
-        onClick={onClose}
+      <Pressable
+        onPress={onClose}
         className="absolute top-4 left-4 z-[60] flex size-12 items-center justify-center md:top-[46px] md:left-[46px] md:h-[60px] md:w-[60px]"
         style={{
           borderRadius: '50%',
@@ -116,94 +118,94 @@ export default function StoryDetailModal({
         }}
       >
         <CloseIcon />
-      </button>
+      </Pressable>
 
-      <div
+      <View
         className="relative z-[55] flex h-auto w-[87%] max-w-[654px] flex-col overflow-hidden text-left"
         style={{
           maxHeight: '82vh',
           background: '#161616',
-          borderRadius: '40px',
+          borderRadius: 40,
           border: '2px solid #424242',
         }}
       >
-        <div
+        <View
           className="pointer-events-none absolute top-0 right-0 left-0 z-10"
           style={{
-            height: '80px',
+            height: 80,
             background: 'linear-gradient(to bottom, #161616 0%, rgba(22,22,22,0) 100%)',
           }}
         />
 
-        <div className="absolute top-0 right-0 left-0 z-20 px-5 pt-6 md:px-[46px] md:pt-[46px]">
+        <View className="absolute top-0 right-0 left-0 z-20 px-5 pt-6 md:px-[46px] md:pt-[46px]">
           <h2
             className="font-['Noto_Sans_SC',sans-serif] text-[24px] font-bold leading-[34px] text-white md:text-[38px] md:leading-[54px]"
           >
             故事详情
           </h2>
-          <p className="mt-1 font-['Noto_Sans_SC',sans-serif] text-[14px] text-[#9ca3af] md:text-[18px]">
+          <Text className="mt-1 font-['Noto_Sans_SC',sans-serif] text-[14px] text-[#9ca3af] md:text-[18px]">
             {normalizeText(storyTitle, '未命名故事')}
-          </p>
-        </div>
+          </Text>
+        </View>
 
-        <div className="relative flex-1 overflow-y-auto pb-8">
-          <div className="px-5 pt-[100px] md:px-[30px] md:pt-[148px]">
-            <div className="flex flex-col gap-8 md:gap-[46px]">
-              <div className="flex flex-col gap-4 md:gap-[23px]">
+        <View className="relative flex-1 overflow-y-auto pb-8">
+          <View className="px-5 pt-[100px] md:px-[30px] md:pt-[148px]">
+            <View className="flex flex-col gap-8 md:gap-[46px]">
+              <View className="flex flex-col gap-4 md:gap-[23px]">
                 <SectionHeading title="故事设定" />
-                <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
+                <View className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                   {settingText}
-                </div>
-              </div>
+                </View>
+              </View>
 
-              <div className="flex flex-col gap-4 md:gap-[23px]">
+              <View className="flex flex-col gap-4 md:gap-[23px]">
                 <SectionHeading title="背景补充" />
-                <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
+                <View className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                   {backgroundText}
-                </div>
-              </div>
+                </View>
+              </View>
 
               {chapterList.length === 0
                 ? (
-                    <div className="flex flex-col gap-4 md:gap-[23px]">
+                    <View className="flex flex-col gap-4 md:gap-[23px]">
                       <SectionHeading title="章节详情" />
-                      <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
+                      <View className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                         <GlowText>暂无章节内容</GlowText>
-                      </div>
-                    </div>
+                      </View>
+                    </View>
                   )
                 : chapterList.slice(0, 6).map((chapter, index) => (
-                    <div key={chapter?.id || index} className="flex flex-col gap-4 md:gap-[23px]">
+                    <View key={chapter?.id || index} className="flex flex-col gap-4 md:gap-[23px]">
                       <SectionHeading title={buildChapterTitle(chapter, index)} />
-                      <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
+                      <View className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                         <BoldWhite>{buildChapterContent(chapter)}</BoldWhite>
-                      </div>
-                    </div>
+                      </View>
+                    </View>
                   ))}
 
-              {loading ? <div className="text-[13px] text-[#9ca3af]">章节加载中...</div> : null}
-              {loadError ? <div className="text-[13px] text-[#fca5a5]">{loadError}</div> : null}
+              {loading ? <View className="text-[13px] text-[#9ca3af]">章节加载中...</View> : null}
+              {loadError ? <View className="text-[13px] text-[#fca5a5]">{loadError}</View> : null}
 
-              <div className="font-['Noto_Sans_SC',sans-serif] text-[14px] leading-[24px] text-[#9ca3af] md:text-[18px] md:leading-[32px]">
+              <View className="font-['Noto_Sans_SC',sans-serif] text-[14px] leading-[24px] text-[#9ca3af] md:text-[18px] md:leading-[32px]">
                 <TagPill>提示</TagPill>
-                <span className="ml-2">
+                <Text className="ml-2">
                   可以在聊天页点击
                   <GlowText>故事详情</GlowText>
                   持续查看设定与章节。
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
-        <div
+        <View
           className="pointer-events-none absolute right-0 bottom-0 left-0 z-10"
           style={{
-            height: '80px',
+            height: 80,
             background: 'linear-gradient(to top, #161616 0%, rgba(22,22,22,0) 100%)',
           }}
         />
-      </div>
-    </div>
+      </View>
+    </View>
   );
 }

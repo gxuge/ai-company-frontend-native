@@ -4,6 +4,7 @@ import { Check, Inbox, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { AiHeader } from '../../../components/ai-company/ai-header';
 import { tsRoleApi } from '../../../lib/api';
+import { View, Text, Image, Pressable, TextInput } from 'react-native';
 
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/select-role/bfc3c41d1a6b570e1b0987aedf706c872d00b6d5.png'));
 const imgFabAddRole = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/select-role/fab_add_role.svg'));
@@ -119,10 +120,10 @@ export default function App() {
   };
 
   return (
-    <div className="relative size-full bg-black overflow-hidden">
+    <View className="relative size-full bg-black overflow-hidden">
       {/* Background layers */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-black to-black" />
-      <div
+      <View className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-black to-black" />
+      <View
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
@@ -132,65 +133,66 @@ export default function App() {
       />
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col items-center size-full max-w-[750px] mx-auto px-4 sm:px-6">
+      <View className="relative z-10 flex flex-col items-center size-full max-w-[750px] mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="w-full pt-[50px] pb-4">
+        <View className="w-full pt-[50px] pb-4">
           <AiHeader title="选择角色" />
-        </div>
+        </View>
 
         {/* Search bar */}
-        <div className="w-full mb-6 sm:mb-8">
-          <div className="relative group">
-            <input
-              type="text"
+        <View className="w-full mb-6 sm:mb-8">
+          <View className="relative group">
+            <TextInput
+              
               value={search}
+              // @ts-expect-error
               onChange={e => setSearch(e.target.value)}
               placeholder="搜索角色"
               className="w-full h-[56px] sm:h-[68px] bg-gradient-to-br from-[#222] to-[#1a1a1a] rounded-full pl-[56px] sm:pl-[72px] pr-6 sm:pr-8 text-white text-[18px] sm:text-[24px] placeholder-[#707070] outline-none border-2 border-white/10 transition-all duration-300"
             />
-            <div className="absolute left-[20px] sm:left-[28px] top-1/2 -translate-y-1/2 transition-all duration-300 group-focus-within:scale-110">
+            <View className="absolute left-[20px] sm:left-[28px] top-1/2 -translate-y-1/2 transition-all duration-300 group-focus-within:scale-110">
               <Search className="w-5 h-5 sm:w-6 sm:h-6 text-[#707070] group-focus-within:text-[#9BFE03] transition-colors duration-300" strokeWidth={2.5} />
-            </div>
-          </div>
-        </div>
+            </View>
+          </View>
+        </View>
 
         {/* Character list */}
-        <div className="w-full flex flex-col gap-3 sm:gap-4 pb-[120px] sm:pb-[180px] overflow-y-auto">
+        <View className="w-full flex flex-col gap-3 sm:gap-4 pb-[120px] sm:pb-[180px] overflow-y-auto">
           {!isLoading && filtered.length > 0
             ? (
                 filtered.map((item) => {
                   const selected = selectedId === item.id;
                   return (
-                    <button
+                    <Pressable
                       key={item.id}
-                      onClick={() => setSelectedId(item.id)}
+                      onPress={() => setSelectedId(item.id)}
                       className={`group w-full rounded-2xl p-4 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02] active:scale-[0.98] ${
                         selected
                           ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-2 border-[#9BFE03] shadow-[0_0_30px_rgba(155,254,3,0.35)]'
                           : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-2 border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      <View className="flex items-center gap-4">
                         {/* Avatar */}
-                        <div className="relative">
-                          <div className="size-12 rounded-full shrink-0 ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden">
-                            <img
-                              src={item.avatar}
+                        <View className="relative">
+                          <View className="size-12 rounded-full shrink-0 ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden">
+                            <Image
+                              source={item.avatar}
                               alt={item.name}
                               className="w-full h-full object-cover"
                             />
-                          </div>
-                        </div>
+                          </View>
+                        </View>
 
                         {/* Name */}
-                        <div className="flex-1 text-left">
-                          <p className="text-base font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">
+                        <View className="flex-1 text-left">
+                          <Text className="text-base font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">
                             {item.name}
-                          </p>
-                        </div>
+                          </Text>
+                        </View>
 
                         {/* Check icon */}
-                        <div
+                        <View
                           className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
                             selected
                               ? 'bg-[#9BFE03] scale-100'
@@ -203,35 +205,36 @@ export default function App() {
                             }`}
                             strokeWidth={3.5}
                           />
-                        </div>
-                      </div>
-                    </button>
+                        </View>
+                      </View>
+                    </Pressable>
                   );
                 })
               )
             : (
-                <div className="flex flex-col items-center justify-center text-[#707070] py-[60px] gap-4">
+                <View className="flex flex-col items-center justify-center text-[#707070] py-[60px] gap-4">
                   <Inbox className="w-16 h-16 opacity-50" strokeWidth={1} />
-                  <div className="text-[20px] sm:text-[24px]">
+                  <View className="text-[20px] sm:text-[24px]">
                     {isLoading ? '加载中...' : (loadError || '暂无数据')}
-                  </div>
-                </div>
+                  </View>
+                </View>
               )}
-        </div>
-      </div>
+        </View>
+      </View>
 
       {/* Bottom Action Bar */}
       {fromPage === 'create-story' && (
-        <div className="fixed bottom-0 left-0 right-0 z-[50] p-[20px] pb-[34px] bg-background/60 backdrop-blur-xl border-t border-white/5">
-          <button
+        <View className="fixed bottom-0 left-0 right-0 z-[50] p-[20px] pb-[34px] bg-background/60 backdrop-blur-xl border-t border-white/5">
+          <Pressable
+            // @ts-expect-error
             type="button"
-            onClick={handleDone}
+            onPress={handleDone}
             disabled={!selectedRole}
             className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#9BFE03] shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 transition-all outline-none disabled:opacity-50 disabled:grayscale"
           >
-            <span className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</span>
-          </button>
-        </div>
+            <Text className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</Text>
+          </Pressable>
+        </View>
       )}
 
       {/* Floating action button */}
@@ -248,27 +251,29 @@ export default function App() {
         `}
       </style>
       {fromPage === 'create-story' && (
-        <button
+        <Pressable
+          // @ts-expect-error
           type="button"
           className="animate-breathing fixed bottom-[120px] right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-[60]"
-          onClick={() => {
+          onPress={() => {
             router.push('/pages/create-role');
           }}
         >
-          <img src={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
-        </button>
+          <Image source={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
+        </Pressable>
       )}
       {fromPage !== 'create-story' && (
-        <button
+        <Pressable
+          // @ts-expect-error
           type="button"
           className="animate-breathing fixed bottom-[100px] right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-[60]"
-          onClick={() => {
+          onPress={() => {
             router.push('/pages/create-role');
           }}
         >
-          <img src={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
-        </button>
+          <Image source={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
+        </Pressable>
       )}
-    </div>
+    </View>
   );
 }

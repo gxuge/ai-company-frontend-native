@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Image, Pressable } from 'react-native';
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 
@@ -24,42 +25,47 @@ const tabs = [
 
 function HomeIcon({ active }: { active: boolean }) {
   return (
-    <div style={{ width: 24, height: 24 }}>
-      <img src={active ? imgHomeActive : imgHome} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-    </div>
+    <View style={{ width: 24, height: 24 }}>
+      // @ts-expect-error
+      <Image source={active ? imgHomeActive : imgHome} alt="" style={{ width: '100%', height: '100%',  display: 'flex' }} />
+    </View>
   );
 }
 
 function SearchIcon({ active }: { active: boolean }) {
   return (
-    <div style={{ width: 24, height: 24 }}>
-      <img src={active ? imgSearchActive : imgSearch} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-    </div>
+    <View style={{ width: 24, height: 24 }}>
+      // @ts-expect-error
+      <Image source={active ? imgSearchActive : imgSearch} alt="" style={{ width: '100%', height: '100%',  display: 'flex' }} />
+    </View>
   );
 }
 
 function CreateIcon({ active }: { active: boolean }) {
   return (
-    <div className="relative" style={{ width: 28, height: 28 }}>
-      <img src={imgCreate} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-      <img src={imgCreateBadge} alt="" className="absolute -top-2 -right-3" style={{ width: 16, height: 16 }} />
-    </div>
+    <View className="relative" style={{ width: 28, height: 28 }}>
+      // @ts-expect-error
+      <Image source={imgCreate} alt="" style={{ width: '100%', height: '100%',  display: 'flex' }} />
+      <Image source={imgCreateBadge} alt="" className="absolute -top-2 -right-3" style={{ width: 16, height: 16 }} />
+    </View>
   );
 }
 
 function ChatIcon({ active }: { active: boolean }) {
   return (
-    <div style={{ width: 24, height: 24 }}>
-      <img src={active ? imgChatActive : imgChat} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-    </div>
+    <View style={{ width: 24, height: 24 }}>
+      // @ts-expect-error
+      <Image source={active ? imgChatActive : imgChat} alt="" style={{ width: '100%', height: '100%',  display: 'flex' }} />
+    </View>
   );
 }
 
 function ProfileIcon({ active }: { active: boolean }) {
   return (
-    <div style={{ width: 24, height: 24 }}>
-      <img src={active ? imgProfileActive : imgProfile} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-    </div>
+    <View style={{ width: 24, height: 24 }}>
+      // @ts-expect-error
+      <Image source={active ? imgProfileActive : imgProfile} alt="" style={{ width: '100%', height: '100%',  display: 'flex' }} />
+    </View>
   );
 }
 
@@ -73,21 +79,21 @@ export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
       className="w-full bg-black border-t border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-[1000]"
       style={{ paddingBottom: Math.max(insets.bottom, 15) }}
     >
-      <div className="flex items-center justify-around h-[64px]">
+      <View className="flex items-center justify-around h-[64px]">
         {tabs.map((tab, i) => {
           const Icon = iconComponents[i];
           const isActive = activeTab === tab.id;
           return (
-            <button
+            <Pressable
               key={tab.id}
-              onClick={() => router.replace(tab.path as any)}
+              onPress={() => router.replace(tab.path as any)}
               className="flex items-center justify-center flex-1 h-full transition-all active:scale-95"
             >
               <Icon active={isActive} />
-            </button>
+            </Pressable>
           );
         })}
-      </div>
+      </View>
     </nav>
   );
 }

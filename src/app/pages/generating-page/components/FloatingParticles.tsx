@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { View } from 'react-native';
 
 interface Particle {
   id: number;
@@ -24,7 +25,7 @@ export function FloatingParticles({ count = 20 }: { count?: number }) {
   const particles = generateParticles(count);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <View className="absolute inset-0 overflow-hidden pointer-events-none">
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
@@ -48,6 +49,6 @@ export function FloatingParticles({ count = 20 }: { count?: number }) {
           }}
         />
       ))}
-    </div>
+    </View>
   );
 }
