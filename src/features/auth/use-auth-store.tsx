@@ -1,7 +1,7 @@
 import type { TokenType } from '@/lib/auth/utils';
 
 import { create } from 'zustand';
-import { getToken, removeToken, setToken } from '@/lib/auth/utils';
+import { hydrateTokenCache, removeToken, setToken } from '@/lib/auth/utils';
 import { createSelectors } from '@/lib/utils';
 
 type AuthState = {
@@ -9,7 +9,7 @@ type AuthState = {
   status: 'idle' | 'signOut' | 'signIn';
   signIn: (data: TokenType) => void;
   signOut: () => void;
-  hydrate: () => void;
+  hydrate: () => Promise<void>;
 };
 
 const _useAuthStore = create<AuthState>((set, get) => ({
@@ -23,9 +23,9 @@ const _useAuthStore = create<AuthState>((set, get) => ({
     removeToken();
     set({ status: 'signOut', token: null });
   },
-  hydrate: () => {
+  hydrate: async () => {
     try {
-      const userToken = getToken();
+      const userToken = await hydrateTokenCache();
       if (userToken !== null) {
         get().signIn(userToken);
       }

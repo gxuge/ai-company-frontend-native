@@ -1,6 +1,8 @@
-import { getItem, removeItem, setItem } from '@/lib/storage';
+import { getItem, getItemAsync, removeItem, setItem } from '@/lib/storage';
 
 const TOKEN = 'token';
+let tokenCache: TokenType | null = null;
+let tokenHydrated = false;
 
 export type TokenType = {
   token: string;
@@ -10,9 +12,30 @@ export type TokenType = {
   refresh?: string;
 };
 
-export const getToken = () => getItem<TokenType>(TOKEN);
-export const removeToken = () => removeItem(TOKEN);
-export const setToken = (value: TokenType) => setItem<TokenType>(TOKEN, value);
+export async function hydrateTokenCache() {
+  tokenCache = await getItemAsync<TokenType>(TOKEN);
+  tokenHydrated = true;
+  return tokenCache;
+}
+
+export const getToken = () => {
+  if (tokenHydrated) {
+    return tokenCache;
+  }
+  return getItem<TokenType>(TOKEN);
+};
+
+export const removeToken = () => {
+  tokenCache = null;
+  tokenHydrated = true;
+  void removeItem(TOKEN);
+};
+
+export const setToken = (value: TokenType) => {
+  tokenCache = value;
+  tokenHydrated = true;
+  void setItem<TokenType>(TOKEN, value);
+};
 
 export function resolveAccessToken(token: TokenType | null | undefined) {
   if (!token) {

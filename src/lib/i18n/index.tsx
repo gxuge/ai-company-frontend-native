@@ -5,7 +5,7 @@ import { initReactI18next } from 'react-i18next';
 import { I18nManager } from 'react-native';
 
 import { resources } from './resources';
-import { getLanguage } from './utils';
+import { getLanguage, getLanguageAsync } from './utils';
 
 export * from './utils';
 
@@ -26,5 +26,12 @@ export const isRTL: boolean = i18n.dir() === 'rtl';
 
 I18nManager.allowRTL(isRTL);
 I18nManager.forceRTL(isRTL);
+
+void getLanguageAsync().then((language) => {
+  if (!language || language === i18n.language) {
+    return;
+  }
+  void i18n.changeLanguage(language);
+});
 
 export default i18n;

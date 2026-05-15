@@ -24,8 +24,6 @@ export const unstable_settings = {
   initialRouteName: 'index',
 };
 
-hydrateAuth();
-loadSelectedTheme();
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 // Set the animation options. This is optional.
@@ -35,6 +33,37 @@ SplashScreen.setOptions({
 });
 
 export default function RootLayout() {
+  const [isReady, setIsReady] = React.useState(false);
+
+  React.useEffect(() => {
+    let mounted = true;
+
+    const bootstrap = async () => {
+      try {
+        await Promise.all([hydrateAuth(), loadSelectedTheme()]);
+      }
+      catch (error) {
+        console.error('app bootstrap failed', error);
+      }
+      finally {
+        if (mounted) {
+          setIsReady(true);
+        }
+        await SplashScreen.hideAsync();
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  if (!isReady) {
+    return null;
+  }
+
   return (
     <Providers>
       <Stack screenOptions={{ headerShown: false }} />
