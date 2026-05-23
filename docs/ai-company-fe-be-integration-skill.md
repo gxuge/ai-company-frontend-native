@@ -1,11 +1,11 @@
 ﻿---
 name: ai-company-fe-be-integration
-description: 面向 D:\project_demo\ai-company-backend-spring\jeecg-boot 与 D:\project_demo\ai-company-frontend-native 的前后端对接执行技能。强调先读后端 hardness 约束、统一 API 封装、保护既有 UI 布局，以及上下文压缩后的恢复与注入。
+description: 面向 D:\project_demo\ai-company-backend-spring\jeecg-boot 与 D:\project_demo\ai-company-frontend-native-backup 的前后端对接执行技能。强调先读后端 hardness 约束、统一 API 封装、保护既有 UI 布局，以及上下文压缩后的恢复与注入。
 ---
 
 ## 1. 适用范围
 - 后端：`D:\project_demo\ai-company-backend-spring\jeecg-boot`
-- 前端：`D:\project_demo\ai-company-frontend-native`
+- 前端：`D:\project_demo\ai-company-frontend-native-backup`
 - 场景：页面接口对接、接口新增联调、字段映射调整、前后端联动改造
 
 ## 2. 触发与注入（强制）
@@ -37,7 +37,7 @@ description: 面向 D:\project_demo\ai-company-backend-spring\jeecg-boot 与 D:\
 
 ## 6. 对接记录目录（强制）
 - 前端 `docs/` 下统一维护对接记录目录：
-  - `D:\project_demo\ai-company-frontend-native\docs\fe-be-integration`
+  - `D:\project_demo\ai-company-frontend-native-backup\docs\fe-be-integration`
 - 生成 plan 时，必须在 `docs/fe-be-integration/` 下新建“当前任务独立文件”，不得复用公共 plan 文件。
 - 文件名必须与当前任务强相关，且包含时间或唯一标识，避免并行任务冲突：
   - 推荐：`任务-<页面或模块>-<YYYYMMDD-HHmm>.md`
@@ -55,7 +55,7 @@ description: 面向 D:\project_demo\ai-company-backend-spring\jeecg-boot 与 D:\
 
 ## 8. Hardness 协同
 - 前端任务同时参考：
-  - `D:\project_demo\ai-company-frontend-native\docs\frontend-hardness.skill`
+  - `D:\project_demo\ai-company-frontend-native-backup\docs\frontend-hardness.skill`
 - 输出中必须包含：
   - 完成项、未完成项、风险、证据索引（文件路径与命令结果）
 

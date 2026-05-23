@@ -427,17 +427,17 @@ export default function BrowseImagesList() {
         ) : (
           <>
             {currentState.loading && currentState.items.length === 0 ? (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <View key={`char-skeleton-${i}`} style={{ width: '47.4%', marginBottom: 18, aspectRatio: 3 / 4 }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <View key={`char-skeleton-${i}`} style={{ width: '31.5%', aspectRatio: 208 / 292 }}>
                     <AiSkeleton width="100%" height="100%" borderRadius={12} />
                   </View>
                 ))}
               </View>
             ) : (
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {characterCards.map((card) => (
-                <View key={card.id} style={{ width: '47.4%', marginBottom: 18 }}>
+                <View key={card.id} style={{ width: '31.5%' }}>
                   <ImageCard
                     imageUrl={card.imageUrl}
                     username={card.username}

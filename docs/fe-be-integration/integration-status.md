@@ -1,6 +1,6 @@
 ﻿# 前后端对接状态总表
 
-更新时间：2026-04-21
+更新时间：2026-05-22
 
 | 模块/页面 | 前端位置 | 后端接口 | 状态 | 负责人 | 最后更新 | 备注 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -225,4 +225,25 @@
 
 - 任务记录：`docs/fe-be-integration/任务-chat页-ChatTip推荐回复对接-20260418-1049.md`
 - 状态：已完成；ChatTip 推荐回复支持展开加载、请求竞态保护与失败回退。
+
+## 2026-05-22 更新（create-role 一键设定回填修复）
+- 页面：`src/app/pages/create-role/components/create-character.tsx`
+- 接口：`POST /sys/ts-roles/one-click-setting`
+- 调整：
+  - 后端 one-click-setting 去除 `roleName` 时间戳默认值（未传名称时不再强制补名）。
+  - 后端字段解析兼容 `role_name/roleName` 与 `background_story/backgroundStory`。
+  - 前端回填逻辑兼容 snake/camel 双键，修复“已生成但未回填”问题。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-create-role-一键设定回填修复-20260522-1600.md`
+
+## 2026-05-22 更新（create-role 形象模板默认值置空）
+- 页面：`src/app/pages/create-role/components/create-character.tsx`（调用链路不变）
+- 接口：`POST /sys/ts-roles/one-click-setting`、`POST /sys/ts-roles/one-click-image`
+- 调整：
+  - 后端 `one-click-setting` 去除默认占位值兜底，字段缺失时保持 `null` 语义。
+  - 后端 `one-click-image` 拼模板前对历史占位值做归一化清洗（占位值 -> `null`）。
+  - 后端 `generate-role` 修复 `TsRoleGenerateRoleDto` 字段误用，四核心字段改为 `null` 语义（无字符串兜底）。
+- UI：未改动布局与视觉，仅修改后端字段处理逻辑。
+- 任务记录文件：
+  - `docs/fe-be-integration/任务-create-role-形象模板默认值置空-20260522-1635.md`
 

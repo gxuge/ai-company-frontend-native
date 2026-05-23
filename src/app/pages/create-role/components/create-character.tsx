@@ -2,7 +2,7 @@ import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, Modal, TextInput } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
@@ -165,12 +165,31 @@ function TagsSection({
   selectedTags,
   onToggleTag,
   onSmartRecommend,
+  onAddCustomTag,
 }: {
   tagOptions: string[];
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
   onSmartRecommend: () => void;
+  onAddCustomTag: (tag: string) => void;
 }) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [customTag, setCustomTag] = useState('');
+
+  const handleConfirm = () => {
+    const trimmed = customTag.trim();
+    if (trimmed) {
+      onAddCustomTag(trimmed);
+    }
+    setCustomTag('');
+    setModalVisible(false);
+  };
+
+  const handleCancel = () => {
+    setCustomTag('');
+    setModalVisible(false);
+  };
+
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
@@ -195,12 +214,52 @@ function TagsSection({
               onToggle={() => onToggleTag(tag)}
             />
           ))}
-          <button className="flex items-center gap-1 rounded-full border border-dashed border-neutral-500 px-4 py-2">
+          <button 
+            onClick={() => setModalVisible(true)}
+            className="flex items-center gap-1 rounded-full border border-dashed border-neutral-500 px-4 py-2"
+          >
             <img src={imgPlusGray} alt="" className="size-[16px] object-contain" />
             <span className={`text-sm text-[#9ca3af] ${fontBase} font-medium`}>自定义</span>
           </button>
         </div>
       </div>
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancel}
+      >
+        <div className="flex h-full w-full items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-[320px] rounded-2xl border border-[#494949] bg-[#111] p-5 shadow-xl">
+            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>添加自定义标签</h3>
+            <TextInput
+              placeholder="请输入标签名称 (最多10个字符)"
+              placeholderTextColor="#6b7280"
+              maxLength={10}
+              value={customTag}
+              onChangeText={setCustomTag}
+              className={`w-full rounded-xl border border-[#494949] bg-black px-4 py-3 text-sm text-white focus:border-[rgba(155,254,3,0.5)] ${fontBase}`}
+              autoFocus
+              style={[{ outlineStyle: 'none' } as any]}
+            />
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={handleCancel}
+                className={`rounded-full border border-[#494949] bg-transparent px-6 py-2 text-sm font-medium text-[#9ca3af] ${fontBase}`}
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirm}
+                className={`rounded-full bg-[rgba(155,254,3,0.9)] px-6 py-2 text-sm font-bold text-[#3b3f34] ${fontBase}`}
+              >
+                确认
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }
@@ -232,16 +291,23 @@ function DialogueStyleSection({
   dialogLength,
   interactivity,
   toneTendency,
+  previewText,
   onDialogLengthChange,
   onInteractivityChange,
+  onToneTendencyChange,
+  onPreviewTextChange,
 }: {
   dialogLength: string;
   interactivity: string;
   toneTendency: string;
+  previewText: string;
   onDialogLengthChange: (value: string) => void;
   onInteractivityChange: (value: string) => void;
+  onToneTendencyChange: (value: string) => void;
+  onPreviewTextChange: (value: string) => void;
 }) {
-  const [previewText, setPreviewText] = useState('哼，别以为你这样说我就会高兴。不过既然你这么诚恳，我就勉为其难帮你一次。');
+  const [toneModalVisible, setToneModalVisible] = useState(false);
+  const TONE_OPTIONS = ['默认', '温柔体贴', '幽默傲娇', '高冷傲慢', '热情开朗', '毒舌腹黑', '稳重知性'];
 
   return (
     <section className="flex flex-col gap-3">
@@ -257,8 +323,9 @@ function DialogueStyleSection({
           <AiFormTextarea
             containerClassName="bg-[#111] rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className={`w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[16px] text-[#d1d5db] placeholder-[#6b7280] text-sm ${fontBase} leading-relaxed`}
+            placeholder="哼，别以为你这样说我就会高兴。不过既然你这么诚恳，我就勉为其难帮你一次。"
             value={previewText}
-            onChange={e => setPreviewText(e.target.value)}
+            onChange={e => onPreviewTextChange(e.target.value)}
           />
         </div>
 
@@ -267,6 +334,11 @@ function DialogueStyleSection({
         <div className="flex items-center justify-between px-5 py-4">
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>对话长度</span>
           <div className="flex gap-2">
+            <OptionButton
+              label="默认"
+              selected={dialogLength === '默认'}
+              onClick={() => onDialogLengthChange('默认')}
+            />
             <OptionButton
               label="简短"
               selected={dialogLength === '简短'}
@@ -282,7 +354,10 @@ function DialogueStyleSection({
 
         <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
 
-        <div className="flex items-center justify-between px-5 py-4">
+        <div 
+          className="flex items-center justify-between px-5 py-4 cursor-pointer active:opacity-70"
+          onClick={() => setToneModalVisible(true)}
+        >
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>语气倾向</span>
           <div className="flex items-center gap-1.5">
             <span className={`text-xs text-[rgba(155,254,3,0.9)] ${fontBase}`}>{toneTendency}</span>
@@ -296,6 +371,11 @@ function DialogueStyleSection({
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>互动性</span>
           <div className="flex gap-2">
             <OptionButton
+              label="默认"
+              selected={interactivity === '默认'}
+              onClick={() => onInteractivityChange('默认')}
+            />
+            <OptionButton
               label="主动引导"
               selected={interactivity === '主动引导'}
               onClick={() => onInteractivityChange('主动引导')}
@@ -308,6 +388,43 @@ function DialogueStyleSection({
           </div>
         </div>
       </div>
+
+      <Modal
+        visible={toneModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setToneModalVisible(false)}
+      >
+        <div className="flex h-full w-full items-end justify-center bg-black/60 sm:items-center">
+          <div className="w-full max-w-[480px] rounded-t-2xl sm:rounded-2xl border border-[#494949] bg-[#111] p-5 shadow-xl">
+            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>选择语气倾向</h3>
+            <div className="flex flex-wrap gap-3">
+              {TONE_OPTIONS.map(tone => (
+                <button
+                  key={tone}
+                  onClick={() => {
+                    onToneTendencyChange(tone);
+                    setToneModalVisible(false);
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    toneTendency === tone
+                      ? 'border border-[rgba(155,254,3,0.9)] bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
+                      : 'border border-[#4b5563] text-[#9ca3af]'
+                  }`}
+                >
+                  {tone}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setToneModalVisible(false)}
+              className={`mt-6 w-full rounded-full border border-[#494949] bg-transparent py-3 text-center text-sm font-medium text-[#9ca3af] ${fontBase}`}
+            >
+              取消
+            </button>
+          </div>
+        </div>
+      </Modal>
     </section>
   );
 }
@@ -361,9 +478,10 @@ export function CreateCharacter() {
   const [isPublic, setIsPublic] = useState(true);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [dialogLength, setDialogLength] = useState<string>('详细');
-  const [interactivity, setInteractivity] = useState<string>('主动引导');
-  const [toneTendency] = useState<string>('幽默傲娇');
+  const [dialogLength, setDialogLength] = useState<string>('默认');
+  const [interactivity, setInteractivity] = useState<string>('默认');
+  const [toneTendency, setToneTendency] = useState<string>('默认');
+  const [dialoguePreview, setDialoguePreview] = useState('');
 
   const [basicAiGenerated, setBasicAiGenerated] = useState(false);
   const [advancedAiGenerated, setAdvancedAiGenerated] = useState(false);
@@ -443,9 +561,10 @@ export function CreateCharacter() {
     avatarUrl: avatarUrl || undefined,
     voiceName: voiceName || undefined,
     isPublic: isPublic ? 1 : 0,
-    dialogueLength: dialogLength,
-    toneTendency,
-    interactionMode: interactivity,
+    dialogueLength: dialogLength === '默认' ? (null as any) : dialogLength,
+    toneTendency: toneTendency === '默认' ? (null as any) : toneTendency,
+    interactionMode: interactivity === '默认' ? (null as any) : interactivity,
+    dialoguePreview: dialoguePreview.trim() || undefined,
     extJson,
     basicAiGenerated: basicAiGenerated ? 1 : 0,
     advancedAiGenerated: advancedAiGenerated ? 1 : 0,
@@ -483,17 +602,22 @@ export function CreateCharacter() {
         backgroundStory: background.trim() || undefined,
         keywords: selectedTags.join(','),
       });
-      if (result?.roleName) {
-        setName(result.roleName);
+      const roleName = result?.roleName ?? result?.role_name;
+      const generatedGender = result?.gender;
+      const occupation = result?.occupation;
+      const backgroundStory = result?.backgroundStory ?? result?.background_story;
+
+      if (typeof roleName === 'string' && roleName.trim()) {
+        setName(roleName);
       }
-      if (result?.gender === 'male' || result?.gender === 'female') {
-        setGender(result.gender);
+      if (generatedGender === 'male' || generatedGender === 'female' || generatedGender === 'unknown') {
+        setGender(generatedGender);
       }
-      if (result?.occupation) {
-        setJob(result.occupation);
+      if (typeof occupation === 'string' && occupation.trim()) {
+        setJob(occupation);
       }
-      if (result?.backgroundStory) {
-        setBackground(result.backgroundStory);
+      if (typeof backgroundStory === 'string' && backgroundStory.trim()) {
+        setBackground(backgroundStory);
       }
       setBasicAiGenerated(true);
       showMessage('角色设定已生成并回填。');
@@ -769,6 +893,15 @@ export function CreateCharacter() {
     setSelectedTags(next);
   };
 
+  const handleAddCustomTag = (tag: string) => {
+    if (!tagOptions.includes(tag)) {
+      setTagOptions(prev => [...prev, tag]);
+    }
+    if (!selectedTags.includes(tag)) {
+      setSelectedTags(prev => [...prev, tag]);
+    }
+  };
+
   const handleSave = async () => {
     if (saving || generatingSetting || generatingImage || generatingVoice) {
       return;
@@ -819,13 +952,17 @@ export function CreateCharacter() {
                     selectedTags={selectedTags}
                     onToggleTag={handleToggleTag}
                     onSmartRecommend={handleSmartRecommendTags}
+                    onAddCustomTag={handleAddCustomTag}
                   />
                   <DialogueStyleSection
                     dialogLength={dialogLength}
                     interactivity={interactivity}
                     toneTendency={toneTendency}
+                    previewText={dialoguePreview}
                     onDialogLengthChange={setDialogLength}
                     onInteractivityChange={setInteractivity}
+                    onToneTendencyChange={setToneTendency}
+                    onPreviewTextChange={setDialoguePreview}
                   />
                 </>
               )

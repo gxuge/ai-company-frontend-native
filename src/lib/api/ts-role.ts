@@ -90,9 +90,11 @@ export type TsRoleOneClickSettingGeneratePayload = {
 
 export type TsRoleOneClickSettingGenerateResult = {
   roleName?: string;
+  role_name?: string;
   gender?: string;
   occupation?: string;
   backgroundStory?: string;
+  background_story?: string;
   filledFields?: string[];
   keptFields?: string[];
   promptCode?: string;
@@ -258,6 +260,7 @@ export const tsRoleApi = {
     return defHttp.post<TsRoleOneClickSettingGenerateResult>({
       url: '/sys/ts-roles/one-click-setting',
       data: payload,
+      timeout: 60_000,
     });
   },
 

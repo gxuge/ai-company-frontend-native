@@ -338,14 +338,14 @@ function LocationSection({
   return (
     <div className="flex flex-col gap-[12px]">
       <SectionHeader
-        title="场所设定"
+        title="场景设定"
         required
         showGenerate
         onGenerate={onGenerate}
         generateLoading={generateLoading}
       />
       <AiFormTextarea
-        placeholder="输入场所设定，生成人物所在场所"
+        placeholder="输入场景设定，生成人物所在场景"
         isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}

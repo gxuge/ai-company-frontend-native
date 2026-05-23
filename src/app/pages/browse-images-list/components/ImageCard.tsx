@@ -20,10 +20,10 @@ export function ImageCard({
   authorAvatarUrl,
 }: ImageCardProps) {
   return (
-    <View style={{ position: 'relative', borderRadius: 12, overflow: 'hidden' }}>
+    <View style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', width: '100%', aspectRatio: 208 / 292 }}>
       <Image
         source={imageUrl ? { uri: imageUrl } : imgMain}
-        style={{ width: '100%', aspectRatio: 3 / 4 }}
+        style={{ width: '100%', height: '100%' }}
         resizeMode="cover"
       />
 

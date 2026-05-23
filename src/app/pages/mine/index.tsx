@@ -27,7 +27,7 @@ const { width } = Dimensions.get('window');
 const GRID_GAP = 8;
 const GRID_PADDING = 15;
 const GRID_ITEM_WIDTH = (width - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
-const GRID_ITEM_HEIGHT = GRID_ITEM_WIDTH * 1.5;
+const GRID_ITEM_HEIGHT = GRID_ITEM_WIDTH * (292 / 208);
 
 const imgCopy = require('../../../assets/images/mine/copy.svg');
 const imgEditAvatar = require('../../../assets/images/mine/edit_avatar.svg');

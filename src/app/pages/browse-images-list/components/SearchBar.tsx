@@ -47,6 +47,7 @@ export function SearchBar({
             fontSize: 14,
             color: '#e7e7e7',
             fontFamily: 'Noto Sans SC',
+            ...( { outlineStyle: 'none' } as any )
           }}
         />
       </View>

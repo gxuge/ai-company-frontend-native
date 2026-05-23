@@ -6,6 +6,13 @@ export type PhoneLoginPayload = {
   loginOrgCode?: string;
 };
 
+export type AccountLoginPayload = {
+  username: string;
+  password?: string;
+  captcha?: string;
+  checkKey?: string;
+};
+
 export type PhoneLoginResult = {
   token: string;
   refreshToken?: string;
@@ -56,7 +63,24 @@ async function phoneLoginRemote(payload: PhoneLoginPayload) {
   );
 }
 
+async function accountLoginRemote(payload: AccountLoginPayload) {
+  return defHttp.post<PhoneLoginResult>(
+    {
+      url: '/sys/login',
+      data: payload,
+    },
+    { withToken: false },
+  );
+}
+
 export const userApi = {
+  async login(payload: AccountLoginPayload) {
+    if (LOCAL_PHONE_LOGIN_MODE) {
+      return buildLocalPhoneLoginResult(payload.username);
+    }
+    return accountLoginRemote(payload);
+  },
+
   async phoneLogin(payload: PhoneLoginPayload) {
     if (LOCAL_PHONE_LOGIN_MODE) {
       return buildLocalPhoneLoginResult(payload.mobile);

@@ -1,6 +1,38 @@
 ﻿# Frontend Integration Plan
 
-更新时间：2026-04-21
+更新时间：2026-05-22
+
+## 0. 任务背景（create-role 形象模板默认值置空，2026-05-22）
+- 目标：避免 `one-click-image` 模板变量被“角色时间戳/待定职业/等待完善背景”占位值污染，缺失字段按 `null` 语义传递。
+- 边界：仅修改后端字段归一化与模板拼接前清洗；不改动前端 UI 与页面结构。
+- 非目标：不改 `create-role` 页面样式、不新增接口。
+
+### 0.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 one-click-setting 去默认兜底 | 已完成 | 取消 `gender/occupation/backgroundStory` 硬编码默认值 | 未输入时不再写入占位文案 | `TsRoleGenerateServiceImpl.java` |
+| T2 one-click-image 占位值清洗 | 已完成 | 拼模板前将占位值归一成 `null` | 模板输入变量不再出现占位文本 | `TsRoleGenerateServiceImpl.java` |
+| T2.1 generate-role 回归修复 | 已完成 | 修复 `TsRoleGenerateRoleDto` 字段误用并改回 `null` 语义 | 不再调用 `dto.getRoleName/getGender/getOccupation/getBackgroundStory` | `TsRoleGenerateServiceImpl.java` |
+| T3 文档回填 | 已完成 | 任务记录与总表同步更新 | 可追踪本轮变更背景与证据 | `docs/fe-be-integration/任务-create-role-形象模板默认值置空-20260522-1635.md` |
+
+## 0. 任务背景（create-role 一键设定回填修复，2026-05-22）
+- 目标：修复 `one-click-setting` 未传角色名时默认补名问题，并修复四核心字段回填不稳定问题。
+- 边界：仅改字段映射与回填逻辑，不改页面布局。
+- 非目标：不改角色保存接口创建草稿逻辑。
+
+### 0.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 后端默认名去除 | 已完成 | 去除 one-click-setting 中 `角色+时间戳` 兜底 | 前端不传名称时后端不再强制生成默认名 | `TsRoleGenerateServiceImpl.java` |
+| T2 后端字段解析增强 | 已完成 | 兼容读取 snake/camel 输出字段 | 生成字段可稳定落到后端 VO 返回 | `TsRoleGenerateServiceImpl.java` |
+| T3 前端回填增强 | 已完成 | 回填改为 snake/camel 双兼容 | 页面角色名/职业/背景可回填 | `create-character.tsx` |
+| T4 API 类型补齐 | 已完成 | 补 `role_name`、`background_story` 类型字段 | 前端回填不依赖 `any` | `ts-role.ts` |
+
+### 0.2 风险与回退
+- 风险：
+  - 若模型返回非 schema 键名，仍可能触发后端兜底值。
+- 回退：
+  - 可回退到仅 camel 映射版本；UI 不受影响。
 
 ## 0. 任务背景（user-setting 对接，2026-04-09）
 - 目标：完成 `pages/user-setting` 的“读取当前用户资料 + 提交保存”链路。
