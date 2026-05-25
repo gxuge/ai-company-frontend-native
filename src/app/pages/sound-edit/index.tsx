@@ -1,7 +1,7 @@
 import type { TsVoiceProfile } from '@/lib/api';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { tsVoiceApi } from '@/lib/api';
-import EditSoundText from './components/edit-sound-text';
+import EditSoundText from '@/components/pages/sound-edit/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { Check, Play, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { AiEmpty } from '@/components/ai-company/ai-empty';

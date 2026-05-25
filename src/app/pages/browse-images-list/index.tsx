@@ -9,11 +9,11 @@ import type {
 import { View, ScrollView, SafeAreaView, Text } from 'react-native';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { tsRoleImageApi, tsStoryApi } from '@/lib/api';
-import { SearchBar } from './components/SearchBar';
-import { CategoryTabs } from './components/CategoryTabs';
-import { StoryGrid } from './components/StoryGrid';
-import type { StoryGridItem } from './components/StoryGrid';
-import { ImageCard } from './components/ImageCard';
+import { SearchBar } from '@/components/pages/browse-images-list/SearchBar';
+import { CategoryTabs } from '@/components/pages/browse-images-list/CategoryTabs';
+import { StoryGrid } from '@/components/pages/browse-images-list/StoryGrid';
+import type { StoryGridItem } from '@/components/pages/browse-images-list/StoryGrid';
+import { ImageCard } from '@/components/pages/browse-images-list/ImageCard';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { AiSkeleton } from '@/components/ai-company/ai-skeleton';

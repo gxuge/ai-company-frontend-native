@@ -4,8 +4,8 @@ import { Image, Text, View } from 'react-native';
 
 import { styles } from './styles';
 
-const imgAvatar = require('../../../../../assets/images/chat/chat-desc/avatar.png');
-const imgBookIcon = require('../../../../../assets/images/chat/chat-desc/book_icon.svg');
+const imgAvatar = require('../../../../assets/images/chat/chat-desc/avatar.png');
+const imgBookIcon = require('../../../../assets/images/chat/chat-desc/book_icon.svg');
 
 // ─── Component ───
 export default function ChatDesc() {

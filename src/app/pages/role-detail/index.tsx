@@ -17,7 +17,7 @@ const imgClose = require('../../../assets/images/role-detail/close.svg');
 const imgMore = require('../../../assets/images/role-detail/more.svg');
 const imgRoleBadge = require('../../../assets/images/role-detail/role_avatar.png');
 const imgVerified = require('../../../assets/images/role-detail/verified.svg');
-const { styles } = require('./components/role-detail.styles');
+const { styles } = require('@/components/pages/role-detail/role-detail.styles');
 
 type TabKey = 'about' | 'story';
 type RoleDetailDataState = {
@@ -132,6 +132,7 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
           <Image
             source={imgRoleBadge}
             style={styles.roleAvatar}
+            resizeMode="contain"
           />
         </View>
 
@@ -139,6 +140,7 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
           <Image
             source={imgAddUser}
             style={styles.followIcon}
+            resizeMode="contain"
           />
           <Text style={styles.followText}>关注</Text>
         </Pressable>
@@ -156,6 +158,7 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
               <Image
                 source={imgVerified}
                 style={styles.verifiedIcon}
+                resizeMode="contain"
               />
             )
           : null}
@@ -237,12 +240,16 @@ export default function RoleDetail() {
                 <Image
                   source={imgClose}
                   style={[styles.navIcon, { width: 16, height: 16 }]}
+                  resizeMode="contain"
+                  tintColor="#fff"
                 />
               </Pressable>
               <Pressable style={styles.navButton}>
                 <Image
                   source={imgMore}
                   style={[styles.navIcon, { width: 20, height: 20 }]}
+                  resizeMode="contain"
+                  tintColor="#fff"
                 />
               </Pressable>
             </View>

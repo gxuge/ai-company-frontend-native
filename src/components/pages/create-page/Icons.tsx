@@ -1,8 +1,8 @@
 import React from 'react';
-const imgAddUser = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/create-page/add_user.svg"));
-const imgArrowRight = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/create-page/arrow_right.svg"));
-const imgBookScript = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/create-page/book_script.svg"));
-const imgClose = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/create-page/close.svg"));
+const imgAddUser = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/add_user.svg"));
+const imgArrowRight = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/arrow_right.svg"));
+const imgBookScript = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/book_script.svg"));
+const imgClose = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/create-page/close.svg"));
 
 type IconProps = React.ImgHTMLAttributes<HTMLImageElement>;
 export const Icons = {

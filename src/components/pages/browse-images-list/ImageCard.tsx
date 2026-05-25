@@ -1,8 +1,8 @@
 import { View, Image, Text } from 'react-native';
 
-const imgAvatar = require('../../../../assets/images/browse-images-list/f237e684d01d55d9ec3a722678f8a240c02ceb8b.png');
-const imgEye = require('../../../../assets/images/browse-images-list/26c770612af2df2377f95228e63007b26e0e21bd.png');
-const imgMain = require('../../../../assets/images/browse-images-list/43a96fc9c5b518385cdb7450c72740a4259ee56b.png');
+const imgAvatar = require('../../../assets/images/browse-images-list/f237e684d01d55d9ec3a722678f8a240c02ceb8b.png');
+const imgEye = require('../../../assets/images/browse-images-list/26c770612af2df2377f95228e63007b26e0e21bd.png');
+const imgMain = require('../../../assets/images/browse-images-list/43a96fc9c5b518385cdb7450c72740a4259ee56b.png');
 
 interface ImageCardProps {
   imageUrl?: string;

@@ -4,9 +4,9 @@ import { View, Text, Pressable, Image } from 'react-native';
 import { styles } from './styles';
 
 // ─── SVG Icons (from Figma exported assets) ───
-const imgBookIcon = require('../../../../../assets/images/chat/chat-header/book.svg');
-const imgFireIcon = require('../../../../../assets/images/chat/chat-header/fire.svg');
-const imgVolumeIcon = require('../../../../../assets/images/chat/chat-header/volume.svg');
+const imgBookIcon = require('../../../../assets/images/chat/chat-header/book.svg');
+const imgFireIcon = require('../../../../assets/images/chat/chat-header/fire.svg');
+const imgVolumeIcon = require('../../../../assets/images/chat/chat-header/volume.svg');
 
 function BookIcon() {
   return <Image source={imgBookIcon} style={{ width: 20, height: 19 }} resizeMode="contain" />;

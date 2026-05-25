@@ -12,9 +12,9 @@ import { tsRoleApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
 import { getItem, setItem } from '@/lib/storage';
 import { BasicInfoSection } from './basic-info';
 
-const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/sparkle.svg'));
-const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/plus_gray.svg'));
-const imgChevronRightGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../../assets/images/create-role/chevron_right_green.svg'));
+const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-role/sparkle.svg'));
+const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-role/plus_gray.svg'));
+const imgChevronRightGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-role/chevron_right_green.svg'));
 
 const fontBase = 'font-[\'Noto_Sans_SC\',sans-serif]';
 const DEFAULT_VOICE_PREVIEW_TEXT = '你好呀，很高兴认识你。';

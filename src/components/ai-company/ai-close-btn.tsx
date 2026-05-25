@@ -51,7 +51,8 @@ export function AiCloseBtn({
     >
       <Image 
         source={iconSource} 
-        style={{ width: iconWidth, height: iconHeight, tintColor: iconTintColor }} 
+        style={{ width: iconWidth, height: iconHeight }} 
+        tintColor={iconTintColor}
         resizeMode="contain" 
       />
     </Pressable>

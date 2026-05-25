@@ -30,10 +30,7 @@ export function AiEmpty({
           width: 80, height: 80, borderRadius: 20,
           backgroundColor: '#18181b', borderWidth: 1, borderColor: 'rgba(39,39,42,0.8)',
           alignItems: 'center', justifyContent: 'center', marginBottom: 24,
-          shadowColor: '#9bfe03',
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
+          boxShadow: '0px 0px 10px rgba(155,254,3,0.1)',
         }}>
           {icon ? (
             <Image source={icon} style={{ width: 40, height: 40 }} resizeMode="contain" />
@@ -73,10 +70,7 @@ export function AiEmpty({
               backgroundColor: pressed ? 'rgba(155,254,3,0.7)' : 'rgba(155,254,3,0.9)', 
               borderRadius: 14,
               transform: [{ scale: pressed ? 0.98 : 1 }],
-              shadowColor: '#9bfe03',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.2,
-              shadowRadius: 8,
+              boxShadow: '0px 4px 8px rgba(155,254,3,0.2)',
             })}
           >
             <Text style={{ color: '#09090b', fontWeight: '600', fontSize: 16 }}>

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft } from "lucide-react";
-import { StoryGeneratingStage } from "./components/StoryGeneratingStage";
-import { CharacterGeneratingStage } from "./components/CharacterGeneratingStage";
-import { AvatarGeneratingStage } from "./components/AvatarGeneratingStage";
-import { ProgressSteps } from "./components/ProgressSteps";
+import { StoryGeneratingStage } from "@/components/pages/generating-page/StoryGeneratingStage";
+import { CharacterGeneratingStage } from "@/components/pages/generating-page/CharacterGeneratingStage";
+import { AvatarGeneratingStage } from "@/components/pages/generating-page/AvatarGeneratingStage";
+import { ProgressSteps } from "@/components/pages/generating-page/ProgressSteps";
 
 const stages = [
   { id: "story", label: "故事", component: StoryGeneratingStage },

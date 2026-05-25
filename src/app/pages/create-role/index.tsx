@@ -1,4 +1,4 @@
-import { CreateCharacter } from "./components/create-character";
+import { CreateCharacter } from "@/components/pages/create-role/create-character";
 
 export default function App() {
   return (

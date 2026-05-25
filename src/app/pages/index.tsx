@@ -16,6 +16,7 @@ const pageItems: PageItem[] = [
   { label: 'Browse Images', href: '/pages/browse-images-list' },
   { label: 'Create Role', href: '/pages/create-role' },
   { label: 'Create Character', href: '/pages/create-character' },
+  { label: 'Email Login', href: '/pages/email-login' },
   { label: 'Verification Code Login', href: '/pages/verification-code-login' },
   { label: 'Select Role', href: '/pages/select-role' },
   { label: 'Role Detail', href: '/pages/role-detail' },

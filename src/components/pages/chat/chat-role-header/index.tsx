@@ -3,10 +3,10 @@ import { View, Text, Pressable, Image } from 'react-native';
 import { styles } from './styles';
 
 // ─── Assets ───
-const imgAvatar = require('../../../../../assets/images/chat/chat-header/avatar.png');
-const imgAddUserIcon = require('../../../../../assets/images/chat/chat-header/add-user.svg');
-const imgChatPreviewIcon = require('../../../../../assets/images/chat/chat-header/chat-preview.svg');
-const imgVolumeIcon = require('../../../../../assets/images/chat/chat-header/volume.svg');
+const imgAvatar = require('../../../../assets/images/chat/chat-header/avatar.png');
+const imgAddUserIcon = require('../../../../assets/images/chat/chat-header/add-user.svg');
+const imgChatPreviewIcon = require('../../../../assets/images/chat/chat-header/chat-preview.svg');
+const imgVolumeIcon = require('../../../../assets/images/chat/chat-header/volume.svg');
 
 function AddUserIcon() {
   return <Image source={imgAddUserIcon} style={{ width: 20, height: 20 }} resizeMode="contain" />;

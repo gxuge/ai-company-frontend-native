@@ -25,9 +25,7 @@ import { userApi } from '@/lib/api/user';
 
 const { width } = Dimensions.get('window');
 const GRID_GAP = 8;
-const GRID_PADDING = 15;
-const GRID_ITEM_WIDTH = (width - GRID_PADDING * 2 - GRID_GAP * 2) / 3;
-const GRID_ITEM_HEIGHT = GRID_ITEM_WIDTH * (292 / 208);
+const GRID_PADDING = 12;
 
 const imgCopy = require('../../../assets/images/mine/copy.svg');
 const imgEditAvatar = require('../../../assets/images/mine/edit_avatar.svg');
@@ -151,7 +149,7 @@ function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
           <Text style={styles.gridAuthorText} numberOfLines={1}>{item.author}</Text>
         </View>
         <View style={styles.gridViewRow}>
-          <Image source={imgViewIcon} style={styles.gridViewIcon} />
+          <Image source={imgViewIcon} style={styles.gridViewIcon} tintColor="#bfbcbd" />
           <Text style={styles.gridViewText}>{item.views}</Text>
         </View>
       </View>
@@ -232,7 +230,7 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
     <>
       <View style={styles.header}>
         <TouchableOpacity style={styles.settingBtn} onPress={() => router.push('/pages/general-setting')}>
-          <Image source={imgSetting} style={styles.settingIcon} />
+          <Image source={imgSetting} style={styles.settingIcon} tintColor="#ffffff" />
         </TouchableOpacity>
 
         <View style={styles.avatarWrapper}>
@@ -260,7 +258,7 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
             {' '}
             {displayUid}
           </Text>
-          <Image source={imgCopy} style={styles.copyIcon} />
+          <Image source={imgCopy} style={styles.copyIcon} tintColor="#6b7280" />
         </View>
 
         <View style={styles.statsRow}>
@@ -537,7 +535,6 @@ const styles = StyleSheet.create({
   settingIcon: {
     width: 28,
     height: 28,
-    tintColor: '#ffffff',
   },
   avatarWrapper: {
     marginTop: 10,
@@ -597,7 +594,6 @@ const styles = StyleSheet.create({
   copyIcon: {
     width: 14,
     height: 14,
-    tintColor: '#6b7280',
   },
   statsRow: {
     flexDirection: 'row',
@@ -715,9 +711,9 @@ const styles = StyleSheet.create({
     gap: GRID_GAP,
   },
   gridCard: {
-    width: GRID_ITEM_WIDTH,
-    height: GRID_ITEM_HEIGHT,
-    borderRadius: 10,
+    width: '31.5%',
+    aspectRatio: 208 / 292,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: '#111',
   },
@@ -760,7 +756,6 @@ const styles = StyleSheet.create({
     width: 12,
     height: 8,
     marginRight: 3,
-    tintColor: '#bfbcbd',
   },
   gridViewText: {
     fontSize: 10,

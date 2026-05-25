@@ -38,7 +38,7 @@ export function AiHeader({ title, className = '', onBack, rightElement }: AiHead
           />
         </Svg>
       </Pressable>
-      <View pointerEvents="none" className="absolute inset-0 items-center justify-center z-0">
+      <View style={{ pointerEvents: 'none' }} className="absolute inset-0 items-center justify-center z-0">
         <Text className={`text-white text-lg ${fontBase} font-bold`}>
           {title}
         </Text>

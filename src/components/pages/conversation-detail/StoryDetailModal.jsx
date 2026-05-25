@@ -1,4 +1,4 @@
-import svgPaths from '../../../../assets/images/story-detail/svg-m13tfs0op9';
+import svgPaths from '../../../assets/images/story-detail/svg-m13tfs0op9';
 
 function GlowText({ children }) {
   return (

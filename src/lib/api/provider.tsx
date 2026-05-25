@@ -5,10 +5,23 @@ import * as React from 'react';
 
 export const queryClient = new QueryClient();
 
-export function APIProvider({ children }: { children: React.ReactNode }) {
+function ReactQueryDevToolsBridge() {
   useReactQueryDevTools(queryClient);
+  return null;
+}
+
+export function APIProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     // Provide the client to your App
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {mounted && __DEV__ ? <ReactQueryDevToolsBridge /> : null}
+    </QueryClientProvider>
   );
 }

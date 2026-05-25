@@ -5,10 +5,10 @@ import { AiDateInput } from "@/components/ai-company/ai-date-input";
 import { AiSelectTab } from "@/components/ai-company/ai-select-tab";
 import { userApi } from "@/lib/api";
 
-const imgAvatarEditButton = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/avatar_edit_button.svg"));
-const imgCalendarIcon = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/calendar_icon.svg"));
-const imgArrowRightGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/arrow_right_gray.svg"));
-const imgProfilePicture = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/user-setting/8c30de68507153a8488aba9e71939af795be62f6.png"));
+const imgAvatarEditButton = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/avatar_edit_button.svg"));
+const imgCalendarIcon = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/calendar_icon.svg"));
+const imgArrowRightGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/arrow_right_gray.svg"));
+const imgProfilePicture = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/8c30de68507153a8488aba9e71939af795be62f6.png"));
 type Gender = "male" | "female" | "secret";
 const FALLBACK_USER_ID = "user_OnPiJPVTUm";
 

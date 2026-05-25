@@ -2,7 +2,7 @@ import type { TsRoleDetail } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Check, Inbox, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { AiHeader } from '../../../components/ai-company/ai-header';
+import { AiHeader } from '@/components/ai-company/ai-header';
 import { tsRoleApi } from '../../../lib/api';
 
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/select-role/bfc3c41d1a6b570e1b0987aedf706c872d00b6d5.png'));

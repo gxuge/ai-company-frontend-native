@@ -44,7 +44,6 @@ export const styles = StyleSheet.create({
   nameTagBgImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'stretch',
   },
   nameTagText: {
     color: '#ffffff',
@@ -69,7 +68,6 @@ export const styles = StyleSheet.create({
   playBgImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'stretch',
     transform: [{ scaleX: -1 }],
   },
   playContent: {

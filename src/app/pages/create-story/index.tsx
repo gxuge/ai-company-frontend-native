@@ -1,7 +1,9 @@
 import type { TsStoryChapter, TsStoryOneClickOutlineChapter, TsStorySavePayload } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, ScrollView } from 'react-native';
+import { Alert, Platform, ScrollView, Modal } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
+import { HelpCircle } from 'lucide-react';
 import { AiFormTextarea } from '../../../components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
 import { AiHeader } from '../../../components/ai-company/ai-header';
@@ -184,6 +186,7 @@ function SectionHeader({
   generateLoading = false,
   generateDisabled = false,
   onGenerate,
+  onHelpClick,
 }: {
   title: string;
   required?: boolean;
@@ -193,10 +196,11 @@ function SectionHeader({
   generateLoading?: boolean;
   generateDisabled?: boolean;
   onGenerate?: () => void;
+  onHelpClick?: () => void;
 }) {
   return (
     <div className="flex w-full items-center justify-between pl-[4px]">
-      <div className="flex items-baseline gap-[2px]">
+      <div className="flex items-center gap-[2px]">
         <span
           className="text-white"
           style={{
@@ -232,6 +236,19 @@ function SectionHeader({
             (选填)
           </span>
         )}
+        {onHelpClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onHelpClick();
+            }}
+            className="flex items-center justify-center p-1 active:opacity-70 ml-1"
+          >
+            <HelpCircle size={14} color="#9ca3af" />
+          </button>
+        )}
       </div>
       {showGenerate && (
         <AiGenerateBtn 
@@ -250,11 +267,13 @@ function StorySettingsSection({
   onChange,
   onGenerate,
   generateLoading,
+  onHelpClick,
 }: {
   text: string;
   onChange: (value: string) => void;
   onGenerate: () => void;
   generateLoading: boolean;
+  onHelpClick?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
@@ -263,6 +282,7 @@ function StorySettingsSection({
         required
         onGenerate={onGenerate}
         generateLoading={generateLoading}
+        onHelpClick={onHelpClick}
       />
       <AiFormTextarea
         placeholder="输入故事整体想法和背景设定，可辅助生成剧情。"
@@ -278,13 +298,15 @@ function StorySettingsSection({
 function CharacterListSection({
   roles = [],
   onAddRole,
+  onHelpClick,
 }: {
   roles?: any[];
   onAddRole: () => void;
+  onHelpClick?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="角色列表" required showGenerate={false} />
+      <SectionHeader title="角色列表" required showGenerate={false} onHelpClick={onHelpClick} />
       <div className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
         <div className="flex flex-wrap items-start gap-[24px]">
           <div className="flex shrink-0 flex-col items-center">
@@ -329,11 +351,13 @@ function LocationSection({
   onChange,
   onGenerate,
   generateLoading,
+  onHelpClick,
 }: {
   text: string;
   onChange: (value: string) => void;
   onGenerate: () => void;
   generateLoading: boolean;
+  onHelpClick?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
@@ -343,6 +367,7 @@ function LocationSection({
         showGenerate
         onGenerate={onGenerate}
         generateLoading={generateLoading}
+        onHelpClick={onHelpClick}
       />
       <AiFormTextarea
         placeholder="输入场景设定，生成人物所在场景"
@@ -644,6 +669,7 @@ export default function App() {
   const [generatingScene, setGeneratingScene] = useState(false);
   const [generatingOutline, setGeneratingOutline] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
+  const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'scene'>('none');
 
   useEffect(() => {
     if (params.selectedRoleId) {
@@ -926,16 +952,19 @@ export default function App() {
               onChange={setStorySettingText}
               onGenerate={handleGenerateSetting}
               generateLoading={generatingSetting}
+              onHelpClick={() => setTooltipType('story')}
             />
             <CharacterListSection
               roles={selectedRoles}
               onAddRole={() => router.push('/pages/select-role?from=create-story')}
+              onHelpClick={() => setTooltipType('role')}
             />
             <LocationSection
               text={sceneSettingText}
               onChange={setSceneSettingText}
               onGenerate={handleGenerateScene}
               generateLoading={generatingScene}
+              onHelpClick={() => setTooltipType('scene')}
             />
             <PlotOutlineSection
               activeTab={activeTab}
@@ -956,6 +985,62 @@ export default function App() {
         </ScrollView>
         <BottomButton loading={saving || loadingDetail} onNext={handleSaveAndNext} />
       </div>
+
+      <Modal
+        visible={tooltipType !== 'none'}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setTooltipType('none')}
+      >
+        <div 
+          className="flex h-full w-full items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setTooltipType('none')}
+        >
+          <div 
+            className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setTooltipType('none')}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+            >
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Line x1="18" y1="6" x2="6" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                <Line x1="6" y1="6" x2="18" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+              </Svg>
+            </button>
+            <div className="mb-4 flex justify-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-[rgba(155,254,3,0.15)]">
+                <HelpCircle size={24} color="rgba(155,254,3,0.9)" />
+              </div>
+            </div>
+            {tooltipType === 'story' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">故事设定提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(155,254,3,0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(155,254,3,0.9)] font-medium">章节细节</span>。
+                </p>
+              </>
+            )}
+            {tooltipType === 'role' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色列表提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(155,254,3,0.9)] font-medium">剧情纠葛</span>。
+                </p>
+              </>
+            )}
+            {tooltipType === 'scene' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景设定提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  设定故事发生的具体地点或环境氛围（例如：<span className="text-white font-medium">赛博朋克都市、古典仙侠客栈</span>）。明确的场景有助于 AI 描绘更生动的画面和氛围。
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

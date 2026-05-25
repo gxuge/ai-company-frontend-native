@@ -1,4 +1,4 @@
-import AccountSettings from "./components/AccountSettings";
+import AccountSettings from "@/components/pages/user-setting/AccountSettings";
 
 export default function App() {
   return (

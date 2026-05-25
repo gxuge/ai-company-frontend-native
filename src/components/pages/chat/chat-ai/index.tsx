@@ -3,11 +3,11 @@ import { View, Text, Pressable, Image, ImageBackground } from 'react-native';
 import { styles } from './styles';
 
 // ─── SVG Icons (from Figma exported assets) ───
-const imgPlayIcon = require('../../../../../assets/images/chat/chat-ai/play-icon.svg');
-const imgRefreshIcon = require('../../../../../assets/images/chat/chat-ai/refresh.svg');
-const imgThumbsUpIcon = require('../../../../../assets/images/chat/chat-ai/thumbs-up.svg');
-const imgNameTagBg = require('../../../../../assets/images/chat/chat-ai/name-tag-bg.svg');
-const imgPlayBg = require('../../../../../assets/images/chat/chat-ai/play-bg.svg');
+const imgPlayIcon = require('../../../../assets/images/chat/chat-ai/play-icon.svg');
+const imgRefreshIcon = require('../../../../assets/images/chat/chat-ai/refresh.svg');
+const imgThumbsUpIcon = require('../../../../assets/images/chat/chat-ai/thumbs-up.svg');
+const imgNameTagBg = require('../../../../assets/images/chat/chat-ai/name-tag-bg.svg');
+const imgPlayBg = require('../../../../assets/images/chat/chat-ai/play-bg.svg');
 
 const imgWaveWhiteTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-white-tiny.gif'));
 
@@ -62,12 +62,12 @@ export function ChatAi({
       {/* ── Chat bubble structure ── */}
       <View style={styles.bubbleWrapper}>
         {/* Absolute headers fixed to left and right corners, sitting BEHIND the bubble wrapper */}
-        <ImageBackground source={imgNameTagBg} style={styles.nameTagBg} imageStyle={styles.nameTagBgImage}>
+        <ImageBackground source={imgNameTagBg} style={styles.nameTagBg} imageStyle={styles.nameTagBgImage} resizeMode="stretch">
           <Text style={styles.nameTagText}>{name}</Text>
         </ImageBackground>
 
         <Pressable style={styles.playBgWrapper} onPress={onPlayAudio}>
-          <ImageBackground source={imgPlayBg} style={styles.playBg} imageStyle={styles.playBgImage}>
+          <ImageBackground source={imgPlayBg} style={styles.playBg} imageStyle={styles.playBgImage} resizeMode="stretch">
             <View style={styles.playContent}>
               <PlayIcon isPlaying={isPlaying} />
               <Text style={styles.playDuration}>{audioDuration}</Text>

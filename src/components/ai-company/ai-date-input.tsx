@@ -226,7 +226,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
         onPress={() => { if (props.editable !== false) setShowPicker(true); }}
         className="w-full"
       >
-        <View pointerEvents="none">
+        <View style={{ pointerEvents: 'none' }}>
           <TextInput
             {...props}
             value={props.value}

@@ -1,12 +1,12 @@
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { useRouter } from 'expo-router';
-const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/feedback_blue.svg"));
-const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/about_purple.svg"));
-const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/account_green.svg"));
-const imgVerifiedOrange = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/verified_orange.svg"));
-const imgPrivacyPink = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/privacy_pink.svg"));
-const imgLogoutRed = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/logout_red.svg"));
-const imgMenuArrowGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../../assets/images/general-setting/menu_arrow_gray.svg"));
+const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/feedback_blue.svg"));
+const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/about_purple.svg"));
+const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/account_green.svg"));
+const imgVerifiedOrange = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/verified_orange.svg"));
+const imgPrivacyPink = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/privacy_pink.svg"));
+const imgLogoutRed = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/logout_red.svg"));
+const imgMenuArrowGray = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/menu_arrow_gray.svg"));
 
 // Icon component with glow effect
 function GlowIcon({

@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, HelpCircle } from 'lucide-react';
 import Svg, { Line } from 'react-native-svg';
+import { showMessage } from 'react-native-flash-message';
+import { Modal } from 'react-native';
 import { AiFormInput } from '@/components/ai-company/ai-form-input';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '@/components/ai-company/ai-generate-btn';
@@ -75,24 +77,65 @@ export function BasicInfoSection({
   voiceListenPhase = 'idle',
 }: BasicInfoSectionProps) {
   const [isAvatarPreviewOpen, setIsAvatarPreviewOpen] = useState(false);
+  const [tooltipType, setTooltipType] = useState<'none' | 'image' | 'setting' | 'voice'>('none');
+  const [generateConfirmType, setGenerateConfirmType] = useState<'none' | 'image' | 'voice'>('none');
+
+  const handleGenerateImageClick = () => {
+    if (generatingImage) return;
+
+    let missingCount = 0;
+    if (gender === 'random') missingCount++;
+    if (!job.trim()) missingCount++;
+    if (!background.trim()) missingCount++;
+
+    if (missingCount >= 2) {
+      setGenerateConfirmType('image');
+    } else {
+      onGenerateImage?.();
+    }
+  };
+
+  const handleGenerateVoiceClick = () => {
+    if (generatingVoice) return;
+
+    let missingCount = 0;
+    if (gender === 'random') missingCount++;
+    if (!job.trim()) missingCount++;
+    if (!background.trim()) missingCount++;
+
+    if (missingCount >= 2) {
+      setGenerateConfirmType('voice');
+    } else {
+      onGenerateVoice?.();
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-8">
       <section className="space-y-4">
         <div className="mb-2 flex w-full flex-col gap-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm tracking-wide text-white">
-              角色形象
-              {' '}
-              <span className="text-[rgba(155,254,3,0.9)]">*</span>
-            </h2>
+            <div className="flex items-center gap-1">
+              <h2 className="text-sm tracking-wide text-white">
+                角色形象
+                {' '}
+                <span className="text-[rgba(155,254,3,0.9)]">*</span>
+              </h2>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setTooltipType('image');
+                }}
+                className="flex items-center justify-center p-1 active:opacity-70"
+              >
+                <HelpCircle size={14} color="#9ca3af" />
+              </button>
+            </div>
             <AiGenerateBtn
               loading={generatingImage}
-              onClick={() => {
-                if (!generatingImage) {
-                  onGenerateImage?.();
-                }
-              }}
+              onClick={handleGenerateImageClick}
             />
           </div>
 
@@ -125,11 +168,24 @@ export function BasicInfoSection({
         </div>
 
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm tracking-wide text-white">
-            角色设定
-            {' '}
-            <span className="text-[rgba(155,254,3,0.9)]">*</span>
-          </h2>
+          <div className="flex items-center gap-1">
+            <h2 className="text-sm tracking-wide text-white">
+              角色设定
+              {' '}
+              <span className="text-[rgba(155,254,3,0.9)]">*</span>
+            </h2>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setTooltipType('setting');
+              }}
+              className="flex items-center justify-center p-1 active:opacity-70"
+            >
+              <HelpCircle size={14} color="#9ca3af" />
+            </button>
+          </div>
           <AiGenerateBtn
             loading={generatingSetting}
             onClick={() => {
@@ -244,22 +300,36 @@ export function BasicInfoSection({
 
       <section className="mb-6 space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm tracking-wide text-white">角色声音</h2>
+          <div className="flex items-center gap-1">
+            <h2 className="text-sm tracking-wide text-white">角色声音</h2>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setTooltipType('voice');
+              }}
+              className="flex items-center justify-center p-1 active:opacity-70"
+            >
+              <HelpCircle size={14} color="#9ca3af" />
+            </button>
+          </div>
           <AiGenerateBtn
             loading={generatingVoice}
-            onClick={() => {
-              if (!generatingVoice) {
-                onGenerateVoice?.();
-              }
-            }}
+            onClick={handleGenerateVoiceClick}
           />
         </div>
 
         <div className="relative w-full">
-          <button
-            onClick={() => router.push('/pages/sound-edit')}
-            disabled={generatingVoice}
-            className={`flex h-[44px] w-full items-center justify-between rounded-[6px] border border-[#494949] bg-black px-4 active:opacity-80 ${generatingVoice ? 'opacity-0' : ''}`}
+          <div
+            onClick={() => {
+              if (!generatingVoice) {
+                router.push('/pages/sound-edit');
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className={`flex h-[44px] w-full cursor-pointer items-center justify-between rounded-[6px] border border-[#494949] bg-black px-4 active:opacity-80 ${generatingVoice ? 'opacity-0 pointer-events-none' : ''}`}
           >
             <span className="text-[14px] text-[#9ca3af]">选择角色声音</span>
             <div className="flex items-center gap-2">
@@ -292,7 +362,7 @@ export function BasicInfoSection({
                 : null}
               <img src={imgChevronRight} alt="" className="h-[16px] w-[10px] object-contain opacity-40" />
             </div>
-          </button>
+          </div>
 
           {generatingVoice && (
             <div className="absolute inset-0 z-10 flex flex-col justify-center rounded-[6px] overflow-hidden">
@@ -301,6 +371,107 @@ export function BasicInfoSection({
           )}
         </div>
       </section>
+
+      <Modal
+        visible={tooltipType !== 'none'}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setTooltipType('none')}
+      >
+        <div 
+          className="flex h-full w-full items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setTooltipType('none')}
+        >
+          <div 
+            className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setTooltipType('none')}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+            >
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Line x1="18" y1="6" x2="6" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                <Line x1="6" y1="6" x2="18" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+              </Svg>
+            </button>
+            <div className="mb-4 flex justify-center">
+              <div className="flex size-12 items-center justify-center rounded-full bg-[rgba(155,254,3,0.15)]">
+                <HelpCircle size={24} color="rgba(155,254,3,0.9)" />
+              </div>
+            </div>
+            {tooltipType === 'image' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色形象提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  上传或使用 AI 生成角色的外观形象，这将作为角色的<span className="text-[rgba(155,254,3,0.9)] font-medium">头像</span>和<span className="text-[rgba(155,254,3,0.9)] font-medium">主视觉展示</span>。<br /><br />
+                  💡 生成的形象与您的<span className="text-white font-medium">角色设定（性别、职业、背景等）</span>密切相关。设定越详细，生成的形象越符合预期。
+                </p>
+              </>
+            )}
+            {tooltipType === 'setting' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色设定提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  详细的角色设定（如名字、职业、背景）可以帮助 AI 更好地理解角色，从而生成更符合预期的<span className="text-[rgba(155,254,3,0.9)] font-medium">形象</span>、<span className="text-[rgba(155,254,3,0.9)] font-medium">声音</span>和<span className="text-[rgba(155,254,3,0.9)] font-medium">故事剧情</span>。
+                </p>
+              </>
+            )}
+            {tooltipType === 'voice' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色声音提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  为角色选择或生成独特的声音音色。在对话和剧情中，AI 将使用该声音进行<span className="text-[rgba(155,254,3,0.9)] font-medium">语音播报</span>。<br /><br />
+                  💡 生成的声音与您的<span className="text-white font-medium">角色设定（性别、职业、背景等）</span>密切相关。设定越详细，生成的声音越符合预期。
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        visible={generateConfirmType !== 'none'}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setGenerateConfirmType('none')}
+      >
+        <div 
+          className="flex h-full w-full items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setGenerateConfirmType('none')}
+        >
+          <div 
+            className="w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">完善角色设定</h3>
+            <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+              您的角色设定内容较少（<span className="text-white font-medium">性别、职业、背景</span>缺失），这可能会影响 AI 生成{generateConfirmType === 'image' ? '形象' : '声音'}的准确度。建议先完善设定，是否继续生成？
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                type="button"
+                className="w-1/2 rounded-full border border-[#494949] bg-transparent py-3 text-[14px] font-medium text-[#9ca3af] active:opacity-70"
+                onClick={() => setGenerateConfirmType('none')}
+              >
+                去完善
+              </button>
+              <button
+                type="button"
+                className="w-1/2 rounded-full bg-[rgba(155,254,3,0.9)] py-3 text-[14px] font-bold text-black active:opacity-80"
+                onClick={() => {
+                  const type = generateConfirmType;
+                  setGenerateConfirmType('none');
+                  if (type === 'image') onGenerateImage?.();
+                  if (type === 'voice') onGenerateVoice?.();
+                }}
+              >
+                继续生成
+              </button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

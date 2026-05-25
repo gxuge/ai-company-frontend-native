@@ -6,7 +6,7 @@ import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, Tou
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
 import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
-import StoryDetailModal from './components/StoryDetailModal';
+import StoryDetailModal from '@/components/pages/conversation-detail/StoryDetailModal';
 
 const imgCharacter1 = require('../../../assets/images/conversation-detail/imgCharacter1.png');
 const imgCharacter2 = require('../../../assets/images/conversation-detail/imgCharacter2.png');
@@ -298,7 +298,7 @@ export default function Body() {
                 <Text style={styles.creatorName}>{creatorName}</Text>
               </View>
               <TouchableOpacity style={styles.followButton} activeOpacity={1}>
-                <Image source={imgFluentAdd12Filled} style={styles.addIcon} />
+                <Image source={imgFluentAdd12Filled} style={styles.addIcon} tintColor="#000000" />
                 <Text style={styles.followText}>关注</Text>
               </TouchableOpacity>
             </View>
@@ -309,7 +309,7 @@ export default function Body() {
 
             <TouchableOpacity style={styles.storyDetailButton} activeOpacity={1} onPress={() => setStoryDetailVisible(true)}>
               <Text style={styles.storyDetailText}>故事详情</Text>
-              <Image source={imgIcon} style={styles.chevronIcon} />
+              <Image source={imgIcon} style={styles.chevronIcon} tintColor="#9bfe03" />
             </TouchableOpacity>
 
             {loading ? <Text style={styles.dataHintText}>加载中...</Text> : null}
@@ -337,7 +337,7 @@ export default function Body() {
               </View>
               <Text style={styles.cardTitle}>观感</Text>
             </View>
-            <Image source={imgContainer} style={styles.chevronIconLight} />
+            <Image source={imgContainer} style={styles.chevronIconLight} tintColor="#ffffff" />
           </TouchableOpacity>
 
           <View style={styles.bottomSpacer} />
@@ -462,7 +462,6 @@ const styles = StyleSheet.create({
   addIcon: {
     width: 14,
     height: 14,
-    tintColor: '#000000',
     marginRight: 4,
   },
   followText: {
@@ -499,7 +498,6 @@ const styles = StyleSheet.create({
   chevronIcon: {
     width: 8,
     height: 12,
-    tintColor: '#9bfe03',
   },
   dataHintText: {
     marginTop: 10,
@@ -582,7 +580,6 @@ const styles = StyleSheet.create({
   chevronIconLight: {
     width: 8,
     height: 14,
-    tintColor: '#ffffff',
   },
   bottomSpacer: {
     height: 40,

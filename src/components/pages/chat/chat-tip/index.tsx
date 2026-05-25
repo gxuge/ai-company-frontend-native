@@ -4,7 +4,7 @@ import { ShimmerLine } from '@/components/ai-company/ai-form-textarea';
 import { styles } from './styles';
 
 // ─── Assets ───
-const imgEditSquare = require('../../../../../assets/images/chat/chat-tip/edit-square.svg');
+const imgEditSquare = require('../../../../assets/images/chat/chat-tip/edit-square.svg');
 
 // ─── Types ───
 

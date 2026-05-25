@@ -30,6 +30,9 @@ export function useSelectedTheme() {
 }
 // to be used in the root file to load the selected theme from MMKV
 export function loadSelectedTheme() {
+  if (typeof window === 'undefined') {
+    return;
+  }
   const theme = storage.getString(SELECTED_THEME);
   if (theme !== undefined) {
     console.log('theme', theme);

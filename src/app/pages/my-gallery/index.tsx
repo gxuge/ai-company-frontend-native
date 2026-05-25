@@ -157,10 +157,7 @@ export default function MyGallery() {
     const progress = (pulse.value - 1) * 10; // 0 -> 1 range
     return {
       transform: [{ scale: pulse.value }],
-      shadowColor: '#9bfe03',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.6 + progress * 0.4,
-      shadowRadius: 10 + progress * 10,
+      boxShadow: `0px 0px ${10 + progress * 10}px rgba(155,254,3,${0.6 + progress * 0.4})`,
       elevation: 8 + progress * 4,
       borderRadius: 28,
     };

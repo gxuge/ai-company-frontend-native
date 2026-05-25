@@ -5,13 +5,13 @@ import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from '
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
-import { ChatAi } from './components/chat-ai';
-import ChatDesc from './components/chat-desc';
-import { ChatHeader } from './components/chat-header';
-import { ChatInput } from './components/chat-input';
-import { ChatRoleHeader } from './components/chat-role-header';
-import { ChatTip, type ChatTipItem } from './components/chat-tip';
-import { ChatUser } from './components/chat-user';
+import { ChatAi } from '@/components/pages/chat/chat-ai';
+import ChatDesc from '@/components/pages/chat/chat-desc';
+import { ChatHeader } from '@/components/pages/chat/chat-header';
+import { ChatInput } from '@/components/pages/chat/chat-input';
+import { ChatRoleHeader } from '@/components/pages/chat/chat-role-header';
+import { ChatTip, type ChatTipItem } from '@/components/pages/chat/chat-tip';
+import { ChatUser } from '@/components/pages/chat/chat-user';
 
 const imgFeatureCamera = require('@/assets/images/admin-chat/feature_camera.svg');
 const imgFeatureImage = require('@/assets/images/admin-chat/feature_image.svg');

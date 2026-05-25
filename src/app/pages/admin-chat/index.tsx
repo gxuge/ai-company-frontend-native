@@ -128,10 +128,7 @@ function UserBubble({ content }: { content: string }) {
           borderRadius: 34,
           backgroundColor: "rgba(255,137,4,0.2)",
           // RN 不支持 CSS blur，用阴影近似
-          shadowColor: "#fbbf24",
-          shadowOffset: { width: 0, height: 0 },
-          shadowOpacity: 0.35,
-          shadowRadius: 18,
+          boxShadow: "0px 0px 18px rgba(251,191,36,0.35)",
         }}
       />
       <View

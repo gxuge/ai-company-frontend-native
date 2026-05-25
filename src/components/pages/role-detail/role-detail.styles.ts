@@ -37,8 +37,6 @@ export const styles = StyleSheet.create({
     navIcon: {
         width: 20,
         height: 20,
-        resizeMode: 'contain',
-        tintColor: '#fff',
     },
     bottomSection: {
         paddingHorizontal: 20,
@@ -64,7 +62,6 @@ export const styles = StyleSheet.create({
     roleAvatar: {
         width: 14,
         height: 20,
-        resizeMode: 'contain',
     },
     followButton: {
         flexDirection: 'row',
@@ -79,7 +76,6 @@ export const styles = StyleSheet.create({
         width: 16,
         height: 16,
         marginRight: 6,
-        resizeMode: 'contain',
     },
     followText: {
         color: 'rgba(155,254,3,0.9)',
@@ -110,7 +106,6 @@ export const styles = StyleSheet.create({
     verifiedIcon: {
         width: 10,
         height: 14,
-        resizeMode: 'contain',
     },
     statsRow: {
         flexDirection: 'row',

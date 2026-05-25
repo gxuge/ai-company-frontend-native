@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Image, Pressable, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import imgLightbulbIcon from '../../../../../assets/images/chat/chat-input/lightbulb.svg';
-import imgMicIcon from '../../../../../assets/images/chat/chat-input/mic.svg';
-import imgPlusIcon from '../../../../../assets/images/chat/chat-input/plus.svg';
+import imgLightbulbIcon from '../../../../assets/images/chat/chat-input/lightbulb.svg';
+import imgMicIcon from '../../../../assets/images/chat/chat-input/mic.svg';
+import imgPlusIcon from '../../../../assets/images/chat/chat-input/plus.svg';
 import { styles } from './styles';
 
 function MicIcon() {
