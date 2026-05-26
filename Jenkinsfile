@@ -13,7 +13,7 @@ pipeline {
     NODE_ENV = 'production'
     PNPM_HOME = "${WORKSPACE}/.pnpm"
     PATH = "${PNPM_HOME}:${env.PATH}"
-    NPM_CONFIG_REGISTRY = 'https://registry.npmmirror.com'
+    NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
   }
 
   stages {
@@ -33,7 +33,7 @@ pipeline {
       steps {
         sh 'corepack enable'
         sh 'corepack prepare pnpm@10.12.3 --activate'
-        sh 'pnpm config set registry https://registry.npmmirror.com'
+        sh 'pnpm config set registry https://registry.npmjs.org'
       }
     }
 
