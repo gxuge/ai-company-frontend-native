@@ -24,6 +24,8 @@ type BasicInfoSectionProps = {
   job: string;
   background: string;
   voiceName: string;
+  voiceProfileId?: number | null;
+  providerVoiceId?: string;
   avatarUrl?: string;
   onNameChange: (value: string) => void;
   onGenderChange: (value: Gender) => void;
@@ -60,6 +62,8 @@ export function BasicInfoSection({
   job,
   background,
   voiceName,
+  voiceProfileId,
+  providerVoiceId = '',
   avatarUrl = '',
   onNameChange,
   onGenderChange,
@@ -324,7 +328,22 @@ export function BasicInfoSection({
           <div
             onClick={() => {
               if (!generatingVoice) {
-                router.push('/pages/sound-edit');
+                const params: Record<string, string> = {};
+                if (typeof voiceProfileId === 'number' && Number.isFinite(voiceProfileId)) {
+                  params.voiceProfileId = String(voiceProfileId);
+                }
+                const trimmedProviderVoiceId = providerVoiceId.trim();
+                if (trimmedProviderVoiceId) {
+                  params.providerVoiceId = trimmedProviderVoiceId;
+                }
+                const trimmedVoiceName = voiceName.trim();
+                if (trimmedVoiceName) {
+                  params.voiceName = trimmedVoiceName;
+                }
+                router.push({
+                  pathname: '/pages/sound-edit',
+                  params,
+                });
               }
             }}
             role="button"

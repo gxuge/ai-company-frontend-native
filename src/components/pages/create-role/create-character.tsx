@@ -3,13 +3,13 @@ import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, Modal, TextInput } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useIsFocused, useLocalSearchParams, router } from 'expo-router';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
 import { tsRoleApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
-import { getItem, setItem } from '@/lib/storage';
+import { getItem, removeItem, setItem } from '@/lib/storage';
 import { BasicInfoSection } from './basic-info';
 
 const imgSparkle = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-role/sparkle.svg'));
@@ -21,10 +21,16 @@ const DEFAULT_VOICE_PREVIEW_TEXT = '你好呀，很高兴认识你。';
 
 const VOICE_PREVIEW_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const VOICE_PREVIEW_CACHE_KEY_PREFIX = 'create-role:voice-preview:';
+const CREATE_ROLE_SELECTED_VOICE_KEY = 'create-role:selected-voice-v1';
 
 type VoicePreviewCacheEntry = {
   expireAt: number;
   preview: TsVoiceProfilePreviewResult;
+};
+type CreateRoleSelectedVoicePayload = {
+  voiceProfileId: number;
+  voiceName?: string;
+  providerVoiceId?: string;
 };
 
 function showMessage(message: string) {
@@ -451,6 +457,7 @@ function SaveButton({
 
 // eslint-disable-next-line max-lines-per-function
 export function CreateCharacter() {
+  const isFocused = useIsFocused();
   const params = useLocalSearchParams<{ selectedImageUrl?: string }>();
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [roleId, setRoleId] = useState<number | null>(null);
@@ -474,6 +481,56 @@ export function CreateCharacter() {
       setAvatarUrl(params.selectedImageUrl);
     }
   }, [params.selectedImageUrl]);
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+    let alive = true;
+
+    const syncSelectedVoiceFromConfig = async () => {
+      const localSelectedVoice = getItem<CreateRoleSelectedVoicePayload>(CREATE_ROLE_SELECTED_VOICE_KEY);
+      if (localSelectedVoice && typeof localSelectedVoice.voiceProfileId === 'number' && Number.isFinite(localSelectedVoice.voiceProfileId)) {
+        if (!alive) {
+          return;
+        }
+        setVoiceProfileId(localSelectedVoice.voiceProfileId);
+        setVoiceName(localSelectedVoice.voiceName?.trim() || '');
+        setProviderVoiceId(localSelectedVoice.providerVoiceId?.trim() || '');
+        void removeItem(CREATE_ROLE_SELECTED_VOICE_KEY);
+        return;
+      }
+
+      try {
+        const config = await tsVoiceApi.getCurrentVoiceConfig();
+        if (!alive) {
+          return;
+        }
+        const selectedVoice = config.selectedVoiceProfile;
+        const selectedId = typeof config.selectedVoiceProfileId === 'number' && Number.isFinite(config.selectedVoiceProfileId)
+          ? config.selectedVoiceProfileId
+          : (typeof selectedVoice?.id === 'number' && Number.isFinite(selectedVoice.id) ? selectedVoice.id : null);
+
+        if (selectedId !== null) {
+          setVoiceProfileId(selectedId);
+        }
+        if (selectedVoice?.providerVoiceId != null) {
+          setProviderVoiceId(selectedVoice.providerVoiceId);
+        }
+        if (selectedVoice?.name?.trim()) {
+          setVoiceName(selectedVoice.name.trim());
+        }
+      }
+      catch (error) {
+        console.warn('sync selected voice from config failed', error);
+      }
+    };
+
+    void syncSelectedVoiceFromConfig();
+    return () => {
+      alive = false;
+    };
+  }, [isFocused]);
 
   const [isPublic, setIsPublic] = useState(true);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
@@ -974,6 +1031,8 @@ export function CreateCharacter() {
                     job={job}
                     background={background}
                     voiceName={voiceName}
+                    voiceProfileId={voiceProfileId}
+                    providerVoiceId={providerVoiceId}
                     avatarUrl={avatarUrl}
                     onNameChange={setName}
                     onGenderChange={setGender}

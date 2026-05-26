@@ -5,7 +5,8 @@ import EditSoundText from '@/components/pages/sound-edit/edit-sound-text';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { Check, Play, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import { setItem } from '@/lib/storage';
 
 const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/play.svg'));
 const imgEdit = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/edit.svg'));
@@ -19,6 +20,7 @@ const AGE_OPTIONS = ['\u5C11\u5E74', '\u9752\u5E74', '\u4E2D\u5E74', '\u8001\u5E
 const AUDIO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const AUDIO_CACHE_NAME = 'sound-edit-preview-audio-v1';
 const AUDIO_CACHE_META_KEY = 'sound-edit-preview-audio-meta-v1';
+const CREATE_ROLE_SELECTED_VOICE_KEY = 'create-role:selected-voice-v1';
 
 const DEFAULT_RECOMMEND_VOICE_LIST: TsVoiceProfile[] = [];
 const DEFAULT_MY_VOICE_LIST: TsVoiceProfile[] = [];
@@ -33,6 +35,18 @@ type PreviewAudioCacheItem = {
   objectUrl: string;
   expiresAt: number;
 };
+type CreateRoleSelectedVoicePayload = {
+  voiceProfileId: number;
+  voiceName?: string;
+  providerVoiceId?: string;
+};
+
+function pickParamValue(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+}
 
 function toPreviewSpeedValue(speed: number) {
   return Math.max(0.8, Math.min(1.2, Number(speed.toFixed(2))));
@@ -478,12 +492,18 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
 
 // eslint-disable-next-line max-lines-per-function
 export default function SoundEditPage() {
+  const searchParams = useLocalSearchParams<{
+    voiceProfileId?: string | string[];
+    providerVoiceId?: string | string[];
+    voiceName?: string | string[];
+  }>();
   const [activeLibraryTab, setActiveLibraryTab] = useState<'recommend' | 'my'>('recommend');
   const [pitch, setPitch] = useState(20);
   const [speed, setSpeed] = useState(1.0);
   const [allRecommendVoices, setAllRecommendVoices] = useState<TsVoiceProfile[]>(DEFAULT_RECOMMEND_VOICE_LIST);
   const [myVoices, setMyVoices] = useState<TsVoiceProfile[]>(DEFAULT_MY_VOICE_LIST);
   const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(null);
+  const [configSelectedVoiceId, setConfigSelectedVoiceId] = useState<number | null>(null);
   const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('\u5168\u90E8');
   const [ageOpen, setAgeOpen] = useState(false);
   const [age, setAge] = useState<(typeof AGE_OPTIONS)[number]>('\u5C11\u5E74');
@@ -498,6 +518,24 @@ export default function SoundEditPage() {
 
   const isListening = listenPhase !== 'idle';
   const isPlaying = listenPhase === 'playing';
+  const routeVoiceProfileId = useMemo(() => {
+    const raw = pickParamValue(searchParams.voiceProfileId);
+    if (!raw) {
+      return null;
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [searchParams.voiceProfileId]);
+  const routeProviderVoiceId = useMemo(() => {
+    const raw = pickParamValue(searchParams.providerVoiceId);
+    const trimmed = raw?.trim();
+    return trimmed || '';
+  }, [searchParams.providerVoiceId]);
+  const routeVoiceName = useMemo(() => {
+    const raw = pickParamValue(searchParams.voiceName);
+    const trimmed = raw?.trim();
+    return trimmed || '';
+  }, [searchParams.voiceName]);
 
   const displayedRecommendVoices = useMemo(() => {
     if (genderFilter === '\u5168\u90E8') {
@@ -560,6 +598,11 @@ export default function SoundEditPage() {
         if (typeof config.speedRate === 'number') {
           setSpeed(Number(config.speedRate));
         }
+        if (typeof config.selectedVoiceProfileId === 'number' && Number.isFinite(config.selectedVoiceProfileId)) {
+          setConfigSelectedVoiceId(config.selectedVoiceProfileId);
+        } else if (typeof config.selectedVoiceProfile?.id === 'number' && Number.isFinite(config.selectedVoiceProfile.id)) {
+          setConfigSelectedVoiceId(config.selectedVoiceProfile.id);
+        }
 
         if (config.selectedVoiceProfile?.gender) {
           setGenderFilter(toGenderLabel(config.selectedVoiceProfile.gender));
@@ -578,6 +621,48 @@ export default function SoundEditPage() {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (selectedVoiceId) {
+      return;
+    }
+
+    const mergedVoices = [...allRecommendVoices, ...myVoices];
+    if (!mergedVoices.length) {
+      return;
+    }
+
+    const matchedByProfileId = mergedVoices.find(item =>
+      item.id === routeVoiceProfileId || item.id === configSelectedVoiceId,
+    );
+    if (matchedByProfileId?.id) {
+      setSelectedVoiceId(matchedByProfileId.id);
+      return;
+    }
+
+    if (routeProviderVoiceId) {
+      const matchedByProvider = mergedVoices.find(item => item.providerVoiceId?.trim() === routeProviderVoiceId);
+      if (matchedByProvider?.id) {
+        setSelectedVoiceId(matchedByProvider.id);
+        return;
+      }
+    }
+
+    if (routeVoiceName) {
+      const matchedByName = mergedVoices.find(item => item.name?.trim() === routeVoiceName);
+      if (matchedByName?.id) {
+        setSelectedVoiceId(matchedByName.id);
+      }
+    }
+  }, [
+    selectedVoiceId,
+    routeVoiceProfileId,
+    configSelectedVoiceId,
+    routeProviderVoiceId,
+    routeVoiceName,
+    allRecommendVoices,
+    myVoices,
+  ]);
 
   useEffect(() => {
     let alive = true;
@@ -793,6 +878,15 @@ export default function SoundEditPage() {
   };
 
   const handleDone = async () => {
+    if (selectedVoice?.id) {
+      const selectedVoicePayload: CreateRoleSelectedVoicePayload = {
+        voiceProfileId: selectedVoice.id,
+        voiceName: selectedVoice.name?.trim() || undefined,
+        providerVoiceId: selectedVoice.providerVoiceId?.trim() || undefined,
+      };
+      await setItem(CREATE_ROLE_SELECTED_VOICE_KEY, selectedVoicePayload);
+    }
+
     try {
       if (selectedVoiceId) {
         await tsVoiceApi.saveCurrentVoiceConfig({
@@ -803,8 +897,7 @@ export default function SoundEditPage() {
       }
       router.back();
     }
-    catch (error) {
-      console.warn('save voice config failed', error);
+    catch {
       router.back();
     }
   };
