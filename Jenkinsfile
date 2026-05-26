@@ -43,16 +43,16 @@ pipeline {
       }
     }
 
-    stage('Build Web') {
+    stage('Build Web SSR') {
       steps {
-        sh 'pnpm run build:web:prod'
+        sh 'pnpm run build:web:ssr'
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy SSR') {
       steps {
-        sh 'docker compose down --remove-orphans || true'
-        sh 'docker compose up -d --build'
+        sh 'docker compose -f docker-compose.ssr.yml down --remove-orphans || true'
+        sh 'docker compose -f docker-compose.ssr.yml up -d --build'
       }
     }
   }
