@@ -82,6 +82,15 @@ export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
               key={tab.id}
               onClick={() => router.replace(tab.path as any)}
               className="flex items-center justify-center flex-1 h-full transition-all active:scale-95"
+              style={{
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                background: 'transparent',
+                border: 0,
+                padding: 0,
+                margin: 0,
+                outline: 'none',
+              }}
             >
               <Icon active={isActive} />
             </button>

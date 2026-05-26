@@ -251,6 +251,9 @@ export function BasicInfoSection({
               className="min-h-[139px] w-full resize-none bg-transparent p-[16px] text-[13.5px] text-white placeholder-[#6b7280] outline-none"
               containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
               onChange={e => onBackgroundChange(e.target.value)}
+              showCount={true}
+              maxLength={1000}
+              onOptimize={() => showMessage({ message: '提示词美化功能开发中...', type: 'info' })}
             />
           </div>
         </div>

@@ -36,7 +36,7 @@ export function AiGenerateBtn({
         animation: loading ? 'pulse-glow 2s ease-in-out infinite' : 'none'
       }}
     >
-      <div className={loading ? 'animate-spin' : ''} style={{ animationDuration: '2s', opacity: disabled ? 0.4 : 1 }}>
+      <div className={loading ? 'animate-pulse-star' : ''} style={{ animationDuration: '2s', opacity: disabled ? 0.4 : 1 }}>
         <SparkleIcon />
       </div>
       <span 
@@ -72,12 +72,20 @@ export function AiGenerateBtn({
             border-color: rgba(155,254,3,0.5);
           }
         }
-        .animate-spin {
-          animation: spin 2s linear infinite;
+        .animate-pulse-star {
+          animation: pulse-star 1.2s ease-in-out infinite;
         }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes pulse-star {
+          0%, 100% { 
+            transform: scale(1);
+            opacity: 0.7;
+            filter: drop-shadow(0 0 2px rgba(155,254,3,0.4));
+          }
+          50% { 
+            transform: scale(1.2);
+            opacity: 1;
+            filter: drop-shadow(0 0 8px rgba(155,254,3,1));
+          }
         }
       `}</style>
     </button>

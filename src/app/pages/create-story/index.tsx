@@ -50,6 +50,30 @@ function extractErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function resolveGenerateErrorMessage(error: unknown, fallback: string) {
+  const message = extractErrorMessage(error, fallback);
+  if (
+    message.includes('故事模板配置不完整')
+    || message.includes('解析故事模板配置失败')
+    || message.includes('未配置 jeecg.airag.prompt-chat.app-id')
+    || message.includes('未找到AI应用配置')
+    || message.includes('未配置故事模板信息')
+  ) {
+    return `故事生成配置未完成：${message}`;
+  }
+  return message;
+}
+
+function buildIdeaInput(storySettingText: string, sceneSettingText: string, outlineText: string) {
+  const parts = [storySettingText, sceneSettingText, outlineText]
+    .map(item => item.trim())
+    .filter(Boolean);
+  if (!parts.length) {
+    return undefined;
+  }
+  return parts.join('\n\n').slice(0, 1000);
+}
+
 function parsePositiveInt(value?: string | string[]): number | null {
   if (Array.isArray(value)) {
     for (const item of value) {
@@ -285,10 +309,13 @@ function StorySettingsSection({
         onHelpClick={onHelpClick}
       />
       <AiFormTextarea
-        placeholder="输入故事整体想法和背景设定，可辅助生成剧情。"
+        placeholder="例：写下故事背景、世界规则、用户身份和主要目标。比如：午夜后的城市会出现异常街区，用户需要探索规则、收集线索，逐步揭开隐藏真相。"
         isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
+        showCount={true}
+        maxLength={500}
+        onOptimize={() => showMessage('提示词优化功能开发中...')}
       />
     </div>
   );
@@ -370,10 +397,13 @@ function LocationSection({
         onHelpClick={onHelpClick}
       />
       <AiFormTextarea
-        placeholder="输入场景设定，生成人物所在场景"
+        placeholder="例：写下当前场景的时间、地点、氛围和可互动线索。比如：凌晨的旧车站空无一人，站牌显示不存在的班次，长椅上放着一张旧车票。"
         isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
+        showCount={true}
+        maxLength={500}
+        onOptimize={() => showMessage('提示词优化功能开发中...')}
       />
     </div>
   );
@@ -474,6 +504,8 @@ function ChapterCard({
             placeholder=">> 输入开场白内容，开启本故事..."
             value={chapter.openingContent}
             onChange={e => onChange({ ...chapter, openingContent: e.target.value })}
+            showCount={true}
+            maxLength={200}
           />
         </div>
 
@@ -502,6 +534,8 @@ function ChapterCard({
             placeholder=">> 请输入任务目标..."
             value={chapter.missionTarget}
             onChange={e => onChange({ ...chapter, missionTarget: e.target.value })}
+            showCount={true}
+            maxLength={500}
           />
         </div>
 
@@ -546,6 +580,7 @@ function PlotOutlineSection({
   onAddChapter,
   onGenerate,
   generateLoading,
+  onHelpClick,
 }: {
   activeTab: StoryMode;
   outlineText: string;
@@ -555,6 +590,7 @@ function PlotOutlineSection({
   onAddChapter: () => void;
   onGenerate: () => void;
   generateLoading: boolean;
+  onHelpClick?: () => void;
 }) {
   if (activeTab === 'normal') {
     return (
@@ -564,12 +600,16 @@ function PlotOutlineSection({
           large
           onGenerate={onGenerate}
           generateLoading={generateLoading}
+          onHelpClick={onHelpClick}
         />
         <AiFormTextarea
           placeholder="输入剧情大纲..."
           isGenerating={generateLoading}
           value={outlineText}
           onChange={e => onOutlineChange(e.target.value)}
+          showCount={true}
+          maxLength={1000}
+          onOptimize={() => showMessage('提示词优化功能开发中...')}
         />
       </div>
     );
@@ -582,6 +622,7 @@ function PlotOutlineSection({
         large
         onGenerate={onGenerate}
         generateLoading={generateLoading}
+        onHelpClick={onHelpClick}
       />
       {chapters.map((chapter, index) => (
         <ChapterCard
@@ -669,7 +710,7 @@ export default function App() {
   const [generatingScene, setGeneratingScene] = useState(false);
   const [generatingOutline, setGeneratingOutline] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
-  const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'scene'>('none');
+  const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'scene' | 'outline'>('none');
 
   useEffect(() => {
     if (params.selectedRoleId) {
@@ -751,7 +792,7 @@ export default function App() {
         storyIntro: storyIntro || undefined,
         storySetting: storySettingText || undefined,
         storyBackground: storyBackground || undefined,
-        ideaInput: storySettingText || undefined,
+        ideaInput: buildIdeaInput(storySettingText, sceneSettingText, outlineText),
       });
       if (result?.title) {
         setStoryTitle(result.title);
@@ -777,7 +818,7 @@ export default function App() {
       }
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '故事设定生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, '故事设定生成失败，请稍后重试。'));
     }
     finally {
       setGeneratingSetting(false);
@@ -809,7 +850,7 @@ export default function App() {
       }
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '场景设定生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, '场景设定生成失败，请稍后重试。'));
     }
     finally {
       setGeneratingScene(false);
@@ -836,7 +877,7 @@ export default function App() {
         sceneSetting: sceneSettingText || undefined,
         storyBackground: storyBackground || undefined,
         chapterCount: activeTab === 'chapter' ? Math.max(chapters.length, 1) : 3,
-        roleNames: [],
+        roleNames: selectedRoles.map(role => role?.name).filter(Boolean),
         extraRequirements: activeTab === 'normal' ? (outlineText.trim() || undefined) : undefined,
       });
 
@@ -854,7 +895,7 @@ export default function App() {
       showMessage('剧情大纲生成成功。');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '剧情大纲生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, '剧情大纲生成失败，请稍后重试。'));
     }
     finally {
       setGeneratingOutline(false);
@@ -979,6 +1020,7 @@ export default function App() {
               }}
               onGenerate={handleGenerateOutline}
               generateLoading={generatingOutline}
+              onHelpClick={() => setTooltipType('outline')}
             />
             <div className="h-[20px] shrink-0" />
           </div>
@@ -1035,6 +1077,14 @@ export default function App() {
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景设定提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
                   设定故事发生的具体地点或环境氛围（例如：<span className="text-white font-medium">赛博朋克都市、古典仙侠客栈</span>）。明确的场景有助于 AI 描绘更生动的画面和氛围。
+                </p>
+              </>
+            )}
+            {tooltipType === 'outline' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">剧情大纲提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(155,254,3,0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
                 </p>
               </>
             )}
