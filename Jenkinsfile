@@ -14,6 +14,8 @@ pipeline {
     PNPM_HOME = "${WORKSPACE}/.pnpm"
     PATH = "${PNPM_HOME}:${env.PATH}"
     NPM_CONFIG_REGISTRY = 'https://registry.npmjs.org'
+    EXPO_PUBLIC_API_URL = '/jeecg-boot'
+    BACKEND_DOCKER_NETWORK = 'jeecg_boot'
   }
 
   stages {
@@ -51,6 +53,7 @@ pipeline {
 
     stage('Deploy') {
       steps {
+        sh 'docker network inspect ${BACKEND_DOCKER_NETWORK} >/dev/null 2>&1 || docker network create ${BACKEND_DOCKER_NETWORK}'
         sh 'docker compose -f docker-compose.yml down --remove-orphans || true'
         sh 'docker compose -f docker-compose.yml up -d --build'
       }
