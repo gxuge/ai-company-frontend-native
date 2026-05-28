@@ -57,6 +57,71 @@ const AiInput = React.forwardRef<TextInput, AiInputProps>(({
     [onBlur]
   );
 
+  if (Platform.OS === 'web') {
+    const {
+      onChangeText,
+      value,
+      placeholder,
+      secureTextEntry,
+      keyboardType,
+      placeholderTextColor: _placeholderTextColor,
+      autoFocus,
+      maxLength,
+      onSubmitEditing,
+      returnKeyType,
+    } = props as any;
+
+    const inputType = secureTextEntry
+      ? 'password'
+      : keyboardType === 'email-address'
+        ? 'email'
+        : keyboardType === 'numeric' || keyboardType === 'number-pad'
+          ? 'tel'
+          : 'text';
+
+    return (
+      <div
+        className={aiInputTv({
+          editable,
+          className: containerClassName,
+        })}
+        style={containerStyle as any}
+      >
+        {leftNode}
+
+        <input
+          ref={ref as any}
+          value={value as any}
+          placeholder={placeholder as any}
+          type={inputType}
+          autoFocus={autoFocus as any}
+          maxLength={maxLength as any}
+          disabled={!editable}
+          onChange={(e) => {
+            onChangeText?.((e.target as HTMLInputElement).value);
+          }}
+          onFocus={handleFocus as any}
+          onBlur={handleBlur as any}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onSubmitEditing?.({ nativeEvent: { text: (e.target as HTMLInputElement).value } });
+            }
+          }}
+          className={inputFieldTv({
+            className: [
+              'outline-none',
+              inputClassName,
+            ].filter(Boolean).join(' '),
+          })}
+          style={inputStyle as any}
+          enterKeyHint={returnKeyType === 'done' ? 'done' : returnKeyType === 'go' ? 'go' : undefined}
+        />
+
+        {rightNode}
+      </div>
+    );
+  }
+
   return (
     <View 
       className={aiInputTv({

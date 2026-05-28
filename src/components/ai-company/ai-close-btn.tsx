@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Pressable, Image, type ImageSourcePropType } from 'react-native';
+import { Image, Platform, Pressable, type ImageSourcePropType } from 'react-native';
 import { tv } from 'tailwind-variants';
 
 const aiCloseBtnBgVariants = tv({
@@ -35,17 +35,53 @@ export function AiCloseBtn({
   className,
   ...props
 }: AiCloseBtnProps) {
+  const classes = aiCloseBtnBgVariants({
+    className: [
+      props.disabled && 'opacity-50',
+      customWidth,
+      customHeight,
+      radius,
+      className,
+    ].filter(Boolean).join(' '),
+  });
+
+  if (Platform.OS === 'web') {
+    const { onPress, disabled, style, ...restProps } = props as any;
+    const resolvedSource: any = iconSource as any;
+    const iconUri = resolvedSource?.uri ?? resolvedSource?.default ?? resolvedSource;
+    return (
+      <button
+        type="button"
+        className={classes}
+        onClick={onPress}
+        disabled={disabled}
+        style={{
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          border: 'none',
+          margin: 0,
+          padding: 0,
+          cursor: disabled ? 'default' : 'pointer',
+          ...(style as any),
+        }}
+        {...restProps}
+      >
+        <img
+          src={iconUri}
+          alt=""
+          style={{
+            width: iconWidth,
+            height: iconHeight,
+            objectFit: 'contain',
+          }}
+        />
+      </button>
+    );
+  }
+
   return (
     <Pressable
-      className={aiCloseBtnBgVariants({
-        className: [
-          props.disabled && 'opacity-50',
-          customWidth,
-          customHeight,
-          radius,
-          className
-        ].filter(Boolean).join(' '),
-      })}
+      className={classes}
       role="button"
       {...props}
     >

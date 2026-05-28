@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Pressable, Text } from 'react-native';
+import { Platform, Pressable, Text } from 'react-native';
 import { tv } from 'tailwind-variants';
 
 const aiLoginBtnBgVariants = tv({
@@ -47,18 +47,46 @@ export function AiLoginBtn({
   className,
   ...props
 }: AiLoginBtnProps) {
+  const classes = aiLoginBtnBgVariants({
+    themeColor,
+    className: [
+      props.disabled && 'opacity-50',
+      customWidth,
+      customHeight,
+      radius,
+      className,
+    ].filter(Boolean).join(' '),
+  });
+
+  if (Platform.OS === 'web') {
+    const { onPress, disabled, style, ...restProps } = props as any;
+    return (
+      <button
+        type="button"
+        className={classes}
+        onClick={onPress}
+        disabled={disabled}
+        style={{
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          border: 'none',
+          margin: 0,
+          padding: 0,
+          cursor: disabled ? 'default' : 'pointer',
+          ...(style as any),
+        }}
+        {...restProps}
+      >
+        <span className={aiLoginBtnTextVariants({ themeColor, className: textClassName })}>
+          {label}
+        </span>
+      </button>
+    );
+  }
+
   return (
     <Pressable
-      className={aiLoginBtnBgVariants({
-        themeColor,
-        className: [
-          props.disabled && 'opacity-50', // Imitate Button disabled state
-          customWidth,
-          customHeight,
-          radius,
-          className
-        ].filter(Boolean).join(' '),
-      })}
+      className={classes}
       role="button" // Same standard role as Button component
       {...props}
     >
