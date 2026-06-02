@@ -151,14 +151,9 @@ export type TsStoryChapterSavePayload = {
 };
 
 export type TsStoryOneClickSettingGeneratePayload = {
-  storyId?: number;
-  title?: string;
-  storyMode?: string;
-  storyIntro?: string;
   storySetting?: string;
-  storyBackground?: string;
-  ideaInput?: string;
-  styleHint?: string;
+  sceneSetting?: string;
+  plotOutline?: string;
   templateMode?: 'core' | 'setting_optimize';
 };
 
@@ -177,12 +172,9 @@ export type TsStoryOneClickSettingGenerateResult = {
 };
 
 export type TsStoryOneClickSceneGeneratePayload = {
-  title?: string;
-  storyMode?: string;
   storySetting?: string;
-  storyBackground?: string;
   sceneSetting?: string;
-  styleHint?: string;
+  plotOutline?: string;
   templateMode?: 'core' | 'site_setting_optimize';
 };
 
@@ -209,21 +201,17 @@ export type TsStoryOneClickOutlineChapter = {
 };
 
 export type TsStoryOneClickOutlineGeneratePayload = {
-  storyId?: number;
-  title?: string;
-  storyMode?: string;
   storySetting?: string;
   sceneSetting?: string;
-  storyBackground?: string;
-  chapterCount?: number;
-  roleNames?: string[];
-  extraRequirements?: string;
+  plotOutline?: string;
   templateMode?: 'core' | 'plot_outline_optimize';
 };
 
 export type TsStoryOneClickOutlineGenerateResult = {
   chapters?: TsStoryOneClickOutlineChapter[];
   plotOutline?: string;
+  generated?: boolean;
+  fallbackReason?: string;
   promptCode?: string;
   promptVersion?: string;
   renderedPrompt?: string;
@@ -242,13 +230,6 @@ export type TsStoryFullGenerateResult = {
   storySetting?: string;
   siteSetting?: string;
   plotOutline?: string;
-  promptCode?: string;
-  promptVersion?: string;
-  renderedPrompt?: string;
-  snapshotKey?: string;
-  settingResult?: TsStoryOneClickSettingGenerateResult;
-  sceneResult?: TsStoryOneClickSceneGenerateResult;
-  outlineResult?: TsStoryOneClickOutlineGenerateResult;
 };
 
 export const tsStoryApi = {

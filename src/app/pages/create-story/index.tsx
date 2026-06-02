@@ -316,6 +316,7 @@ function StorySettingsSection({
         showCount={true}
         maxLength={500}
         optimizeLoading={optimizeLoading}
+        optimizeDisabled={!text.trim()}
         onOptimize={onOptimize}
       />
     </div>
@@ -422,6 +423,7 @@ function LocationSection({
         showCount={true}
         maxLength={500}
         optimizeLoading={optimizeLoading}
+        optimizeDisabled={!text.trim()}
         onOptimize={onOptimize}
       />
     </div>
@@ -633,6 +635,7 @@ function PlotOutlineSection({
           showCount={true}
           maxLength={1000}
           optimizeLoading={optimizeLoading}
+          optimizeDisabled={!outlineText.trim()}
           onOptimize={onOptimize}
         />
       </div>
@@ -836,13 +839,13 @@ export default function App() {
   }, [routeStoryId]);
 
   const extractStorySettingValue = (result?: TsStoryFullGenerateResult) =>
-    (result?.storySetting || result?.settingResult?.storySetting || '').trim();
+    (result?.storySetting || '').trim();
   const extractSiteSettingValue = (result?: TsStoryFullGenerateResult) =>
-    (result?.siteSetting || result?.sceneResult?.sceneSummary || result?.sceneResult?.sceneNameSnapshot || '').trim();
+    (result?.siteSetting || '').trim();
   const extractPlotOutlineValue = (result?: TsStoryFullGenerateResult) =>
     (result?.plotOutline || '').trim();
   const extractOutlineChapters = (result?: TsStoryFullGenerateResult) =>
-    result?.outlineResult?.chapters || [];
+    [];
 
   const buildOnlyCurrentExtraRequirements = (target: 'setting' | 'scene' | 'outline') => {
     const targetLabelMap = {
@@ -885,13 +888,8 @@ export default function App() {
         throw new Error('未生成有效故事设定，请稍后重试。');
       }
       setStorySettingText(nextStorySetting);
-      setIsAiStorySetting(result?.settingResult?.generated !== false);
-      if (result?.settingResult?.generated === false) {
-        showMessage(result?.settingResult?.fallbackReason || '故事设定生成失败，当前为兜底内容，请重试。');
-      }
-      else {
-        showMessage('故事设定已生成并回填。');
-      }
+      setIsAiStorySetting(true);
+      showMessage('故事设定已生成并回填。');
     }
     catch (error) {
       showMessage(resolveGenerateErrorMessage(error, '故事设定生成失败，请稍后重试。'));
@@ -917,12 +915,7 @@ export default function App() {
         throw new Error('未生成有效场景设定，请稍后重试。');
       }
       setSceneSettingText(nextSiteSetting);
-      if (result?.sceneResult?.generated === false) {
-        showMessage(result?.sceneResult?.fallbackReason || '场景设定生成失败，当前为兜底内容，请重试。');
-      }
-      else {
-        showMessage('场景设定已生成并回填。');
-      }
+      showMessage('场景设定已生成并回填。');
     }
     catch (error) {
       showMessage(resolveGenerateErrorMessage(error, '场景设定生成失败，请稍后重试。'));
@@ -977,13 +970,9 @@ export default function App() {
     setOptimizingSetting(true);
     try {
       const result = await tsStoryApi.generateStorySetting({
-        storyId: storyId || undefined,
-        title: storyTitle.trim() || undefined,
-        storyMode: activeTab,
-        storyIntro: storyIntro.trim() || undefined,
         storySetting: storySettingText.trim() || undefined,
-        storyBackground: storyBackground.trim() || undefined,
-        ideaInput: outlineText.trim() || undefined,
+        sceneSetting: sceneSettingText.trim() || undefined,
+        plotOutline: outlineText.trim() || undefined,
         templateMode: 'setting_optimize',
       });
       const nextStorySetting = (result?.storySetting || '').trim();
@@ -1009,12 +998,9 @@ export default function App() {
     setOptimizingScene(true);
     try {
       const result = await tsStoryApi.generateStoryScene({
-        title: storyTitle.trim() || undefined,
-        storyMode: activeTab,
         storySetting: storySettingText.trim() || undefined,
-        storyBackground: storyBackground.trim() || undefined,
         sceneSetting: sceneSettingText.trim() || undefined,
-        styleHint: selectedRoles.map(role => role?.name).filter(Boolean).join('、') || undefined,
+        plotOutline: outlineText.trim() || undefined,
         templateMode: 'site_setting_optimize',
       });
       const nextSceneSetting = (result?.sceneSummary || result?.sceneNameSnapshot || '').trim();
@@ -1039,15 +1025,9 @@ export default function App() {
     setOptimizingOutline(true);
     try {
       const result = await tsStoryApi.generateStoryOutline({
-        storyId: storyId || undefined,
-        title: storyTitle.trim() || undefined,
-        storyMode: activeTab,
         storySetting: storySettingText.trim() || undefined,
         sceneSetting: sceneSettingText.trim() || undefined,
-        storyBackground: storyBackground.trim() || undefined,
-        chapterCount: chapters.length || undefined,
-        roleNames: selectedRoles.map(role => role?.name).filter(Boolean),
-        extraRequirements: outlineText.trim() || undefined,
+        plotOutline: outlineText.trim() || undefined,
         templateMode: 'plot_outline_optimize',
       });
       const nextPlotOutline = (result?.plotOutline || '').trim();
@@ -1104,7 +1084,7 @@ export default function App() {
         setIsAiOutline(true);
       }
 
-      setIsAiStorySetting(result?.settingResult?.generated !== false);
+      setIsAiStorySetting(!!nextStorySetting);
       showMessage('已为您生成所有可用的设定内容。');
     }
     catch (error) {

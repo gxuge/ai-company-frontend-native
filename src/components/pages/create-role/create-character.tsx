@@ -1010,6 +1010,29 @@ export function CreateCharacter() {
       setActiveTab('basic');
       return;
     }
+    if (gender === 'random') {
+      showMessage('请先确认角色性别，不能保存为随机。');
+      setActiveTab('basic');
+      return;
+    }
+    if (!background.trim()) {
+      showMessage('请先生成或填写角色设定。');
+      setActiveTab('basic');
+      return;
+    }
+    if (!avatarUrl.trim()) {
+      showMessage('请先生成或上传角色形象。');
+      setActiveTab('basic');
+      return;
+    }
+    const hasVoice = !!voiceName.trim()
+      || (typeof voiceProfileId === 'number' && Number.isFinite(voiceProfileId))
+      || !!providerVoiceId.trim();
+    if (!hasVoice) {
+      showMessage('请先生成或选择角色声音。');
+      setActiveTab('basic');
+      return;
+    }
     setSaving(true);
     try {
       const payload = buildSavePayload();

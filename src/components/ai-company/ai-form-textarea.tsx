@@ -38,6 +38,7 @@ interface AiFormTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaE
   showCount?: boolean;
   onOptimize?: () => void | Promise<void>;
   optimizeLoading?: boolean;
+  optimizeDisabled?: boolean;
 }
 
 export function AiFormTextarea({
@@ -49,6 +50,7 @@ export function AiFormTextarea({
   showCount,
   onOptimize,
   optimizeLoading,
+  optimizeDisabled = false,
   style,
   maxLength,
   value,
@@ -60,7 +62,7 @@ export function AiFormTextarea({
   const isOptimizing = Boolean(optimizeLoading) || optimizeInFlightRef.current;
 
   const handleOptimize = async () => {
-    if (!onOptimize || isOptimizing || isGenerating) return;
+    if (!onOptimize || optimizeDisabled || isOptimizing || isGenerating) return;
     optimizeInFlightRef.current = true;
     try {
       await onOptimize();
@@ -73,7 +75,7 @@ export function AiFormTextarea({
     <div className={`relative flex flex-col w-full ${containerClassName}`}>
       {/* Textarea area with skeleton overlay — skeleton does NOT cover the bottom bar */}
       <div className="relative flex-1">
-        {isGenerating && (
+        {(isGenerating || isOptimizing) && (
           <div className={`absolute inset-0 z-10 flex flex-col gap-[6px] overflow-hidden bg-black ${skeletonPaddingClassName}`}>
             {Array.from({ length: skeletonLines }).map((_, i) => (
                <ShimmerLine 
@@ -123,7 +125,7 @@ export function AiFormTextarea({
                 <button
                   type="button"
                   onClick={handleOptimize}
-                  disabled={isOptimizing || isGenerating}
+                  disabled={optimizeDisabled || isOptimizing || isGenerating}
                   className="group flex items-center gap-[4px] rounded-full px-[8px] py-[4px] bg-transparent hover:bg-white/5 active:bg-white/10 disabled:opacity-50 transition-all duration-300"
                 >
                   <Wand2 

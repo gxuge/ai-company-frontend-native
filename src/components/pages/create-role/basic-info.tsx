@@ -258,6 +258,7 @@ export function BasicInfoSection({
               showCount={true}
               maxLength={1000}
               optimizeLoading={optimizingBackground}
+              optimizeDisabled={!background.trim()}
               onOptimize={() => {
                 if (typeof onOptimizeBackground === 'function') {
                   return onOptimizeBackground();
