@@ -62,12 +62,12 @@ export function ChatAi({
       {/* ── Chat bubble structure ── */}
       <View style={styles.bubbleWrapper}>
         {/* Absolute headers fixed to left and right corners, sitting BEHIND the bubble wrapper */}
-        <ImageBackground source={imgNameTagBg} style={styles.nameTagBg} imageStyle={styles.nameTagBgImage} resizeMode="stretch">
+        <ImageBackground source={imgNameTagBg} style={styles.nameTagBg} imageStyle={styles.nameTagBgImage}>
           <Text style={styles.nameTagText}>{name}</Text>
         </ImageBackground>
 
         <Pressable style={styles.playBgWrapper} onPress={onPlayAudio}>
-          <ImageBackground source={imgPlayBg} style={styles.playBg} imageStyle={styles.playBgImage} resizeMode="stretch">
+          <ImageBackground source={imgPlayBg} style={styles.playBg} imageStyle={styles.playBgImage}>
             <View style={styles.playContent}>
               <PlayIcon isPlaying={isPlaying} />
               <Text style={styles.playDuration}>{audioDuration}</Text>

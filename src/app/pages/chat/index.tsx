@@ -1,7 +1,7 @@
 import type { TsChatMessage } from '@/lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
@@ -403,43 +403,45 @@ function ChatView({
   }));
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+    <div className="flex h-[100dvh] w-full justify-center bg-background overflow-hidden">
+      <div className="relative flex h-full w-full max-w-[420px] flex-col bg-black">
         <ChatTopHeader headerState={headerState} sessionId={sessionId} />
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <ChatDesc />
-          <View style={{ flex: 1 }} />
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <ChatDesc />
+            <View style={{ flex: 1 }} />
 
-          <View style={styles.chatList}>
-            {messages.map((msg) => {
-              if (msg.type === 'ai') {
+            <View style={styles.chatList}>
+              {messages.map((msg) => {
+                if (msg.type === 'ai') {
+                  return (
+                    <ChatAi
+                      key={msg.id}
+                      name={msg.name}
+                      actionText={msg.actionText}
+                      speechText={msg.speechText}
+                      audioDuration={msg.audioDuration}
+                      isPlaying={playingMessageId === msg.id}
+                      onPlayAudio={() => onPlayMessageAudio(msg.id)}
+                    />
+                  );
+                }
                 return (
-                  <ChatAi
+                  <ChatUser
                     key={msg.id}
-                    name={msg.name}
-                    actionText={msg.actionText}
-                    speechText={msg.speechText}
-                    audioDuration={msg.audioDuration}
-                    isPlaying={playingMessageId === msg.id}
-                    onPlayAudio={() => onPlayMessageAudio(msg.id)}
+                    segments={msg.segments || [{ text: ' ', type: 'speech' }]}
                   />
                 );
-              }
-              return (
-                <ChatUser
-                  key={msg.id}
-                  segments={msg.segments || [{ text: ' ', type: 'speech' }]}
-                />
-              );
-            })}
-          </View>
-        </ScrollView>
+              })}
+            </View>
+          </ScrollView>
+        </div>
 
         <View style={{ marginBottom: 12 }}>
           <Animated.View style={[styles.tipsWrap, tipsAnimatedStyle]}>
@@ -485,8 +487,8 @@ function ChatView({
         <View style={styles.tabContainer}>
           <AiBottomTabs />
         </View>
-      </SafeAreaView>
-    </View>
+      </div>
+    </div>
   );
 }
 
@@ -682,13 +684,12 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    minHeight: 0,
     backgroundColor: '#000000',
-  },
-  safeArea: {
-    flex: 1,
   },
   scrollView: {
     flex: 1,
+    minHeight: 0,
   },
   scrollContent: {
     flexGrow: 1,

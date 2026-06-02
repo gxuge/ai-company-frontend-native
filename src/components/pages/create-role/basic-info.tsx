@@ -32,10 +32,12 @@ type BasicInfoSectionProps = {
   onJobChange: (value: string) => void;
   onBackgroundChange: (value: string) => void;
   onGenerateSetting?: () => void;
+  onOptimizeBackground?: () => void | Promise<void>;
   onGenerateImage?: () => void;
   onGenerateVoice?: () => void;
   onPreviewVoice?: () => void;
   generatingSetting?: boolean;
+  optimizingBackground?: boolean;
   generatingImage?: boolean;
   generatingVoice?: boolean;
   previewingVoice?: boolean;
@@ -70,11 +72,13 @@ export function BasicInfoSection({
   onJobChange,
   onBackgroundChange,
   onGenerateSetting,
+  onOptimizeBackground,
   onGenerateImage,
   onGenerateVoice,
   onPreviewVoice,
   onSelectFromGallery,
   generatingSetting = false,
+  optimizingBackground = false,
   generatingImage = false,
   generatingVoice = false,
   previewingVoice = false,
@@ -137,10 +141,10 @@ export function BasicInfoSection({
                 <HelpCircle size={14} color="#9ca3af" />
               </button>
             </div>
-            <AiGenerateBtn
+            {/* <AiGenerateBtn
               loading={generatingImage}
               onClick={handleGenerateImageClick}
-            />
+            /> */}
           </div>
 
           <div className="my-2 flex w-full justify-center">
@@ -208,7 +212,7 @@ export function BasicInfoSection({
               value={name}
               onChangeText={onNameChange}
               isGenerating={generatingSetting}
-              customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
+              customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden h-[44px]"
             />
           </div>
 
@@ -232,13 +236,13 @@ export function BasicInfoSection({
           </div>
 
           <div className="space-y-2">
-            <FieldLabel text="职业" />
+            <FieldLabel text="职业/身份" />
             <AiFormInput
-              placeholder="输入角色职业"
+              placeholder="输入角色职业/身份"
               value={job}
               onChangeText={onJobChange}
               isGenerating={generatingSetting}
-              customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
+              customContainerClass="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden h-[44px]"
             />
           </div>
 
@@ -253,7 +257,14 @@ export function BasicInfoSection({
               onChange={e => onBackgroundChange(e.target.value)}
               showCount={true}
               maxLength={1000}
-              onOptimize={() => showMessage({ message: '提示词美化功能开发中...', type: 'info' })}
+              optimizeLoading={optimizingBackground}
+              onOptimize={() => {
+                if (typeof onOptimizeBackground === 'function') {
+                  return onOptimizeBackground();
+                }
+                showMessage({ message: '提示词美化功能开发中...', type: 'info' });
+                return Promise.resolve();
+              }}
             />
           </div>
         </div>
@@ -321,10 +332,10 @@ export function BasicInfoSection({
               <HelpCircle size={14} color="#9ca3af" />
             </button>
           </div>
-          <AiGenerateBtn
+          {/* <AiGenerateBtn
             loading={generatingVoice}
             onClick={handleGenerateVoiceClick}
-          />
+          /> */}
         </div>
 
         <div className="relative w-full">
@@ -353,7 +364,7 @@ export function BasicInfoSection({
             tabIndex={0}
             className={`flex h-[44px] w-full cursor-pointer items-center justify-between rounded-[6px] border border-[#494949] bg-black px-4 active:opacity-80 ${generatingVoice ? 'opacity-0 pointer-events-none' : ''}`}
           >
-            <span className="text-[14px] text-[#9ca3af]">选择角色声音</span>
+            <span className="text-[14px] text-[#6b7280]">选择角色声音</span>
             <div className="flex items-center gap-2">
               {voiceName
                 ? (

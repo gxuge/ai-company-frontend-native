@@ -1,9 +1,10 @@
 import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
+import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, Modal, TextInput } from 'react-native';
-import { useIsFocused, useLocalSearchParams, router } from 'expo-router';
+import { Alert, Modal, ScrollView, TextInput } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
@@ -27,6 +28,7 @@ type VoicePreviewCacheEntry = {
   expireAt: number;
   preview: TsVoiceProfilePreviewResult;
 };
+type SettingGenerateMode = 'single' | 'full';
 type CreateRoleSelectedVoicePayload = {
   voiceProfileId: number;
   voiceName?: string;
@@ -170,13 +172,11 @@ function TagsSection({
   tagOptions,
   selectedTags,
   onToggleTag,
-  onSmartRecommend,
   onAddCustomTag,
 }: {
   tagOptions: string[];
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
-  onSmartRecommend: () => void;
   onAddCustomTag: (tag: string) => void;
 }) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -200,15 +200,6 @@ function TagsSection({
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
         <h2 className={`text-base text-white ${fontBase} font-bold tracking-wide`}>角色标签</h2>
-        <button
-          onClick={onSmartRecommend}
-          className="flex items-center gap-1.5 rounded-full border border-[rgba(155,254,3,0.2)] px-3 py-1.5 shadow-[0px_0px_6px_0px_rgba(155,254,3,0.2),0px_0px_12px_0px_rgba(155,254,3,0.1)]"
-        >
-          <img src={imgSparkle} alt="" className="size-[14px] shrink-0 object-contain" />
-          <span className={`text-sm text-[rgba(155,254,3,0.9)] ${fontBase} font-medium`}>
-            智能推荐
-          </span>
-        </button>
       </div>
       <div className="rounded-2xl border border-[#494949] bg-black p-5">
         <div className="flex flex-wrap gap-3">
@@ -313,7 +304,7 @@ function DialogueStyleSection({
   onPreviewTextChange: (value: string) => void;
 }) {
   const [toneModalVisible, setToneModalVisible] = useState(false);
-  const TONE_OPTIONS = ['默认', '温柔体贴', '幽默傲娇', '高冷傲慢', '热情开朗', '毒舌腹黑', '稳重知性'];
+  const TONE_OPTIONS = ['默认', '轻声细语', '惜字如金', '喋喋不休', '慵懒随意', '咬文嚼字', '干练果断', '粗犷豪放'];
 
   return (
     <section className="flex flex-col gap-3">
@@ -457,6 +448,8 @@ function SaveButton({
 
 // eslint-disable-next-line max-lines-per-function
 export function CreateCharacter() {
+  const [generateModalVisible, setGenerateModalVisible] = useState(false);
+
   const isFocused = useIsFocused();
   const params = useLocalSearchParams<{ selectedImageUrl?: string }>();
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
@@ -544,6 +537,7 @@ export function CreateCharacter() {
   const [advancedAiGenerated, setAdvancedAiGenerated] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingSetting, setGeneratingSetting] = useState(false);
+  const [optimizingBackground, setOptimizingBackground] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
   const [voiceListenPhase, setVoiceListenPhase] = useState<'idle' | 'loading' | 'playing'>('idle');
@@ -645,20 +639,36 @@ export function CreateCharacter() {
     return created.id;
   };
 
-  const handleGenerateSetting = async () => {
-    if (generatingSetting || saving) {
-      return;
+    const handleGenerateSetting = () => {
+    if (generatingSetting || saving) return;
+    const isEmpty = !name.trim() && !job.trim() && !background.trim() && gender === 'random';
+    if (isEmpty) {
+      executeGenerateSetting('full');
+    } else {
+      setGenerateModalVisible(true);
     }
+  };
+
+  const executeGenerateSetting = async (generateMode: 'single' | 'full') => {
     setGeneratingSetting(true);
     try {
-      const result = await tsRoleApi.generateRoleSetting({
-        roleId: roleId || undefined,
-        roleName: name.trim() || undefined,
-        gender,
-        occupation: job.trim() || undefined,
-        backgroundStory: background.trim() || undefined,
-        keywords: selectedTags.join(','),
-      });
+      const result = generateMode === 'full'
+        ? await tsRoleApi.generateRoleSettingPreset({
+            roleId: roleId || undefined,
+            roleName: name.trim() || undefined,
+            gender,
+            occupation: job.trim() || undefined,
+            backgroundStory: background.trim() || undefined,
+            keywords: selectedTags.join(','),
+          })
+        : await tsRoleApi.generateRoleSetting({
+            roleId: roleId || undefined,
+            roleName: name.trim() || undefined,
+            gender,
+            occupation: job.trim() || undefined,
+            backgroundStory: background.trim() || undefined,
+            keywords: selectedTags.join(','),
+          });
       const roleName = result?.roleName ?? result?.role_name;
       const generatedGender = result?.gender;
       const occupation = result?.occupation;
@@ -677,13 +687,45 @@ export function CreateCharacter() {
         setBackground(backgroundStory);
       }
       setBasicAiGenerated(true);
-      showMessage('角色设定已生成并回填。');
+      showMessage(generateMode === 'full' ? '角色设定已全量生成。' : '角色设定已生成补全。');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '设定生成失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, '生成设定失败，请稍后重试。'));
     }
     finally {
       setGeneratingSetting(false);
+    }
+  };
+
+  const handleOptimizeBackground = async () => {
+    if (optimizingBackground || generatingSetting || saving) {
+      return;
+    }
+    setOptimizingBackground(true);
+    try {
+      const result = await tsRoleApi.generateRoleSetting({
+        roleId: roleId || undefined,
+        roleName: name.trim() || undefined,
+        gender,
+        occupation: job.trim() || undefined,
+        backgroundStory: background.trim() || undefined,
+        keywords: selectedTags.join(','),
+        templateMode: 'background_optimize',
+      });
+      const backgroundStory = result?.backgroundStory ?? result?.background_story;
+      if (typeof backgroundStory === 'string' && backgroundStory.trim()) {
+        setBackground(backgroundStory);
+        setBasicAiGenerated(true);
+        showMessage('背景设定已美化。');
+        return;
+      }
+      showMessage('美化完成，但未返回背景内容。');
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, '背景美化失败，请稍后重试。'));
+    }
+    finally {
+      setOptimizingBackground(false);
     }
   };
 
@@ -1039,6 +1081,7 @@ export function CreateCharacter() {
                     onJobChange={setJob}
                     onBackgroundChange={setBackground}
                     onGenerateSetting={handleGenerateSetting}
+                    onOptimizeBackground={handleOptimizeBackground}
                     onGenerateImage={handleGenerateImage}
                     onGenerateVoice={handleGenerateVoice}
                     onPreviewVoice={handlePreviewVoice}
@@ -1046,6 +1089,7 @@ export function CreateCharacter() {
                       router.push('/pages/my-gallery?from=create-role');
                     }}
                     generatingSetting={generatingSetting}
+                    optimizingBackground={optimizingBackground}
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}
                     previewingVoice={voiceListenPhase !== 'idle'}
@@ -1056,6 +1100,68 @@ export function CreateCharacter() {
               )}
         </div>
       </ScrollView>
+      
+      <Modal
+        visible={generateModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setGenerateModalVisible(false)}
+      >
+        <div 
+          className="flex h-full w-full items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setGenerateModalVisible(false)}
+        >
+          <div 
+            className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">AI 一键生成</h3>
+            <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
+              <p>检测到您已填写了部分设定。您希望 AI 如何为您生成？</p>
+              <div className="flex items-start gap-1">
+                <span className="text-[rgba(155,254,3,0.9)] mt-1">•</span>
+                <p><span className="text-white font-medium">接着生成：</span>基于您当前的灵感，继续润色和扩写。</p>
+              </div>
+              <div className="flex items-start gap-1">
+                <span className="text-[#ff4d4f] mt-1">•</span>
+                <p><span className="text-white font-medium">全量覆盖：</span>清空所有输入，重新随机生成完整角色。</p>
+              </div>
+            </div>
+            <div className="flex flex-row gap-3 mt-4">
+              <button
+                type="button"
+                className="flex-1 rounded-full border border-[rgba(155,254,3,0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(155,254,3,0.9)] active:bg-white/5"
+                onClick={() => {
+                  setGenerateModalVisible(false);
+                  executeGenerateSetting('single');
+                }}
+              >
+                接着生成
+              </button>
+              <button
+                type="button"
+                className="flex-1 rounded-full bg-[#ff4d4f] py-3 text-center text-base font-bold text-white active:opacity-80"
+                onClick={() => {
+                  setGenerateModalVisible(false);
+                  executeGenerateSetting('full');
+                }}
+              >
+                全量覆盖
+              </button>
+            </div>
+            <button
+              onClick={() => setGenerateModalVisible(false)}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+            >
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Line x1="18" y1="6" x2="6" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                <Line x1="6" y1="6" x2="18" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+              </Svg>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <SaveButton onSave={handleSave} saving={saving} />
     </div>
   );

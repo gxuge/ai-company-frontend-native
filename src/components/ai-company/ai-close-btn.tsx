@@ -3,7 +3,7 @@ import { Image, Platform, Pressable, type ImageSourcePropType } from 'react-nati
 import { tv } from 'tailwind-variants';
 
 const aiCloseBtnBgVariants = tv({
-  base: 'items-center justify-center overflow-hidden',
+  base: 'flex items-center justify-center overflow-hidden',
   variants: {
     themeStyle: {
       default: 'bg-white/10 active:bg-white/20',
@@ -73,6 +73,11 @@ export function AiCloseBtn({
             width: iconWidth,
             height: iconHeight,
             objectFit: 'contain',
+            filter: (iconTintColor === '#ffffff' || iconTintColor === '#fff' || iconTintColor?.toLowerCase() === 'white')
+              ? 'brightness(0) invert(1)'
+              : (iconTintColor === '#000000' || iconTintColor === '#000' || iconTintColor?.toLowerCase() === 'black')
+                ? 'brightness(0)'
+                : undefined,
           }}
         />
       </button>

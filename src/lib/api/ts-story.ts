@@ -159,6 +159,7 @@ export type TsStoryOneClickSettingGeneratePayload = {
   storyBackground?: string;
   ideaInput?: string;
   styleHint?: string;
+  templateMode?: 'core' | 'setting_optimize';
 };
 
 export type TsStoryOneClickSettingGenerateResult = {
@@ -182,6 +183,7 @@ export type TsStoryOneClickSceneGeneratePayload = {
   storyBackground?: string;
   sceneSetting?: string;
   styleHint?: string;
+  templateMode?: 'core' | 'site_setting_optimize';
 };
 
 export type TsStoryOneClickSceneGenerateResult = {
@@ -216,14 +218,37 @@ export type TsStoryOneClickOutlineGeneratePayload = {
   chapterCount?: number;
   roleNames?: string[];
   extraRequirements?: string;
+  templateMode?: 'core' | 'plot_outline_optimize';
 };
 
 export type TsStoryOneClickOutlineGenerateResult = {
   chapters?: TsStoryOneClickOutlineChapter[];
+  plotOutline?: string;
   promptCode?: string;
   promptVersion?: string;
   renderedPrompt?: string;
   snapshotKey?: string;
+};
+
+export type TsStoryFullGeneratePayload = {
+  storyId?: number;
+  storyMode?: string;
+  extraRequirements?: string;
+};
+
+export type TsStoryFullGenerateResult = {
+  title?: string;
+  storyIntro?: string;
+  storySetting?: string;
+  siteSetting?: string;
+  plotOutline?: string;
+  promptCode?: string;
+  promptVersion?: string;
+  renderedPrompt?: string;
+  snapshotKey?: string;
+  settingResult?: TsStoryOneClickSettingGenerateResult;
+  sceneResult?: TsStoryOneClickSceneGenerateResult;
+  outlineResult?: TsStoryOneClickOutlineGenerateResult;
 };
 
 export const tsStoryApi = {
@@ -274,6 +299,22 @@ export const tsStoryApi = {
   async generateStoryOutline(payload: TsStoryOneClickOutlineGeneratePayload) {
     return defHttp.post<TsStoryOneClickOutlineGenerateResult>({
       url: '/sys/ts-stories/story--outline-generate',
+      data: payload,
+      timeout: 60_000,
+    });
+  },
+
+  async generateStoryFull(payload: TsStoryFullGeneratePayload) {
+    return defHttp.post<TsStoryFullGenerateResult>({
+      url: '/sys/ts-stories/story-full-generate',
+      data: payload,
+      timeout: 60_000,
+    });
+  },
+
+  async generateStoryFullPreset(payload: TsStoryFullGeneratePayload) {
+    return defHttp.post<TsStoryFullGenerateResult>({
+      url: '/sys/ts-stories/story-full-generate-preset',
       data: payload,
       timeout: 60_000,
     });

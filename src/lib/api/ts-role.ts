@@ -86,6 +86,7 @@ export type TsRoleOneClickSettingGeneratePayload = {
   backgroundStory?: string;
   styleHint?: string;
   keywords?: string;
+  templateMode?: 'core' | 'background_optimize';
 };
 
 export type TsRoleOneClickSettingGenerateResult = {
@@ -259,6 +260,14 @@ export const tsRoleApi = {
   async generateRoleSetting(payload: TsRoleOneClickSettingGeneratePayload) {
     return defHttp.post<TsRoleOneClickSettingGenerateResult>({
       url: '/sys/ts-roles/one-click-setting',
+      data: payload,
+      timeout: 60_000,
+    });
+  },
+
+  async generateRoleSettingPreset(payload: TsRoleOneClickSettingGeneratePayload) {
+    return defHttp.post<TsRoleOneClickSettingGenerateResult>({
+      url: '/sys/ts-roles/one-click-setting-preset',
       data: payload,
       timeout: 60_000,
     });
