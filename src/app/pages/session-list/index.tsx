@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi } from '@/lib/api';
+import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
+import { AiEmpty } from '@/components/ai-company/ai-empty';
 
 const imgCategoryBgBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_blue.svg'));
 const imgCategoryBgOrange = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_orange.svg'));
@@ -56,6 +58,7 @@ type Conversation = {
   time: string;
   badge: number;
   isSystemSession: boolean;
+  avatar?: string;
 };
 
 type SessionListState = {
@@ -122,6 +125,7 @@ async function buildConversationRows(sessions: TsChatSession[]) {
     time: formatConversationTime(session.lastMessageAt || session.updatedAt || session.createdAt),
     badge: normalizeBadge(session.unreadCount),
     isSystemSession: session.isSystemSession === true,
+    avatar: session.coverUrl || session.avatarUrl,
   }));
 }
 
@@ -219,6 +223,7 @@ function ConversationItem({
   message,
   time,
   badge,
+  avatar,
   onPress,
 }: {
   isSystemSession: boolean;
@@ -226,9 +231,10 @@ function ConversationItem({
   message: string;
   time: string;
   badge: number;
+  avatar?: string;
   onPress?: () => void;
 }) {
-  const avatarSrc = isSystemSession ? imgSystemAvatar : imgAvatar;
+  const avatarSrc = isSystemSession ? imgSystemAvatar : avatar || imgAvatar;
   return (
     <div className="flex items-center border-t border-[#5d5d5d] px-4 py-3" onClick={onPress}>
       <div className="relative mr-3 size-[56px] shrink-0">
@@ -302,9 +308,27 @@ export default function App() {
         </div>
 
         <div className="flex-1 overflow-y-auto pb-[90px]">
-          {loading ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">加载中...</div> : null}
-          {loadError ? <div className="px-4 py-3 text-[12px] text-[#fca5a5]">{loadError}</div> : null}
-          {!loading && conversations.length === 0 ? <div className="px-4 py-3 text-[12px] text-[#9ca3af]">暂无会话</div> : null}
+          {loading ? (
+            <div className="flex flex-col gap-4 px-4 py-3">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="flex items-center gap-3 py-2 border-t border-[rgba(255,255,255,0.05)]">
+                  <AiSkeleton width={56} height={56} borderRadius={28} />
+                  <div className="flex min-w-0 flex-1 flex-col gap-2">
+                    <AiSkeleton width="50%" height={16} />
+                    <AiSkeleton width="80%" height={14} />
+                  </div>
+                  <div className="ml-2 flex flex-col items-end gap-1">
+                    <AiSkeleton width={30} height={12} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          {!loading && conversations.length === 0 ? (
+            <div className="mt-10">
+              <AiEmpty title="暂无会话" description="这里还没有任何会话记录" />
+            </div>
+          ) : null}
           {conversations.map(conv => (
             <ConversationItem
               key={conv.id}
@@ -313,6 +337,7 @@ export default function App() {
               message={conv.message}
               time={conv.time}
               badge={conv.badge}
+              avatar={conv.avatar}
               onPress={() => handleOpenConversation(conv)}
             />
           ))}

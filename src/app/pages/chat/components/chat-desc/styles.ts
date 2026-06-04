@@ -73,7 +73,7 @@ export const styles = StyleSheet.create({
   descriptionRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     width: '100%',
   },
   iconWrapper: {

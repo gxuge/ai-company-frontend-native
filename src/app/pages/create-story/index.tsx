@@ -803,11 +803,11 @@ export default function App() {
         setStoryId(story?.id || routeStoryId);
         setStoryTitle(story?.title || '');
         setStoryIntro(story?.storyIntro || '');
-        setStorySettingText(story?.storySetting || '');
+        setStorySettingText(story?.siteSetting || '');
         setStoryBackground(story?.storyBackground || '');
         setSceneSettingText(story?.sceneNameSnapshot || '');
         setActiveTab(normalizeStoryMode(story?.storyMode));
-        setOutlineText(story?.remark || '');
+        setOutlineText(story?.plotOutline || '');
 
         const chapterRecords = [...(chapterPage?.records || [])].sort((a, b) => {
           const aNo = a.chapterNo || 0;
@@ -970,7 +970,7 @@ export default function App() {
     setOptimizingSetting(true);
     try {
       const result = await tsStoryApi.generateStorySetting({
-        storySetting: storySettingText.trim() || undefined,
+        siteSetting: storySettingText.trim() || undefined,
         sceneSetting: sceneSettingText.trim() || undefined,
         plotOutline: outlineText.trim() || undefined,
         templateMode: 'setting_optimize',
@@ -998,7 +998,7 @@ export default function App() {
     setOptimizingScene(true);
     try {
       const result = await tsStoryApi.generateStoryScene({
-        storySetting: storySettingText.trim() || undefined,
+        siteSetting: storySettingText.trim() || undefined,
         sceneSetting: sceneSettingText.trim() || undefined,
         plotOutline: outlineText.trim() || undefined,
         templateMode: 'site_setting_optimize',
@@ -1148,7 +1148,7 @@ export default function App() {
         isPublic: 1,
         isAiStorySetting: isAiStorySetting ? 1 : 0,
         isAiOutline: isAiOutline ? 1 : 0,
-        remark: activeTab === 'normal' ? (outlineText.trim() || undefined) : undefined,
+        plotOutline: activeTab === 'normal' ? (outlineText.trim() || undefined) : undefined,
       };
 
       const saved = storyId

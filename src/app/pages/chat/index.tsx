@@ -1,22 +1,25 @@
 import type { TsChatMessage } from '@/lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
-import { ChatAi } from '@/components/pages/chat/chat-ai';
-import ChatDesc from '@/components/pages/chat/chat-desc';
-import { ChatHeader } from '@/components/pages/chat/chat-header';
-import { ChatInput } from '@/components/pages/chat/chat-input';
-import { ChatRoleHeader } from '@/components/pages/chat/chat-role-header';
-import { ChatTip, type ChatTipItem } from '@/components/pages/chat/chat-tip';
-import { ChatUser } from '@/components/pages/chat/chat-user';
 
-const imgFeatureCamera = require('@/assets/images/admin-chat/feature_camera.svg');
-const imgFeatureImage = require('@/assets/images/admin-chat/feature_image.svg');
-const imgFeatureFile = require('@/assets/images/admin-chat/feature_file.svg');
+import { ChatAi } from './components/chat-ai';
+import ChatDesc from './components/chat-desc';
+import { ChatHeader } from './components/chat-header';
+import { ChatInput } from './components/chat-input';
+import { ChatRoleHeader } from './components/chat-role-header';
+import type { ChatTipItem } from './components/chat-tip';
+import { ChatTip } from './components/chat-tip';
+import { ChatUser } from './components/chat-user';
+
 const imgFeatureCall = require('@/assets/images/admin-chat/feature_call.svg');
+const imgFeatureCamera = require('@/assets/images/admin-chat/feature_camera.svg');
+const imgFeatureFile = require('@/assets/images/admin-chat/feature_file.svg');
+const imgFeatureImage = require('@/assets/images/admin-chat/feature_image.svg');
+
 const FEATURE_EXPANDED_HEIGHT = 92;
 const TIP_HINT_EMPTY_ID = '__tip_hint_empty__';
 const TIP_HINT_ERROR_ID = '__tip_hint_error__';
@@ -35,12 +38,17 @@ type ChatHeaderState = {
   mode: 'story' | 'role';
   storyId: number | null;
   roleId: number | null;
+  activeRoleId?: number;
   storyTitle?: string;
   storyFanCount?: string;
   roleName?: string;
   roleUsername?: string;
   roleChatCount?: string;
   roleAvatar?: string;
+  roleBackground?: string;
+  descTitle?: string;
+  descDescription?: string;
+  descAvatarSources?: string[];
 };
 
 const SEND_ERROR_TEXT = '消息发送失败，请稍后重试。';
@@ -96,11 +104,12 @@ function mapBackendMessages(records?: TsChatMessage[]): ChatListItem[] {
   return source.map((item, index) => {
     const id = typeof item.id === 'number' && Number.isFinite(item.id) ? String(item.id) : String(index + 1);
     const content = typeof item.contentText === 'string' && item.contentText.trim() ? item.contentText.trim() : ' ';
+    const segments = splitMessageSegments(content);
     if (item.senderType === 'user') {
       return {
         id,
         type: 'user',
-        segments: [{ text: content, type: 'speech' }],
+        segments,
       };
     }
     return {
@@ -110,8 +119,42 @@ function mapBackendMessages(records?: TsChatMessage[]): ChatListItem[] {
       actionText: '',
       speechText: content,
       audioDuration: '',
+      segments,
     };
   });
+}
+
+function splitMessageSegments(content: string): Array<{ text: string; type: 'speech' | 'action' }> {
+  const text = typeof content === 'string' ? content : '';
+  if (!text) {
+    return [{ text: ' ', type: 'speech' }];
+  }
+
+  const segments: Array<{ text: string; type: 'speech' | 'action' }> = [];
+  const pattern = /([（(][^（）()]+[）)])/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null = pattern.exec(text);
+
+  while (match) {
+    if (match.index > lastIndex) {
+      const speechText = text.slice(lastIndex, match.index);
+      if (speechText) {
+        segments.push({ text: speechText, type: 'speech' });
+      }
+    }
+    segments.push({ text: match[0], type: 'action' });
+    lastIndex = match.index + match[0].length;
+    match = pattern.exec(text);
+  }
+
+  if (lastIndex < text.length) {
+    const speechText = text.slice(lastIndex);
+    if (speechText) {
+      segments.push({ text: speechText, type: 'speech' });
+    }
+  }
+
+  return segments.length > 0 ? segments : [{ text, type: 'speech' }];
 }
 
 function toTipItems(source: unknown, emptyText: string): ChatTipItem[] {
@@ -173,6 +216,12 @@ function formatCompactCount(value?: number) {
   return String(intValue);
 }
 
+function compactText(...values: Array<string | null | undefined>) {
+  return values
+    .map(item => (typeof item === 'string' ? item.trim() : ''))
+    .find(Boolean);
+}
+
 function useChatMessages(sessionId: number | null) {
   const [messages, setMessages] = React.useState<ChatListItem[]>(DEFAULT_MESSAGES);
 
@@ -208,16 +257,66 @@ async function resolveChatHeaderState(sessionId: number): Promise<ChatHeaderStat
   const session = await tsChatApi.getSessionDetail(sessionId);
   const storyId = toPositiveInt(session?.storyId);
   const roleId = toPositiveInt(session?.targetRoleId ?? session?.roleId);
+  const sessionType = typeof session?.sessionType === 'string' ? session.sessionType.trim().toLowerCase() : '';
+  const preferRoleMode = sessionType === 'single' && !!roleId;
+
+  if (preferRoleMode && roleId) {
+    try {
+      const role = await tsRoleApi.getRoleDetail(roleId);
+      const usernameSource = (role?.roleSubtitle || role?.occupation || '').trim();
+      return {
+        mode: 'role',
+        storyId,
+        roleId,
+        roleName: role?.roleName || session?.sessionTitle || undefined,
+        roleUsername: usernameSource ? `@${usernameSource.replace(/^@+/, '')}` : undefined,
+        roleChatCount: role?.dialogueLength || '0',
+        roleAvatar: role?.avatarUrl || role?.coverUrl || session?.coverUrl || undefined,
+        roleBackground: compactText(role?.coverUrl, role?.avatarUrl, session?.coverUrl),
+        activeRoleId: roleId,
+        descTitle: role?.roleName || session?.sessionTitle || undefined,
+        descDescription: compactText(role?.introText, role?.backgroundStory, role?.personaText, role?.storyText),
+        descAvatarSources: compactText(role?.avatarUrl, role?.coverUrl) ? [compactText(role?.avatarUrl, role?.coverUrl) as string] : undefined,
+      };
+    }
+    catch {
+      return {
+        mode: 'role',
+        storyId,
+        roleId,
+        activeRoleId: roleId,
+        roleName: session?.sessionTitle || undefined,
+        roleAvatar: session?.coverUrl || undefined,
+        roleBackground: session?.coverUrl || undefined,
+        descTitle: session?.sessionTitle || undefined,
+      };
+    }
+  }
 
   if (storyId) {
     try {
       const story = await tsStoryApi.getStoryDetail(storyId);
+      const storyRoleIds = Array.from(
+        new Set(
+          (story?.roleBindings || [])
+            .map(item => toPositiveInt(item.roleId))
+            .filter((id): id is number => typeof id === 'number'),
+        ),
+      );
+      const roleResults = await Promise.allSettled(storyRoleIds.slice(0, 5).map(roleId => tsRoleApi.getRoleDetail(roleId)));
+      const storyRoleAvatars = roleResults
+        .map(result => (result.status === 'fulfilled' ? compactText(result.value?.avatarUrl, result.value?.coverUrl) : undefined))
+        .filter((item): item is string => Boolean(item));
       return {
         mode: 'story',
         storyId,
         roleId,
+        activeRoleId: roleId ?? storyRoleIds[0],
         storyTitle: story?.title || session?.sessionTitle || undefined,
         storyFanCount: formatCompactCount(story?.followerCount),
+        descTitle: story?.title || session?.sessionTitle || undefined,
+        descDescription: compactText(story?.storyIntro, story?.siteSetting, story?.storyBackground, story?.plotOutline),
+        descAvatarSources: storyRoleAvatars,
       };
     }
     catch {
@@ -225,7 +324,9 @@ async function resolveChatHeaderState(sessionId: number): Promise<ChatHeaderStat
         mode: 'story',
         storyId,
         roleId,
+        activeRoleId: roleId ?? undefined,
         storyTitle: session?.sessionTitle || undefined,
+        descTitle: session?.sessionTitle || undefined,
       };
     }
   }
@@ -241,7 +342,12 @@ async function resolveChatHeaderState(sessionId: number): Promise<ChatHeaderStat
         roleName: role?.roleName || session?.sessionTitle || undefined,
         roleUsername: usernameSource ? `@${usernameSource.replace(/^@+/, '')}` : undefined,
         roleChatCount: role?.dialogueLength || '0',
-        roleAvatar: role?.avatarUrl || role?.coverUrl || undefined,
+        roleAvatar: role?.avatarUrl || role?.coverUrl || session?.coverUrl || undefined,
+        roleBackground: compactText(role?.coverUrl, role?.avatarUrl, session?.coverUrl),
+        activeRoleId: roleId,
+        descTitle: role?.roleName || session?.sessionTitle || undefined,
+        descDescription: compactText(role?.introText, role?.backgroundStory, role?.personaText, role?.storyText),
+        descAvatarSources: compactText(role?.avatarUrl, role?.coverUrl) ? [compactText(role?.avatarUrl, role?.coverUrl) as string] : undefined,
       };
     }
     catch {
@@ -249,7 +355,11 @@ async function resolveChatHeaderState(sessionId: number): Promise<ChatHeaderStat
         mode: 'role',
         storyId,
         roleId,
+        activeRoleId: roleId,
         roleName: session?.sessionTitle || undefined,
+        roleAvatar: session?.coverUrl || undefined,
+        roleBackground: session?.coverUrl || undefined,
+        descTitle: session?.sessionTitle || undefined,
       };
     }
   }
@@ -359,6 +469,8 @@ function ChatView({
   tipsExpanded,
   tipsLoading,
   onTipPress,
+  scrollViewRef,
+  onScrollToBottom,
 }: {
   headerState: ChatHeaderState;
   sessionId: number | null;
@@ -377,9 +489,14 @@ function ChatView({
   tipsExpanded: boolean;
   tipsLoading: boolean;
   onTipPress: (item: ChatTipItem) => void;
+  scrollViewRef: React.RefObject<ScrollView | null>;
+  onScrollToBottom: () => void;
 }) {
   const featureExpandProgress = useSharedValue(isFeatureExpanded ? 1 : 0);
   const tipsExpandProgress = useSharedValue(tipsExpanded ? 1 : 0);
+  const roleBackgroundSource = headerState.mode === 'role' && headerState.roleBackground
+    ? { uri: headerState.roleBackground }
+    : null;
 
   React.useEffect(() => {
     featureExpandProgress.value = withTiming(isFeatureExpanded ? 1 : 0, { duration: 240 });
@@ -403,53 +520,86 @@ function ChatView({
   }));
 
   return (
-    <div className="flex h-[100dvh] w-full justify-center bg-background overflow-hidden">
-      <div className="relative flex h-full w-full max-w-[420px] flex-col bg-black">
+    <View style={styles.container}>
+      {roleBackgroundSource && Platform.OS === 'web' ? (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: `url(${roleBackgroundSource.uri})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              zIndex: 0,
+            }}
+          />
+          <View style={[styles.roleBackgroundOverlay, { zIndex: 0 }]} />
+        </>
+      ) : roleBackgroundSource ? (
+        <>
+          <Image
+            source={roleBackgroundSource}
+            style={[styles.roleBackgroundImage, { zIndex: 0 }]}
+            resizeMode="cover"
+          />
+          <View style={[styles.roleBackgroundOverlay, { zIndex: 0 }]} />
+        </>
+      ) : null}
+      <SafeAreaView style={styles.safeArea}>
         <ChatTopHeader headerState={headerState} sessionId={sessionId} />
 
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <ChatDesc />
-            <View style={{ flex: 1 }} />
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={onScrollToBottom}
+        >
+          <ChatDesc
+            title={headerState.descTitle}
+            description={headerState.descDescription}
+            avatarSources={headerState.descAvatarSources}
+            mode={headerState.mode}
+          />
+          <View style={{ flex: 1 }} />
 
-            <View style={styles.chatList}>
-              {messages.map((msg) => {
-                if (msg.type === 'ai') {
-                  return (
-                    <ChatAi
-                      key={msg.id}
-                      name={msg.name}
-                      actionText={msg.actionText}
-                      speechText={msg.speechText}
-                      audioDuration={msg.audioDuration}
-                      isPlaying={playingMessageId === msg.id}
-                      onPlayAudio={() => onPlayMessageAudio(msg.id)}
-                    />
-                  );
-                }
+          <View style={styles.chatList}>
+            {messages.map((msg) => {
+              if (msg.type === 'ai') {
                 return (
-                  <ChatUser
+                  <ChatAi
                     key={msg.id}
-                    segments={msg.segments || [{ text: ' ', type: 'speech' }]}
+                    name={msg.name}
+                    speechText={msg.speechText}
+                    audioDuration={msg.audioDuration}
+                    segments={msg.segments}
+                    isPlaying={playingMessageId === msg.id}
+                    onPlayAudio={() => onPlayMessageAudio(msg.id)}
                   />
                 );
-              })}
-            </View>
-          </ScrollView>
-        </div>
+              }
+              return (
+                <ChatUser
+                  key={msg.id}
+                  segments={msg.segments || [{ text: ' ', type: 'speech' }]}
+                />
+              );
+            })}
+          </View>
+        </ScrollView>
 
         <View style={{ marginBottom: 12 }}>
           <Animated.View style={[styles.tipsWrap, tipsAnimatedStyle]}>
-            <ChatTip 
-              items={tips} 
-              loading={tipsLoading} 
-              onTipPress={onTipPress} 
-              onEditPress={(item) => console.log('Edit tip:', item)}
+            <ChatTip
+              items={tips}
+              loading={tipsLoading}
+              onTipPress={onTipPress}
+              onEditPress={item => console.log('Edit tip:', item)}
             />
           </Animated.View>
           <ChatInput
@@ -487,8 +637,8 @@ function ChatView({
         <View style={styles.tabContainer}>
           <AiBottomTabs />
         </View>
-      </div>
-    </div>
+      </SafeAreaView>
+    </View>
   );
 }
 
@@ -505,6 +655,13 @@ export default function Chat() {
   const [isTipsLoading, setIsTipsLoading] = React.useState(false);
   const [tipsData, setTipsData] = React.useState<ChatTipItem[]>([]);
   const tipsRequestIdRef = React.useRef(0);
+  const scrollViewRef = React.useRef<ScrollView | null>(null);
+
+  const scrollToBottom = React.useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd?.({ animated: true });
+    });
+  }, []);
 
   const lastAssistantMessageId = React.useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -531,6 +688,10 @@ export default function Chat() {
     setTipsData([]);
   }, [sessionId]);
 
+  React.useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTipsExpanded, isFeatureExpanded, tipsData, scrollToBottom]);
+
   const handlePlayMessageAudio = React.useCallback((id: string) => {
     setPlayingMessageId(prev => (prev === id ? null : id));
   }, []);
@@ -548,11 +709,15 @@ export default function Chat() {
       Alert.alert('提示', SESSION_INVALID_TEXT);
       return;
     }
+    if (!headerState.activeRoleId) {
+      Alert.alert('提示', '当前会话还未加载可发言角色，请稍后再试。');
+      return;
+    }
 
     appendMessage({
       id: `local-user-${Date.now()}`,
       type: 'user',
-      segments: [{ text, type: 'speech' }],
+      segments: splitMessageSegments(text),
     });
     setInputValue('');
     tipsRequestIdRef.current += 1;
@@ -561,11 +726,12 @@ export default function Chat() {
     setTipsData([]);
     setSending(true);
     try {
-      const reply = await tsChatApi.createAiReply({
+      const reply = await tsChatApi.createTemplateAiReply({
         sessionId,
-        userContent: text,
+        userInput: text,
+        activeRoleId: headerState.activeRoleId,
         historyCount: 12,
-        generateVoice: true,
+        lastAssistantMessageId,
       });
       const aiText = typeof reply?.contentText === 'string' && reply.contentText.trim()
         ? reply.contentText.trim()
@@ -575,8 +741,9 @@ export default function Chat() {
           ? String(reply.assistantMessageId)
           : `local-ai-${Date.now() + 1}`,
         type: 'ai',
-        name: '系统',
+        name: reply?.activeRoleName || headerState.roleName || '系统',
         speechText: aiText,
+        segments: splitMessageSegments(aiText),
       });
     }
     catch {
@@ -585,12 +752,13 @@ export default function Chat() {
         type: 'ai',
         name: '系统',
         speechText: SEND_ERROR_TEXT,
+        segments: splitMessageSegments(SEND_ERROR_TEXT),
       });
     }
     finally {
       setSending(false);
     }
-  }, [appendMessage, sending, sessionId]);
+  }, [appendMessage, headerState.activeRoleId, headerState.roleName, lastAssistantMessageId, sending, sessionId]);
 
   const handleSubmit = React.useCallback(() => {
     void sendMessage(inputValue);
@@ -677,6 +845,8 @@ export default function Chat() {
       tipsExpanded={isTipsExpanded}
       tipsLoading={isTipsLoading}
       onTipPress={handleTipPress}
+      scrollViewRef={scrollViewRef}
+      onScrollToBottom={scrollToBottom}
     />
   );
 }
@@ -684,12 +854,30 @@ export default function Chat() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: 0,
     backgroundColor: '#000000',
+  },
+  roleBackgroundImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+  },
+  roleBackgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  safeArea: {
+    flex: 1,
   },
   scrollView: {
     flex: 1,
-    minHeight: 0,
   },
   scrollContent: {
     flexGrow: 1,

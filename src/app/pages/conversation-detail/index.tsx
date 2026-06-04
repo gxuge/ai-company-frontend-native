@@ -6,7 +6,7 @@ import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, Tou
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
 import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
-import StoryDetailModal from '@/components/pages/conversation-detail/StoryDetailModal';
+import StoryDetailModal from './components/StoryDetailModal';
 
 const imgCharacter1 = require('../../../assets/images/conversation-detail/imgCharacter1.png');
 const imgCharacter2 = require('../../../assets/images/conversation-detail/imgCharacter2.png');
@@ -72,6 +72,25 @@ function toRemoteSource(url?: string | null): ImageSourcePropType | null {
     return null;
   }
   return { uri: url };
+}
+
+function toAssetUri(source: ImageSourcePropType) {
+  if (typeof source === 'string') {
+    return source;
+  }
+  if (source && typeof source === 'object' && 'uri' in source && typeof source.uri === 'string') {
+    return source.uri;
+  }
+  const candidate = source as { default?: string; uri?: string } | number;
+  if (typeof candidate === 'object') {
+    if (typeof candidate.default === 'string') {
+      return candidate.default;
+    }
+    if (typeof candidate.uri === 'string') {
+      return candidate.uri;
+    }
+  }
+  return '';
 }
 
 function buildFallbackCharacters() {
@@ -284,64 +303,65 @@ export default function Body() {
             radius="rounded-[22px]"
             iconWidth={20}
             iconHeight={20}
+            className="ml-[8px] mt-[4px]"
           />
-          <AiMoreBtn iconSource={imgMoreSquare41} />
+          <AiMoreBtn iconSource={imgMoreSquare41} className="mr-[8px] mt-[4px]" />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.contentHeader}>
-            <Text style={styles.title}>{title}</Text>
+        <div style={debugStyles.scrollBody}>
+          <div style={debugStyles.contentHeader}>
+            <div style={debugStyles.title}>{title}</div>
 
-            <View style={styles.creatorCard}>
-              <View style={styles.creatorInfo}>
-                <Image source={imgCreatorAvatar} style={styles.avatar} />
-                <Text style={styles.creatorName}>{creatorName}</Text>
-              </View>
-              <TouchableOpacity style={styles.followButton} activeOpacity={1}>
-                <Image source={imgFluentAdd12Filled} style={styles.addIcon} tintColor="#000000" />
-                <Text style={styles.followText}>关注</Text>
-              </TouchableOpacity>
-            </View>
+            <div style={debugStyles.creatorCard}>
+              <div style={debugStyles.creatorInfo}>
+                <img src={toAssetUri(imgCreatorAvatar)} style={debugStyles.avatar} />
+                <div style={debugStyles.creatorName}>{creatorName}</div>
+              </div>
+              <button type="button" style={debugStyles.followButton}>
+                <img src={toAssetUri(imgFluentAdd12Filled)} style={debugStyles.addIcon} />
+                <span style={debugStyles.followText}>关注</span>
+              </button>
+            </div>
 
-            <View style={styles.descriptionContainer}>
-              <Text style={styles.descriptionText}>{description}</Text>
-            </View>
+            <div style={debugStyles.descriptionContainer}>
+              <div style={debugStyles.descriptionText}>{description}</div>
+            </div>
 
-            <TouchableOpacity style={styles.storyDetailButton} activeOpacity={1} onPress={() => setStoryDetailVisible(true)}>
-              <Text style={styles.storyDetailText}>故事详情</Text>
-              <Image source={imgIcon} style={styles.chevronIcon} tintColor="#9bfe03" />
-            </TouchableOpacity>
+            <button type="button" style={debugStyles.storyDetailButton} onClick={() => setStoryDetailVisible(true)}>
+              <span style={debugStyles.storyDetailText}>故事详情</span>
+              <img src={toAssetUri(imgIcon)} style={debugStyles.chevronIcon} />
+            </button>
 
-            {loading ? <Text style={styles.dataHintText}>加载中...</Text> : null}
-            {loadError ? <Text style={styles.dataErrorText}>{loadError}</Text> : null}
-          </View>
+            {loading ? <div style={debugStyles.dataHintText}>加载中...</div> : null}
+            {loadError ? <div style={debugStyles.dataErrorText}>{loadError}</div> : null}
+          </div>
 
-          <View style={styles.characterListCard}>
-            <Text style={styles.cardTitle}>角色列表</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.characterScroll}>
+          <div style={debugStyles.card}>
+            <div style={debugStyles.cardTitle}>角色列表</div>
+            <div style={debugStyles.characterRow}>
               {characterCards.map(character => (
-                <View key={character.id} style={styles.characterItem}>
-                  <View style={styles.characterImageContainer}>
-                    <Image source={character.avatarSource} style={styles.characterImage} />
-                  </View>
-                  <Text style={styles.characterName}>{character.name}</Text>
-                </View>
+                <div key={character.id} style={debugStyles.characterItem}>
+                  <div style={debugStyles.characterImageContainer}>
+                    <img src={toAssetUri(character.avatarSource)} style={debugStyles.characterImage} />
+                  </div>
+                  <div style={debugStyles.characterName}>{character.name}</div>
+                </div>
               ))}
-            </ScrollView>
-          </View>
+            </div>
+          </div>
 
-          <TouchableOpacity style={styles.impressionCard} activeOpacity={1}>
-            <View style={styles.impressionLeft}>
-              <View style={styles.impressionIconContainer}>
-                <Image source={imgGroup1} style={styles.impressionIcon} />
-              </View>
-              <Text style={styles.cardTitle}>观感</Text>
-            </View>
-            <Image source={imgContainer} style={styles.chevronIconLight} tintColor="#ffffff" />
-          </TouchableOpacity>
+          <div style={debugStyles.impressionCard}>
+            <div style={debugStyles.impressionLeft}>
+              <div style={debugStyles.impressionIconContainer}>
+                <img src={toAssetUri(imgGroup1)} style={debugStyles.impressionIcon} />
+              </div>
+              <div style={debugStyles.cardTitle}>观感</div>
+            </div>
+            <img src={toAssetUri(imgContainer)} style={debugStyles.chevronIconLight} />
+          </div>
 
-          <View style={styles.bottomSpacer} />
-        </ScrollView>
+          <div style={debugStyles.bottomSpacer} />
+        </div>
 
         {storyDetailVisible
           ? (
@@ -381,8 +401,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: 28,
+    paddingTop: 18,
     zIndex: 10,
   },
   iconButton: {
@@ -462,6 +482,7 @@ const styles = StyleSheet.create({
   addIcon: {
     width: 14,
     height: 14,
+    tintColor: '#000000',
     marginRight: 4,
   },
   followText: {
@@ -498,6 +519,7 @@ const styles = StyleSheet.create({
   chevronIcon: {
     width: 8,
     height: 12,
+    tintColor: '#9bfe03',
   },
   dataHintText: {
     marginTop: 10,
@@ -580,8 +602,202 @@ const styles = StyleSheet.create({
   chevronIconLight: {
     width: 8,
     height: 14,
+    tintColor: '#ffffff',
   },
   bottomSpacer: {
     height: 40,
   },
 });
+
+const debugStyles: Record<string, React.CSSProperties> = {
+  scrollBody: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: '30px 20px 40px',
+    boxSizing: 'border-box',
+  },
+  contentHeader: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  title: {
+    marginBottom: 30,
+    fontSize: 32,
+    fontWeight: 700,
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  creatorCard: {
+    width: '100%',
+    marginBottom: 30,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 50,
+    padding: '12px 16px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    boxSizing: 'border-box',
+  },
+  creatorInfo: {
+    minWidth: 0,
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.2)',
+    objectFit: 'cover',
+  },
+  creatorName: {
+    color: '#e5e7eb',
+    fontSize: 16,
+    fontWeight: 500,
+  },
+  followButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#9bfe03',
+    padding: '8px 16px',
+    borderRadius: 20,
+    border: 'none',
+  },
+  addIcon: {
+    width: 14,
+    height: 14,
+  },
+  followText: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: '#000000',
+  },
+  descriptionContainer: {
+    width: '100%',
+    marginBottom: 30,
+  },
+  descriptionText: {
+    color: '#d1d5db',
+    fontSize: 16,
+    lineHeight: '26px',
+    textAlign: 'left',
+    whiteSpace: 'pre-wrap',
+  },
+  storyDetailButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '10px 24px',
+    borderRadius: 30,
+    border: '1px solid rgba(155, 254, 3, 0.8)',
+    backgroundColor: 'transparent',
+  },
+  storyDetailText: {
+    fontSize: 16,
+    fontWeight: 500,
+    color: '#9bfe03',
+  },
+  chevronIcon: {
+    width: 8,
+    height: 12,
+  },
+  dataHintText: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  dataErrorText: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    color: '#fca5a5',
+    fontSize: 12,
+  },
+  card: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(22, 22, 22, 0.8)',
+    borderRadius: 20,
+    padding: 24,
+    border: '1px solid rgba(255,255,255,0.05)',
+  },
+  cardTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 700,
+  },
+  impressionCard: {
+    marginBottom: 20,
+    backgroundColor: 'rgba(22, 22, 22, 0.8)',
+    borderRadius: 20,
+    padding: 20,
+    border: '1px solid rgba(255,255,255,0.05)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  impressionLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+  },
+  impressionIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: '50%',
+    backgroundColor: '#262626',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  impressionIcon: {
+    width: 18,
+    height: 18,
+  },
+  chevronIconLight: {
+    width: 8,
+    height: 14,
+    flexShrink: 0,
+  },
+  characterRow: {
+    display: 'flex',
+    gap: 16,
+    marginTop: 20,
+    overflowX: 'auto',
+  },
+  characterItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    minWidth: 64,
+  },
+  characterImageContainer: {
+    width: 64,
+    height: 64,
+    marginBottom: 8,
+    borderRadius: '50%',
+    overflow: 'hidden',
+  },
+  characterImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  characterName: {
+    maxWidth: 86,
+    color: '#9ca3af',
+    fontSize: 14,
+    fontWeight: 500,
+    textAlign: 'center',
+  },
+  bottomSpacer: {
+    height: 40,
+  },
+};

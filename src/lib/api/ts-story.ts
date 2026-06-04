@@ -13,7 +13,7 @@ export type TsStorySavePayload = {
   title: string;
   storyIntro?: string;
   storyMode?: string;
-  storySetting?: string;
+  siteSetting?: string;
   storyBackground?: string;
   coverUrl?: string;
   sceneId?: number;
@@ -23,7 +23,7 @@ export type TsStorySavePayload = {
   isAiStorySetting?: number;
   isAiCharacter?: number;
   isAiOutline?: number;
-  remark?: string;
+  plotOutline?: string;
   roleBindings?: TsStoryRoleBinding[];
 };
 
@@ -34,7 +34,7 @@ export type TsStory = {
   title?: string;
   storyIntro?: string;
   storyMode?: string;
-  storySetting?: string;
+  siteSetting?: string;
   storyBackground?: string;
   coverUrl?: string;
   sceneId?: number;
@@ -44,7 +44,7 @@ export type TsStory = {
   isAiStorySetting?: number;
   isAiCharacter?: number;
   isAiOutline?: number;
-  remark?: string;
+  plotOutline?: string;
   createdBy?: string;
   createdName?: string;
   updatedBy?: string;

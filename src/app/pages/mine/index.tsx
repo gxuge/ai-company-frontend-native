@@ -5,6 +5,7 @@ import {
   Dimensions,
   Image,
   Modal,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -86,6 +87,11 @@ const TABS = [
   { label: '角色', value: 1 },
 ];
 
+function toAssetUri(source: ImageSourcePropType | null | undefined) {
+  const resolved = source as any;
+  return resolved?.uri ?? resolved?.default ?? resolved ?? '';
+}
+
 function toRemoteSource(url?: string | null): ImageSourcePropType | null {
   if (!url) {
     return null;
@@ -127,6 +133,15 @@ function formatCount(value: number | null | undefined) {
 }
 
 function StatItem({ value, label }: { value: string; label: string }) {
+  if (Platform.OS === 'web') {
+    return (
+      <div style={webStyles.statItem}>
+        <div style={webStyles.statValue}>{value}</div>
+        <div style={webStyles.statLabel}>{label}</div>
+      </div>
+    );
+  }
+
   return (
     <View style={styles.statItem}>
       <Text style={styles.statValue}>{value}</Text>
@@ -136,6 +151,28 @@ function StatItem({ value, label }: { value: string; label: string }) {
 }
 
 function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
+  if (Platform.OS === 'web') {
+    return (
+      <button
+        type="button"
+        onClick={onPress}
+        style={webStyles.gridCard}
+      >
+        <img src={toAssetUri(item.image)} style={webStyles.gridImage} />
+        <div style={webStyles.gridOverlay}>
+          <div style={webStyles.gridAuthorRow}>
+            <img src={toAssetUri(item.authorAvatar)} style={webStyles.gridAvatar} />
+            <div style={webStyles.gridAuthorText}>{item.author}</div>
+          </div>
+          <div style={webStyles.gridViewRow}>
+            <img src={toAssetUri(imgViewIcon)} style={webStyles.gridViewIcon} />
+            <div style={webStyles.gridViewText}>{item.views}</div>
+          </div>
+        </div>
+      </button>
+    );
+  }
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -226,6 +263,42 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
     likeStat,
   } = props;
 
+  if (Platform.OS === 'web') {
+    return (
+      <div style={webStyles.header}>
+        <button type="button" style={webStyles.settingBtn} onClick={() => router.push('/pages/general-setting')}>
+          <img src={toAssetUri(imgSetting)} style={webStyles.settingIcon} />
+        </button>
+
+        <div style={webStyles.avatarWrapper}>
+          <button type="button" onClick={props.onAvatarPress} style={webStyles.avatarRing}>
+            <img src={toAssetUri(avatarSource)} style={webStyles.avatarImage} />
+          </button>
+          <button type="button" onClick={props.onEditPress} style={webStyles.editBadge}>
+            <img src={toAssetUri(imgEditAvatar)} style={webStyles.editBadgeIcon} />
+          </button>
+        </div>
+
+        <div style={webStyles.username}>{displayName}</div>
+
+        <div style={webStyles.uidRow}>
+          <div style={webStyles.uidText}>
+            UID:
+            {' '}
+            {displayUid}
+          </div>
+          <img src={toAssetUri(imgCopy)} style={webStyles.copyIcon} />
+        </div>
+
+        <div style={webStyles.statsRow}>
+          <StatItem value={followStat} label="关注" />
+          <StatItem value={fansStat} label="粉丝" />
+          <StatItem value={likeStat} label="点赞" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <View style={styles.header}>
@@ -281,6 +354,47 @@ function MineGridSection(props: MineGridSectionProps) {
     onTabChange,
     onItemPress,
   } = props;
+
+  if (Platform.OS === 'web') {
+    return (
+      <>
+        <div style={webStyles.tabBar}>
+          <AiNavigateTabs
+            options={TABS}
+            activeValue={activeTab}
+            onChange={value => onTabChange(Number(value))}
+            activeTextClassName="text-[rgba(155,254,3,0.9)] text-[18px] font-bold pb-[10px]"
+            inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
+            indicatorClassName="absolute bottom-[-1px] h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+          />
+        </div>
+
+        {loadError ? <div style={webStyles.dataErrorText}>{loadError}</div> : null}
+
+        <div style={webStyles.gridContainer}>
+          {loading && activeGridItems.length === 0 ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div key={`skeleton-${i}`} style={webStyles.gridCard}>
+                <AiSkeleton width="100%" height="100%" borderRadius={10} />
+              </div>
+            ))
+          ) : activeGridItems.length > 0 ? (
+            activeGridItems.map(item => (
+              <GridCard key={item.id} item={item} onPress={() => onItemPress(item)} />
+            ))
+          ) : !loading && !loadError ? (
+            <div style={webStyles.emptyWrap}>
+              <AiEmpty
+                title={activeTab === 0 ? '还没有发布故事' : '还没有发布角色'}
+                description="快去发现页看看大家的创作，或者自己动笔试试吧！"
+                style={{ marginTop: 40, width: width - GRID_PADDING * 2 }}
+              />
+            </div>
+          ) : null}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
@@ -461,6 +575,46 @@ export default function Mine() {
       setIsResolving(false);
     }
   };
+
+  if (Platform.OS === 'web') {
+    return (
+      <div style={webStyles.page}>
+        <div style={webStyles.scrollBody}>
+          <MineHeaderSection
+            avatarSource={viewModel.avatarSource}
+            displayName={viewModel.displayName}
+            displayUid={viewModel.displayUid}
+            fansStat={viewModel.fansStat}
+            followStat={viewModel.followStat}
+            likeStat={viewModel.likeStat}
+            onAvatarPress={handleAvatarPress}
+            onEditPress={handleEditPress}
+          />
+          <MineGridSection
+            activeGridItems={viewModel.activeGridItems}
+            activeTab={activeTab}
+            loadError={viewModel.loadError}
+            loading={viewModel.loading || isResolving}
+            onTabChange={setActiveTab}
+            onItemPress={handleItemPress}
+          />
+        </div>
+
+        <div style={webStyles.tabContainer}>
+          <AiBottomTabs activeTab="profile" />
+        </div>
+
+        {isPreviewOpen ? (
+          <div style={webStyles.previewContainer} onClick={() => setIsPreviewOpen(false)}>
+            <div style={webStyles.previewBox}>
+              <img src={toAssetUri(viewModel.avatarSource)} style={webStyles.previewImage} />
+            </div>
+            <div style={webStyles.previewTip}>点击任意区域关闭</div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -787,3 +941,241 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
 });
+
+const webStyles: Record<string, React.CSSProperties> = {
+  page: {
+    minHeight: '100vh',
+    backgroundColor: '#060a00',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  scrollBody: {
+    minHeight: '100vh',
+    overflowY: 'auto',
+    paddingBottom: 100,
+    boxSizing: 'border-box',
+  },
+  header: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '10px 20px 20px',
+    boxSizing: 'border-box',
+  },
+  settingBtn: {
+    alignSelf: 'flex-end',
+    padding: 10,
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+  },
+  settingIcon: {
+    width: 28,
+    height: 28,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginTop: 10,
+    marginBottom: 18,
+  },
+  avatarRing: {
+    width: 110,
+    height: 110,
+    borderRadius: '50%',
+    border: `3px solid ${ACCENT}`,
+    padding: 6,
+    boxSizing: 'border-box',
+    boxShadow: `0 0 15px ${ACCENT}`,
+    background: 'transparent',
+    cursor: 'pointer',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  },
+  editBadge: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
+    borderRadius: '50%',
+    border: '2px solid #333',
+    backgroundColor: '#1a1a1a',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  },
+  editBadgeIcon: {
+    width: 16,
+    height: 16,
+  },
+  username: {
+    marginBottom: 8,
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 700,
+  },
+  uidRow: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: 25,
+    gap: 6,
+  },
+  uidText: {
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  copyIcon: {
+    width: 14,
+    height: 14,
+  },
+  statsRow: {
+    width: '80%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  statValue: {
+    marginBottom: 4,
+    color: '#ffffff',
+    fontSize: 24,
+    fontWeight: 700,
+  },
+  statLabel: {
+    color: '#ffffff',
+    fontSize: 14,
+  },
+  tabBar: {
+    display: 'flex',
+    padding: '0 20px',
+    borderBottom: '1px solid #1a1a1a',
+    marginBottom: 10,
+    boxSizing: 'border-box',
+  },
+  dataErrorText: {
+    color: '#fca5a5',
+    fontSize: 12,
+    padding: '0 16px',
+    marginBottom: 8,
+    boxSizing: 'border-box',
+  },
+  gridContainer: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: GRID_GAP,
+    padding: `0 ${GRID_PADDING}px`,
+    boxSizing: 'border-box',
+  },
+  gridCard: {
+    width: '31.5%',
+    aspectRatio: '208 / 292',
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#111',
+    border: 'none',
+    padding: 0,
+    position: 'relative',
+    cursor: 'pointer',
+  },
+  gridImage: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  },
+  gridOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '35%',
+    padding: '5px 6px',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    boxSizing: 'border-box',
+  },
+  gridAuthorRow: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  gridAvatar: {
+    width: 14,
+    height: 14,
+    borderRadius: '50%',
+    marginRight: 4,
+    objectFit: 'cover',
+  },
+  gridAuthorText: {
+    flex: 1,
+    color: '#e7e7e7',
+    fontSize: 10,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  gridViewRow: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  gridViewIcon: {
+    width: 12,
+    height: 8,
+    marginRight: 3,
+  },
+  gridViewText: {
+    color: '#bfbcbd',
+    fontSize: 10,
+  },
+  emptyWrap: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  tabContainer: {
+    position: 'fixed',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+  },
+  previewContainer: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 1200,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewBox: {
+    width: '85vw',
+    height: '85vw',
+    maxWidth: 420,
+    maxHeight: 420,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    border: '1px solid rgba(255,255,255,0.1)',
+    objectFit: 'cover',
+  },
+  previewTip: {
+    marginTop: 30,
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
+  },
+};

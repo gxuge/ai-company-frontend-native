@@ -102,6 +102,28 @@ export type TsChatAiReplyResult = {
   createdAt?: string;
 };
 
+export type TsChatTemplateReplyPayload = {
+  sessionId: number;
+  userInput: string;
+  activeRoleId?: number;
+  historyCount?: number;
+  lastAssistantMessageId?: number;
+};
+
+export type TsChatTemplateReplyResult = {
+  sessionId?: number;
+  activeRoleId?: number;
+  userMessageId?: number;
+  assistantMessageId?: number;
+  activeRoleName?: string;
+  contentText?: string;
+  promptCode?: string;
+  promptVersion?: string;
+  renderedPrompt?: string;
+  snapshotKey?: string;
+  createdAt?: string;
+};
+
 export type TsChatReplySuggestionsPayload = {
   sessionId: number;
   historyCount?: number;
@@ -150,7 +172,7 @@ export const tsChatApi = {
       params: { id: messageId },
     });
   },
-  
+
   async createSession(payload: {
     storyId?: number;
     targetRoleId?: number;
@@ -172,6 +194,13 @@ export const tsChatApi = {
   async createAiReply(payload: TsChatAiReplyPayload) {
     return defHttp.post<TsChatAiReplyResult>({
       url: '/sys/ts-chat-sessions/ai-reply',
+      data: payload,
+    });
+  },
+
+  async createTemplateAiReply(payload: TsChatTemplateReplyPayload) {
+    return defHttp.post<TsChatTemplateReplyResult>({
+      url: '/sys/ts-chat-sessions/ai-reply-template',
       data: payload,
     });
   },

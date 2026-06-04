@@ -1,7 +1,6 @@
 import type { Href } from 'expo-router';
 import { router } from 'expo-router';
 import * as React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type PageItem = {
   label: string;
@@ -33,62 +32,71 @@ const pageItems: PageItem[] = [
 
 export default function PagesHubScreen() {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Pages Navigation</Text>
-      <Text style={styles.subtitle}>Tap any button to open a page</Text>
+    <div style={styles.container}>
+      <div style={styles.content}>
+        <h1 style={styles.title}>Pages Navigation</h1>
+        <p style={styles.subtitle}>Tap any button to open a page</p>
 
-      <View style={styles.buttonList}>
+        <div style={styles.buttonList}>
         {pageItems.map(item => (
-          <TouchableOpacity key={item.href} style={styles.button} activeOpacity={0.85} onPress={() => router.push(item.href)}>
-            <Text style={styles.buttonText}>{item.label}</Text>
-            <Text style={styles.pathText}>{item.href}</Text>
-          </TouchableOpacity>
+          <button
+            key={item.href}
+            type="button"
+            style={styles.button}
+            onClick={() => router.push(item.href)}
+          >
+            <div style={styles.buttonText}>{item.label}</div>
+            <div style={styles.pathText}>{item.href}</div>
+          </button>
         ))}
-      </View>
-    </ScrollView>
+        </div>
+      </div>
+    </div>
   );
 }
 
-const styles = StyleSheet.create({
+const styles: Record<string, React.CSSProperties> = {
   container: {
-    flex: 1,
+    minHeight: '100vh',
     backgroundColor: '#0b1220',
+    overflowY: 'auto',
   },
   content: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    paddingBottom: 40,
+    padding: '20px 16px 40px',
   },
   title: {
+    margin: 0,
     color: '#ffffff',
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: 800,
   },
   subtitle: {
+    margin: '8px 0 16px',
     color: '#9ca3af',
     fontSize: 14,
-    marginTop: 8,
-    marginBottom: 16,
   },
   buttonList: {
+    display: 'flex',
+    flexDirection: 'column',
     gap: 10,
   },
   button: {
+    width: '100%',
+    textAlign: 'left',
     backgroundColor: '#131d33',
-    borderWidth: 1,
-    borderColor: '#26314f',
+    border: '1px solid #26314f',
     borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    padding: '12px 14px',
+    cursor: 'pointer',
   },
   buttonText: {
     color: '#e2e8f0',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: 700,
   },
   pathText: {
     color: '#93c5fd',
     fontSize: 12,
     marginTop: 4,
   },
-});
+};

@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tsChatApi } from '@/lib/api';
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 
@@ -68,6 +69,28 @@ const iconComponents = [HomeIcon, SearchIcon, CreateIcon, ChatIcon, ProfileIcon]
 export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
   const insets = useSafeAreaInsets();
 
+  const handleTabClick = async (tab: typeof tabs[0]) => {
+    if (tab.id === 'home') {
+      try {
+        const sessionPage = await tsChatApi.getSessionList({ pageNo: 1, pageSize: 50 });
+        const sessions = sessionPage?.records || [];
+        const nonAdminSession = sessions.find(s => s.isSystemSession !== true);
+        if (nonAdminSession) {
+          router.replace({
+            pathname: '/pages/chat',
+            params: { sessionId: String(nonAdminSession.id) }
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to fetch sessions for home tab navigation:', error);
+      }
+      router.replace(tab.path as any);
+    } else {
+      router.replace(tab.path as any);
+    }
+  };
+
   return (
     <nav 
       className="w-full bg-black border-t border-white/5 shadow-[0_-4px_20px_rgba(0,0,0,0.5)] z-[1000]"
@@ -80,7 +103,7 @@ export default function AiBottomTabs({ activeTab }: { activeTab?: string }) {
           return (
             <button
               key={tab.id}
-              onClick={() => router.replace(tab.path as any)}
+              onClick={() => handleTabClick(tab)}
               className="flex items-center justify-center flex-1 h-full transition-all active:scale-95"
               style={{
                 appearance: 'none',

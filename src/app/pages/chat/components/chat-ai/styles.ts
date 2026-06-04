@@ -28,6 +28,11 @@ export const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
+  textContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'baseline',
+  },
 
   // Name tag overlapping styling
   nameTagBg: {
