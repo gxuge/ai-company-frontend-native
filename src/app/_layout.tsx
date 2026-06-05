@@ -3,7 +3,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import * as React from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import FlashMessage from 'react-native-flash-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -40,6 +40,43 @@ export default function RootLayout() {
   );
 }
 
+function WebEruda() {
+  React.useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') {
+      return;
+    }
+
+    let active = true;
+    void import('eruda')
+      .then(({ default: eruda }) => {
+        if (!active) {
+          return;
+        }
+        const webWindow = window as typeof window & { __ERUDA_INITIALIZED__?: boolean };
+        if (!webWindow.__ERUDA_INITIALIZED__) {
+          eruda.init({
+            autoScale: true,
+            useShadowDom: true,
+          });
+          eruda.hide();
+          webWindow.__ERUDA_INITIALIZED__ = true;
+        }
+        else {
+          eruda.hide();
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to initialize eruda:', error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return null;
+}
+
 function Providers({ children }: { children: React.ReactNode }) {
   const theme = useThemeConfig();
   return (
@@ -53,6 +90,7 @@ function Providers({ children }: { children: React.ReactNode }) {
           <ThemeProvider value={theme}>
             <APIProvider>
               <BottomSheetModalProvider>
+                <WebEruda />
                 {children}
                 <FlashMessage position="top" />
               </BottomSheetModalProvider>

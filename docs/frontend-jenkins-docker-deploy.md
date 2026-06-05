@@ -91,6 +91,7 @@ WEB_PORT=80 docker compose up -d --build
 ## 5. 注意事项
 
 1. 这套配置是 **Web/H5 部署**；移动端 APK/IPA 仍走 EAS 构建流程。
-2. 若前端需要连接后端，请确保前端运行时环境变量（如 `EXPO_PUBLIC_*`）在构建阶段已正确注入。
-3. 若你使用反向代理（Nginx/Ingress），建议把外层域名和 HTTPS 放在网关层处理。
-
+2. 当前 Jenkins 默认注入 `EXPO_PUBLIC_API_URL=/jeecg-boot`，因此前端容器内的 Nginx 必须把 `/jeecg-boot/**` 反向代理到同一 Docker 网络中的后端服务 `http://jeecg-boot-system:8080/jeecg-boot/`。
+3. 若你不走同域代理，而是让前端直接访问后端公网域名，请把 `EXPO_PUBLIC_API_URL` 改成完整后端地址（例如 `https://api.example.com/jeecg-boot`），并同步检查 HTTPS / CORS。
+4. 若线上浏览器仍请求 `http://localhost:8080/jeecg-boot`，说明当前静态产物没有吃到 Jenkins 注入值，而是落回了本地 `.env`，需要优先检查构建产物与部署版本。
+5. 若你使用外层反向代理（Nginx/Ingress），建议把外层域名和 HTTPS 放在网关层处理，同时保留容器内 `/jeecg-boot` 到后端容器的转发关系。

@@ -1,7 +1,18 @@
 ﻿# Frontend Integration Plan
 
-更新时间：2026-05-22
+更新时间：2026-06-05
 
+## 0. 任务背景（云端登录 Network Error 部署链路排查，2026-06-05）
+- 目标：修复云端前端登录时请求后端出现 `Network Error` 的部署链路问题，明确前端 Web 构建与后端 Docker 网络的正确连通方式。
+- 边界：仅修改前端部署配置与文档，不改动页面 UI 布局、业务接口定义与登录页交互结构。
+- 非目标：本轮不改动登录页面样式，不切换为新的后端公网域名方案。
+
+### 0.1 任务拆分
+| 任务 | 状态 | 说明 | 验收标准 | 证据 |
+| --- | --- | --- | --- | --- |
+| T1 云端链路核对 | 已完成 | 核对前后端 Jenkins、Docker 网络、Nginx 与 API baseURL 的关系 | 明确同域代理缺口与 `localhost` 风险来源 | `Jenkinsfile`、`docker-compose.yml`、`nginx.default.conf` |
+| T2 前端 Nginx 反代补齐 | 已完成 | 为 `/jeecg-boot/**` 增加到 `jeecg-boot-system:8080` 的代理 | 同域 `/jeecg-boot` 请求可被转发到后端容器 | `deploy/nginx.default.conf` |
+| T3 部署文档回填 | 已完成 | 补充 Jenkins 环境变量与 Docker 网络依赖说明 | 部署说明可指导线上环境排查 | `docs/frontend-jenkins-docker-deploy.md` |
 ## 0. 任务背景（create-role 形象模板默认值置空，2026-05-22）
 - 目标：避免 `one-click-image` 模板变量被“角色时间戳/待定职业/等待完善背景”占位值污染，缺失字段按 `null` 语义传递。
 - 边界：仅修改后端字段归一化与模板拼接前清洗；不改动前端 UI 与页面结构。

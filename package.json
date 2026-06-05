@@ -81,6 +81,7 @@
     "app-icon-badge": "^0.1.2",
     "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
+    "eruda": "^3.4.3",
     "expo": "~56.0.3",
     "expo-constants": "~56.0.14",
     "expo-crypto": "^56.0.3",
