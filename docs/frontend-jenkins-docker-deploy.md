@@ -19,6 +19,8 @@
 - `deploy/nginx.default.conf`  
   SPA 路由兜底 `try_files ... /index.html`
 
+当前仓库仅保留“静态 Web 构建 + Nginx 托管”这一条服务器部署链路，历史 SSR 相关 Docker / Compose / 文档已移除。
+
 ## 2. 打包方式（Web）
 
 当前项目新增了以下命令：
@@ -69,7 +71,7 @@ WEB_PORT=80 docker compose up -d --build
 
 - 已安装 Docker + Docker Compose（docker compose 插件）
 - Jenkins 全局工具中存在 NodeJS：`node-22.19.0`
-- 能访问 npm 镜像（脚本中已使用 `https://registry.npmmirror.com`）
+- 能访问 npm 镜像（脚本中当前使用 `https://registry.npmjs.org`）
 
 ### 4.2 Jenkins 任务配置
 
