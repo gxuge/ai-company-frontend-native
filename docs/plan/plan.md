@@ -13,6 +13,7 @@
 | T1 云端链路核对 | 已完成 | 核对前后端 Jenkins、Docker 网络、Nginx 与 API baseURL 的关系 | 明确同域代理缺口与 `localhost` 风险来源 | `Jenkinsfile`、`docker-compose.yml`、`nginx.default.conf` |
 | T2 前端 Nginx 反代补齐 | 已完成 | 为 `/jeecg-boot/**` 增加到 `jeecg-boot-system:8080` 的代理 | 同域 `/jeecg-boot` 请求可被转发到后端容器 | `deploy/nginx.default.conf` |
 | T3 部署文档回填 | 已完成 | 补充 Jenkins 环境变量与 Docker 网络依赖说明 | 部署说明可指导线上环境排查 | `docs/frontend-jenkins-docker-deploy.md` |
+| T4 Nginx upstream 启动风险修复 | 已完成 | 将 `/jeecg-boot/**` 代理改为 Docker DNS 延迟解析，避免后端暂未注册时前端容器启动失败 | 前端容器不再因 `jeecg-boot-system` 解析时机问题整站不可用 | `deploy/nginx.default.conf`、`docs/frontend-jenkins-docker-deploy.md` |
 ## 0. 任务背景（create-role 形象模板默认值置空，2026-05-22）
 - 目标：避免 `one-click-image` 模板变量被“角色时间戳/待定职业/等待完善背景”占位值污染，缺失字段按 `null` 语义传递。
 - 边界：仅修改后端字段归一化与模板拼接前清洗；不改动前端 UI 与页面结构。
