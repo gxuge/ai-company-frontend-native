@@ -23,6 +23,7 @@ type BasicInfoSectionProps = {
   gender: Gender;
   job: string;
   background: string;
+  greeting: string;
   voiceName: string;
   voiceProfileId?: number | null;
   providerVoiceId?: string;
@@ -31,13 +32,16 @@ type BasicInfoSectionProps = {
   onGenderChange: (value: Gender) => void;
   onJobChange: (value: string) => void;
   onBackgroundChange: (value: string) => void;
+  onGreetingChange: (value: string) => void;
   onGenerateSetting?: () => void;
   onOptimizeBackground?: () => void | Promise<void>;
+  onOptimizeGreeting?: () => void | Promise<void>;
   onGenerateImage?: () => void;
   onGenerateVoice?: () => void;
   onPreviewVoice?: () => void;
   generatingSetting?: boolean;
   optimizingBackground?: boolean;
+  optimizingGreeting?: boolean;
   generatingImage?: boolean;
   generatingVoice?: boolean;
   previewingVoice?: boolean;
@@ -63,6 +67,7 @@ export function BasicInfoSection({
   gender,
   job,
   background,
+  greeting,
   voiceName,
   voiceProfileId,
   providerVoiceId = '',
@@ -71,14 +76,17 @@ export function BasicInfoSection({
   onGenderChange,
   onJobChange,
   onBackgroundChange,
+  onGreetingChange,
   onGenerateSetting,
   onOptimizeBackground,
+  onOptimizeGreeting,
   onGenerateImage,
   onGenerateVoice,
   onPreviewVoice,
   onSelectFromGallery,
   generatingSetting = false,
   optimizingBackground = false,
+  optimizingGreeting = false,
   generatingImage = false,
   generatingVoice = false,
   previewingVoice = false,
@@ -246,7 +254,7 @@ export function BasicInfoSection({
             />
           </div>
 
-          <div className="space-y-4 border-t border-[rgba(255,255,255,0.05)] pt-4">
+          <div className="space-y-2">
             <FieldLabel text="角色背景设定" required={false} />
             <AiFormTextarea
               placeholder="输入角色背景故事，可辅助生成人设和剧情。"
@@ -268,6 +276,29 @@ export function BasicInfoSection({
               }}
             />
           </div>
+          <div className="space-y-2">
+            <FieldLabel text="开场白" required={false} />
+            <AiFormTextarea
+              placeholder="输入角色开场白，将作为对话的第一句话。"
+              value={greeting}
+              isGenerating={generatingSetting}
+              className="min-h-[96px] w-full resize-none bg-transparent p-[16px] text-[13.5px] text-white placeholder-[#6b7280] outline-none"
+              containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
+              onChange={e => onGreetingChange(e.target.value)}
+              showCount={true}
+              maxLength={300}
+              optimizeLoading={optimizingGreeting}
+              optimizeDisabled={!greeting.trim()}
+              onOptimize={() => {
+                if (typeof onOptimizeGreeting === 'function') {
+                  return onOptimizeGreeting();
+                }
+                showMessage({ message: '提示词美化功能开发中...', type: 'info' });
+                return Promise.resolve();
+              }}
+            />
+          </div>
+
         </div>
       </section>
 

@@ -1,3 +1,4 @@
+import type { TsImageResource } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsRoleDetail = {
@@ -5,11 +6,12 @@ export type TsRoleDetail = {
   userId: string;
   roleName?: string;
   roleSubtitle?: string;
+  imageResources?: TsImageResource[];
   avatarUrl?: string;
   coverUrl?: string;
   gender?: string;
   occupation?: string;
-  introText?: string;
+  greeting?: string;
   personaText?: string;
   backgroundStory?: string;
   storyText?: string;
@@ -52,6 +54,39 @@ export type TsRoleQuery = {
   isPublic?: number;
 };
 
+export type TsRolePublicBrowse = {
+  id: number;
+  publicId?: number;
+  channelCode?: string;
+  roleName?: string;
+  roleSubtitle?: string;
+  imageResources?: TsImageResource[];
+  avatarUrl?: string;
+  coverUrl?: string;
+  gender?: string;
+  occupation?: string;
+  greeting?: string;
+  authorName?: string;
+  authorAvatar?: string;
+  updatedAt?: string;
+};
+
+export type TsRolePublicBrowsePage = {
+  records?: TsRolePublicBrowse[];
+  total?: number;
+  size?: number;
+  current?: number;
+  pages?: number;
+};
+
+export type TsRolePublicBrowseQuery = {
+  pageNo?: number;
+  pageSize?: number;
+  channelCode?: string;
+  keyword?: string;
+  gender?: string;
+};
+
 export type TsRoleGender = 'male' | 'female' | 'unknown' | 'random';
 
 export type TsRoleSavePayload = {
@@ -62,7 +97,7 @@ export type TsRoleSavePayload = {
   coverUrl?: string;
   gender?: Exclude<TsRoleGender, 'random'>;
   occupation?: string;
-  introText?: string;
+  greeting?: string;
   personaText?: string;
   backgroundStory?: string;
   storyText?: string;
@@ -86,7 +121,8 @@ export type TsRoleOneClickSettingGeneratePayload = {
   backgroundStory?: string;
   styleHint?: string;
   keywords?: string;
-  templateMode?: 'core' | 'background_optimize';
+  templateMode?: 'core' | 'background_optimize' | 'intro_optimize';
+  greeting?: string;
 };
 
 export type TsRoleOneClickSettingGenerateResult = {
@@ -96,6 +132,8 @@ export type TsRoleOneClickSettingGenerateResult = {
   occupation?: string;
   backgroundStory?: string;
   background_story?: string;
+  greeting?: string;
+  greeting_text?: string;
   filledFields?: string[];
   keptFields?: string[];
   promptCode?: string;
@@ -223,6 +261,14 @@ export const tsRoleApi = {
     return defHttp.get<TsRolePage>({
       url: '/sys/ts-roles',
       params,
+    });
+  },
+
+  async getPublicRoleList(params: TsRolePublicBrowseQuery) {
+    return defHttp.get<TsRolePublicBrowsePage>({
+      url: '/sys/ts-roles/public',
+      params,
+      withToken: false,
     });
   },
 

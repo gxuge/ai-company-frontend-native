@@ -1,5 +1,7 @@
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { signOut } from '@/features/auth/use-auth-store';
 const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/feedback_blue.svg"));
 const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/about_purple.svg"));
 const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/account_green.svg"));
@@ -79,6 +81,17 @@ function Divider() {
 
 export function SettingsPage() {
   const router = useRouter();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    signOut();
+    router.replace('/pages/verification-code-login');
+  };
 
   return (
     <div className="relative min-h-full bg-black font-['Noto_Sans_SC',sans-serif] overflow-auto">
@@ -189,7 +202,10 @@ export function SettingsPage() {
 
           {/* Section 3: Logout */}
           <SectionCard>
-            <button className="flex items-center justify-center w-full px-4 py-4 gap-2 active:bg-white/5 transition-colors">
+            <button
+              onClick={handleLogout}
+              className="flex items-center justify-center w-full px-4 py-4 gap-2 active:bg-white/5 transition-colors"
+            >
               <img src={imgLogoutRed} alt="" className="w-[16px] h-[17px] object-contain" />
               <span className="text-[#f87171] font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
                 退出登录
@@ -214,6 +230,68 @@ export function SettingsPage() {
           </span>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ animation: 'fadeIn 0.2s ease-out forwards' }}
+        >
+          {/* Overlay Background */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+            onClick={() => setShowLogoutConfirm(false)} 
+          />
+          
+          {/* Modal Container */}
+          <div 
+            className="relative w-full max-w-[320px] rounded-[24px] bg-gradient-to-b from-[#262B32] to-[#1A1F24] border border-white/10 p-7 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col items-center"
+            style={{ animation: 'fadeScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+          >
+            {/* Icon Wrapper with glow */}
+            <div className="relative mb-5">
+              <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full" />
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#2D282A] to-[#1A1819] border border-red-500/20 flex items-center justify-center shadow-inner">
+                <img src={imgLogoutRed} alt="" className="w-6 h-6 object-contain opacity-90" />
+              </div>
+            </div>
+            
+            <h3 className="text-[18px] font-semibold text-white mb-2 font-['Noto_Sans_SC',sans-serif] tracking-wide">
+              退出登录
+            </h3>
+            <p className="text-[#9CA3AF] text-[14px] mb-8 text-center font-['Noto_Sans_SC',sans-serif] leading-relaxed">
+              确定要退出当前账号吗？<br />退出后将需要重新验证身份。
+            </p>
+            
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-3 rounded-2xl bg-[#2A2F36] border border-white/5 text-white/80 text-[15px] font-medium hover:bg-[#323840] active:bg-[#2A2F36] transition-all font-['Noto_Sans_SC',sans-serif]"
+              >
+                取消
+              </button>
+              <button 
+                onClick={confirmLogout}
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-500/80 to-red-600/80 text-white text-[15px] font-medium hover:from-red-500 hover:to-red-600 active:opacity-80 transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] font-['Noto_Sans_SC',sans-serif]"
+              >
+                确定退出
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fadeScaleIn {
+          from { opacity: 0; transform: scale(0.9) translateY(10px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }

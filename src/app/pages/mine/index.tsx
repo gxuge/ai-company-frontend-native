@@ -150,7 +150,7 @@ function StatItem({ value, label }: { value: string; label: string }) {
   );
 }
 
-function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
+function GridCard({ item, onPress, showDetails = false }: { item: GridItem; onPress?: () => void; showDetails?: boolean }) {
   if (Platform.OS === 'web') {
     return (
       <button
@@ -159,16 +159,18 @@ function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
         style={webStyles.gridCard}
       >
         <img src={toAssetUri(item.image)} style={webStyles.gridImage} />
-        <div style={webStyles.gridOverlay}>
-          <div style={webStyles.gridAuthorRow}>
-            <img src={toAssetUri(item.authorAvatar)} style={webStyles.gridAvatar} />
-            <div style={webStyles.gridAuthorText}>{item.author}</div>
+        {showDetails && (
+          <div style={webStyles.gridOverlay}>
+            <div style={webStyles.gridAuthorRow}>
+              <img src={toAssetUri(item.authorAvatar)} style={webStyles.gridAvatar} />
+              <div style={webStyles.gridAuthorText}>{item.author}</div>
+            </div>
+            <div style={webStyles.gridViewRow}>
+              <img src={toAssetUri(imgViewIcon)} style={webStyles.gridViewIcon} />
+              <div style={webStyles.gridViewText}>{item.views}</div>
+            </div>
           </div>
-          <div style={webStyles.gridViewRow}>
-            <img src={toAssetUri(imgViewIcon)} style={webStyles.gridViewIcon} />
-            <div style={webStyles.gridViewText}>{item.views}</div>
-          </div>
-        </div>
+        )}
       </button>
     );
   }
@@ -180,16 +182,18 @@ function GridCard({ item, onPress }: { item: GridItem; onPress?: () => void }) {
       style={styles.gridCard}
     >
       <Image source={item.image} style={styles.gridImage} />
-      <View style={styles.gridOverlay}>
-        <View style={styles.gridAuthorRow}>
-          <Image source={item.authorAvatar} style={styles.gridAvatar} />
-          <Text style={styles.gridAuthorText} numberOfLines={1}>{item.author}</Text>
+      {showDetails && (
+        <View style={styles.gridOverlay}>
+          <View style={styles.gridAuthorRow}>
+            <Image source={item.authorAvatar} style={styles.gridAvatar} />
+            <Text style={styles.gridAuthorText} numberOfLines={1}>{item.author}</Text>
+          </View>
+          <View style={styles.gridViewRow}>
+            <Image source={imgViewIcon} style={styles.gridViewIcon} tintColor="#bfbcbd" />
+            <Text style={styles.gridViewText}>{item.views}</Text>
+          </View>
         </View>
-        <View style={styles.gridViewRow}>
-          <Image source={imgViewIcon} style={styles.gridViewIcon} tintColor="#bfbcbd" />
-          <Text style={styles.gridViewText}>{item.views}</Text>
-        </View>
-      </View>
+      )}
     </TouchableOpacity>
   );
 }

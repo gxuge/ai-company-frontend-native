@@ -459,6 +459,7 @@ export function CreateCharacter() {
   const [gender, setGender] = useState<Gender>('random');
   const [job, setJob] = useState('');
   const [background, setBackground] = useState('');
+  const [greeting, setGreeting] = useState('');
   const [voiceName, setVoiceName] = useState('');
   const [voiceProfileId, setVoiceProfileId] = useState<number | null>(null);
   const [providerVoiceId, setProviderVoiceId] = useState('');
@@ -538,6 +539,7 @@ export function CreateCharacter() {
   const [saving, setSaving] = useState(false);
   const [generatingSetting, setGeneratingSetting] = useState(false);
   const [optimizingBackground, setOptimizingBackground] = useState(false);
+  const [optimizingGreeting, setOptimizingGreeting] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
   const [voiceListenPhase, setVoiceListenPhase] = useState<'idle' | 'loading' | 'playing'>('idle');
@@ -609,6 +611,7 @@ export function CreateCharacter() {
     gender: normalizeGenderForSave(gender),
     occupation: job.trim() || undefined,
     backgroundStory: background.trim() || undefined,
+    greeting: greeting.trim() || undefined,
     avatarUrl: avatarUrl || undefined,
     voiceName: voiceName || undefined,
     isPublic: isPublic ? 1 : 0,
@@ -639,9 +642,9 @@ export function CreateCharacter() {
     return created.id;
   };
 
-    const handleGenerateSetting = () => {
+  const handleGenerateSetting = () => {
     if (generatingSetting || saving) return;
-    const isEmpty = !name.trim() && !job.trim() && !background.trim() && gender === 'random';
+    const isEmpty = !name.trim() && !job.trim() && !background.trim() && !greeting.trim() && gender === 'random';
     if (isEmpty) {
       executeGenerateSetting('full');
     } else {
@@ -659,6 +662,7 @@ export function CreateCharacter() {
             gender,
             occupation: job.trim() || undefined,
             backgroundStory: background.trim() || undefined,
+            greeting: greeting.trim() || undefined,
             keywords: selectedTags.join(','),
           })
         : await tsRoleApi.generateRoleSetting({
@@ -667,12 +671,14 @@ export function CreateCharacter() {
             gender,
             occupation: job.trim() || undefined,
             backgroundStory: background.trim() || undefined,
+            greeting: greeting.trim() || undefined,
             keywords: selectedTags.join(','),
           });
       const roleName = result?.roleName ?? result?.role_name;
       const generatedGender = result?.gender;
       const occupation = result?.occupation;
       const backgroundStory = result?.backgroundStory ?? result?.background_story;
+      const greetingText = result?.greeting ?? result?.greeting_text;
 
       if (typeof roleName === 'string' && roleName.trim()) {
         setName(roleName);
@@ -685,6 +691,9 @@ export function CreateCharacter() {
       }
       if (typeof backgroundStory === 'string' && backgroundStory.trim()) {
         setBackground(backgroundStory);
+      }
+      if (typeof greetingText === 'string' && greetingText.trim()) {
+        setGreeting(greetingText);
       }
       setBasicAiGenerated(true);
       showMessage(generateMode === 'full' ? '角色设定已全量生成。' : '角色设定已生成补全。');
@@ -726,6 +735,39 @@ export function CreateCharacter() {
     }
     finally {
       setOptimizingBackground(false);
+    }
+  };
+
+  const handleOptimizeGreeting = async () => {
+    if (optimizingGreeting || generatingSetting || saving) {
+      return;
+    }
+    setOptimizingGreeting(true);
+    try {
+      const result = await tsRoleApi.generateRoleSetting({
+        roleId: roleId || undefined,
+        roleName: name.trim() || undefined,
+        gender,
+        occupation: job.trim() || undefined,
+        backgroundStory: background.trim() || undefined,
+        greeting: greeting.trim() || undefined,
+        keywords: selectedTags.join(','),
+        templateMode: 'intro_optimize',
+      });
+      const optimizedGreeting = result?.greeting ?? result?.greeting_text ?? result?.backgroundStory ?? result?.background_story;
+      if (typeof optimizedGreeting === 'string' && optimizedGreeting.trim()) {
+        setGreeting(optimizedGreeting);
+        setBasicAiGenerated(true);
+        showMessage('开场白已美化。');
+        return;
+      }
+      showMessage('美化完成，但未返回开场白内容。');
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, '开场白美化失败，请稍后重试。'));
+    }
+    finally {
+      setOptimizingGreeting(false);
     }
   };
 
@@ -1069,13 +1111,13 @@ export function CreateCharacter() {
             ? (
                 <>
                   <PublicStatusSection isPublic={isPublic} onPublicChange={setIsPublic} />
-                  <TagsSection
+                  {/* <TagsSection
                     tagOptions={tagOptions}
                     selectedTags={selectedTags}
                     onToggleTag={handleToggleTag}
                     onSmartRecommend={handleSmartRecommendTags}
                     onAddCustomTag={handleAddCustomTag}
-                  />
+                  /> */}
                   <DialogueStyleSection
                     dialogLength={dialogLength}
                     interactivity={interactivity}
@@ -1095,6 +1137,7 @@ export function CreateCharacter() {
                     gender={gender}
                     job={job}
                     background={background}
+                    greeting={greeting}
                     voiceName={voiceName}
                     voiceProfileId={voiceProfileId}
                     providerVoiceId={providerVoiceId}
@@ -1103,8 +1146,10 @@ export function CreateCharacter() {
                     onGenderChange={setGender}
                     onJobChange={setJob}
                     onBackgroundChange={setBackground}
+                    onGreetingChange={setGreeting}
                     onGenerateSetting={handleGenerateSetting}
                     onOptimizeBackground={handleOptimizeBackground}
+                    onOptimizeGreeting={handleOptimizeGreeting}
                     onGenerateImage={handleGenerateImage}
                     onGenerateVoice={handleGenerateVoice}
                     onPreviewVoice={handlePreviewVoice}
@@ -1113,6 +1158,7 @@ export function CreateCharacter() {
                     }}
                     generatingSetting={generatingSetting}
                     optimizingBackground={optimizingBackground}
+                    optimizingGreeting={optimizingGreeting}
                     generatingImage={generatingImage}
                     generatingVoice={generatingVoice}
                     previewingVoice={voiceListenPhase !== 'idle'}

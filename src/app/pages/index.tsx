@@ -21,6 +21,7 @@ const pageItems: PageItem[] = [
   { label: 'Role Detail', href: '/pages/role-detail' },
   { label: 'Create Story', href: '/pages/create-story' },
   { label: 'Create Page', href: '/pages/create-page' },
+  { label: 'Draft', href: '/pages/draft' },
   { label: 'Sound Edit', href: '/pages/sound-edit' },
   { label: 'General Setting', href: '/pages/general-setting' },
   { label: 'User Setting', href: '/pages/user-setting' },
@@ -38,17 +39,17 @@ export default function PagesHubScreen() {
         <p style={styles.subtitle}>Tap any button to open a page</p>
 
         <div style={styles.buttonList}>
-        {pageItems.map(item => (
-          <button
-            key={item.href}
-            type="button"
-            style={styles.button}
-            onClick={() => router.push(item.href)}
-          >
-            <div style={styles.buttonText}>{item.label}</div>
-            <div style={styles.pathText}>{item.href}</div>
-          </button>
-        ))}
+          {pageItems.map(item => (
+            <button
+              key={item.href}
+              type="button"
+              style={styles.button}
+              onClick={() => router.push(item.href)}
+            >
+              <div style={styles.buttonText}>{item.label}</div>
+              <div style={styles.pathText}>{item.href}</div>
+            </button>
+          ))}
         </div>
       </div>
     </div>

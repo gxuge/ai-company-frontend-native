@@ -15,6 +15,7 @@ const imgImagePlaceholder = resolveAsset(require('@/assets/images/my-gallery/ima
 const imgFabAddRole = resolveAsset(require('@/assets/images/select-role/fab_add_role.svg'));
 
 const PAGE_SIZE = 60;
+const ROLE_IMAGE_FILE_NAME_PREFIX = 'role-image-';
 
 const SOURCE_TYPE_LABEL_MAP: Record<string, string> = {
   reference: '参考图',
@@ -47,6 +48,16 @@ function resolveSourceTypeLabel(sourceType?: string) {
     return '未分类';
   }
   return SOURCE_TYPE_LABEL_MAP[key] || sourceType;
+}
+
+function shouldIncludeRoleGalleryAsset(asset: TsUserImageAsset) {
+  const sourceType = typeof asset.sourceType === 'string' ? asset.sourceType.trim().toLowerCase() : '';
+  if (sourceType === 'ai_generate') {
+    return true;
+  }
+
+  const fileName = typeof asset.fileName === 'string' ? asset.fileName.trim().toLowerCase() : '';
+  return fileName.startsWith(ROLE_IMAGE_FILE_NAME_PREFIX);
 }
 
 function mapAssetToImageItem(asset: TsUserImageAsset, index: number): ImageItem {
@@ -140,6 +151,7 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
 
 export default function MyGallery() {
   const params = useLocalSearchParams<{ from?: string }>();
+  const isRoleGallery = params.from === 'create-role';
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -151,7 +163,7 @@ export default function MyGallery() {
   const pulse = useSharedValue(1);
   useEffect(() => {
     pulse.value = withRepeat(withTiming(1.1, { duration: 1500 }), -1, true);
-  }, []);
+  }, [isRoleGallery]);
 
   const pulseStyle = useAnimatedStyle(() => {
     const progress = (pulse.value - 1) * 10; // 0 -> 1 range
@@ -202,6 +214,7 @@ export default function MyGallery() {
 
         const mapped = allAssets
           .filter(item => Number.isFinite(Number(item.id)))
+          .filter(item => (isRoleGallery ? shouldIncludeRoleGalleryAsset(item) : true))
           .map((item, index) => mapAssetToImageItem(item, index));
 
         setImages(mapped);
@@ -252,8 +265,9 @@ export default function MyGallery() {
     }
 
     const isFromCreateRole = params.from === 'create-role';
-    const pathname = isFromCreateRole ? '/pages/create-role' : '/pages/create-character';
-    const paramKey = isFromCreateRole ? 'selectedImageUrl' : 'referenceImageUrl';
+    const isFromCreateStory = params.from === 'create-story';
+    const pathname = isFromCreateRole ? '/pages/create-role' : isFromCreateStory ? '/pages/create-story' : '/pages/create-character';
+    const paramKey = (isFromCreateRole || isFromCreateStory) ? 'selectedImageUrl' : 'referenceImageUrl';
 
     router.replace({
       pathname: pathname as any,
@@ -343,10 +357,10 @@ export default function MyGallery() {
       <View style={{ flex: 1, backgroundColor: '#000000' }}>
         <AiHeader title="我的图库" className="px-5 py-4" />
         <AiEmpty 
-          title="你还没有图片" 
-          description="上传参考图或保存生成结果后，会显示在这里" 
-          actionText="返回创建人物"
-          onAction={() => router.push('/pages/create-character')}
+          title={isRoleGallery ? '你还没有角色图片' : '你还没有图片'} 
+          description={isRoleGallery ? '生成或保存角色图片后，会显示在这里' : '上传参考图或保存生成结果后，会显示在这里'} 
+          actionText={isRoleGallery ? '返回创建角色' : '返回创建人物'}
+          onAction={() => router.push(isRoleGallery ? '/pages/create-role' : '/pages/create-character')}
           style={{ flex: 1 }}
         />
       </View>

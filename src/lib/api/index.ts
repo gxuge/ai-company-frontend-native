@@ -6,6 +6,8 @@ export * from './http-types';
 export * from './provider';
 export * from './request';
 export * from './ts-chat';
+export * from './ts-agent-chat';
+export * from './ts-image';
 export * from './ts-role';
 export * from './ts-role-image';
 export * from './ts-role-tag';

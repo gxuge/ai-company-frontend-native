@@ -36,9 +36,10 @@ type ChatInputProps = {
   onMicPress?: () => void;
   onLightbulbPress?: () => void;
   onPlusPress?: () => void;
+  onFocus?: () => void;
 };
 
-export function ChatInput({
+export const ChatInput = React.forwardRef<any, ChatInputProps>(({
   value,
   onChangeText,
   onSubmit,
@@ -47,10 +48,20 @@ export function ChatInput({
   onMicPress,
   onLightbulbPress,
   onPlusPress,
-}: ChatInputProps) {
+  onFocus,
+}, ref) => {
   const [inputType, setInputType] = React.useState<'keyboard' | 'voice'>('keyboard');
   const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<any>(null);
+
+  React.useImperativeHandle(ref, () => ({
+    focus: () => {
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 50);
+    }
+  }));
+
   const plusRotation = useSharedValue(featureExpanded ? 45 : 0);
 
   React.useEffect(() => {
@@ -95,7 +106,10 @@ export function ChatInput({
                   onSubmit?.();
                 }
               }}
-              onFocus={() => setIsFocused(true)}
+              onFocus={() => {
+                setIsFocused(true);
+                onFocus?.();
+              }}
               onBlur={() => setIsFocused(false)}
               disabled={submitting}
               placeholder="发送消息..."
@@ -104,7 +118,7 @@ export function ChatInput({
                 width: '100%',
                 textAlign: 'left',
                 paddingLeft: isFocused ? 15 : 60,
-                paddingRight: 110,
+                paddingRight: 145,
                 boxSizing: 'border-box'
               }}
             />
@@ -173,11 +187,14 @@ export function ChatInput({
             placeholderTextColor="rgba(255,255,255,0.55)"
             style={[
               styles.holdInput,
-              { width: '100%', textAlign: 'left', paddingRight: 110 },
+              { width: '100%', textAlign: 'left', paddingRight: 145 },
               { paddingLeft: isFocused ? 15 : 60 }
             ]}
             returnKeyType="send"
-            onFocus={() => setIsFocused(true)}
+            onFocus={() => {
+              setIsFocused(true);
+              onFocus?.();
+            }}
             onBlur={() => setIsFocused(false)}
           />
         ) : (
@@ -205,7 +222,7 @@ export function ChatInput({
       </View>
     </View>
   );
-}
+});
 
 const webStyles: Record<string, React.CSSProperties> = {
   container: {

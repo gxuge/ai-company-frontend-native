@@ -9,7 +9,7 @@ import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import { styles } from '@/components/pages/role-detail/role-detail.styles';
-import { tsRoleApi } from '@/lib/api';
+import { pickTsImageUrl, tsRoleApi } from '@/lib/api';
 
 const imgAddUser = require('../../../assets/images/role-detail/add_user.svg');
 const imgAuthorAvatarFallback = require('../../../assets/images/role-detail/author_avatar.png');
@@ -307,12 +307,12 @@ export default function RoleDetail() {
   }, [params.id, params.roleId]);
 
   const { role, author, loading, loadError } = useRoleDetailData(roleId);
-  const backgroundSource = toRemoteSource(role?.avatarUrl) ?? toRemoteSource(role?.coverUrl) ?? imgBg;
+  const backgroundSource = toRemoteSource(pickTsImageUrl(role, 'character_image', 'character_avatar')) ?? imgBg;
   const authorAvatarSource = toRemoteSource(author?.avatar) ?? imgAuthorAvatarFallback;
   const displayRoleName = role?.roleName || '角色';
   const displayAuthorName = author?.displayName || '作者';
   const tabContent = activeTab === 'about'
-    ? (role?.introText || role?.personaText || role?.occupation || '暂无角色介绍')
+    ? (role?.greeting?.trim() || '')
     : (role?.storyText || role?.backgroundStory || '暂无故事内容');
 
   if (Platform.OS === 'web') {

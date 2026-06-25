@@ -20,9 +20,20 @@ const svgPaths = {
 
 const STYLE_OPTIONS = [
   { image: imgImage, label: '通用', value: '通用' },
-  { image: imgImage1, label: '像素艺术', value: '像素艺术' },
-  { image: imgImage2, label: '漫画', value: '漫画' },
-  { image: imgImage3, label: '厚涂', value: '厚涂' },
+  { image: imgImage1, label: '动漫插画', value: '动漫插画', suitableRoles: '二次元、校园、恋爱、轻小说角色', description: '角色感强，适合 AI 伴侣、虚拟角色、剧情互动。Adobe Firefly 也把 anime/anime art 作为独立生成方向。' },
+  { image: imgImage2, label: '写实摄影', value: '写实摄影', suitableRoles: '现实陪伴、职场、生活化角色', description: '接近真人照片，适合真实感、沉浸感较强的角色。' },
+  { image: imgImage3, label: '半写实风', value: '半写实风', suitableRoles: 'AI 伴侣、精致人物、恋爱向角色', description: '介于动漫和真人之间，既有美型感，又不会太夸张。' },
+  { image: imgImage, label: '国风古韵', value: '国风古韵', suitableRoles: '古风、仙侠、宫廷、武侠角色', description: '强调东方服饰、发饰、古典气质、含蓄氛围。' },
+  { image: imgImage, label: '赛博科幻', value: '赛博科幻', suitableRoles: '黑客、仿生人、未来都市角色', description: '适合霓虹、机械义体、未来科技、冷色光影。' },
+  { image: imgImage, label: '奇幻史诗', value: '奇幻史诗', suitableRoles: '魔法师、精灵、骑士、异世界角色', description: '适合 RPG、冒险、魔法、战斗类角色。' },
+  { image: imgImage1, label: '像素复古', value: '像素复古', suitableRoles: '游戏 NPC、复古头像、轻量角色卡', description: '适合游戏化、低成本、可爱复古的视觉方向。' },
+  { image: imgImage, label: '卡通萌系', value: '卡通萌系', suitableRoles: '治愈陪伴、Q版角色、宠物拟人', description: '更圆润、更可爱，适合轻松、治愈、低压互动。' },
+  { image: imgImage3, label: '厚涂原画', value: '厚涂原画', suitableRoles: '游戏立绘、角色设定、主视觉', description: '更像游戏概念设计，强调笔触、体积、材质和光影。AI 图像提示中常见“illustration / realistic photography / creative experimentation”等大类划分。' },
+  { image: imgImage, label: '水彩绘本', value: '水彩绘本', suitableRoles: '温柔、童话、治愈、日常角色', description: '色彩柔和，适合陪伴型、治愈型、故事型角色。' },
+  { image: imgImage, label: '日系轻漫', value: '日系轻漫', suitableRoles: '校园、恋爱、日常、青春角色', description: '比“动漫插画”更轻、更干净，更适合轻互动。' },
+  { image: imgImage, label: '暗黑哥特', value: '暗黑哥特', suitableRoles: '吸血鬼、恶魔、病娇、悬疑角色', description: '强调黑色、蕾丝、古堡、冷光、神秘感。' },
+  { image: imgImage, label: '蒸汽朋克', value: '蒸汽朋克', suitableRoles: '机械师、侦探、复古幻想角色', description: '齿轮、铜管、皮革、护目镜、维多利亚幻想感。' },
+  { image: imgImage, label: '梦幻超现实', value: '梦幻超现实', suitableRoles: '梦境、精灵、神秘陪伴角色', description: '偏幻想、象征、梦境画面；超现实主义也是常见 AI 艺术提示风格之一。' },
 ];
 
 const PROFILE_NAME_MAX_LENGTH = 24;

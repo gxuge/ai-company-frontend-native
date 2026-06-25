@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, Pressable, Platform } from 'react-native';
-import { ShimmerLine } from '@/components/ai-company/ai-form-textarea';
+import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
 import { styles } from './styles';
 
 // ─── Assets ───
@@ -82,7 +82,7 @@ function TipRow({
 function SkeletonTip() {
   return (
     <View style={styles.skeletonRow}>
-      <ShimmerLine className="h-[14px] w-full bg-[#2a2a2a] rounded-[4px]" />
+      <AiSkeleton width="100%" height={14} borderRadius={4} baseColor="#2a2a2a" />
     </View>
   );
 }
@@ -99,9 +99,9 @@ export function ChatTip({
     if (Platform.OS === 'web') {
       return (
         <div style={webStyles.loadingContainer}>
-          <div style={webStyles.skeletonRow} />
-          <div style={webStyles.skeletonRow} />
-          <div style={webStyles.skeletonRow} />
+          <div style={webStyles.skeletonRow}><AiSkeleton width="100%" height={14} borderRadius={4} baseColor="#2a2a2a" /></div>
+          <div style={webStyles.skeletonRow}><AiSkeleton width="100%" height={14} borderRadius={4} baseColor="#2a2a2a" /></div>
+          <div style={webStyles.skeletonRow}><AiSkeleton width="100%" height={14} borderRadius={4} baseColor="#2a2a2a" /></div>
         </div>
       );
     }
@@ -215,5 +215,10 @@ const webStyles: Record<string, React.CSSProperties> = {
     height: 35,
     borderRadius: 10,
     backgroundColor: '#1d1d1d',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 12px',
+    boxSizing: 'border-box',
   },
 };

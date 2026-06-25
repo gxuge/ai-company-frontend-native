@@ -1,3 +1,4 @@
+import type { TsImageResource } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsStoryRoleBinding = {
@@ -15,7 +16,7 @@ export type TsStorySavePayload = {
   storyMode?: string;
   siteSetting?: string;
   storyBackground?: string;
-  coverUrl?: string;
+  sceneImageUrl?: string;
   sceneId?: number;
   sceneNameSnapshot?: string;
   status?: number;
@@ -32,11 +33,13 @@ export type TsStory = {
   storyCode?: string;
   userId?: string;
   title?: string;
+  imageResources?: TsImageResource[];
   storyIntro?: string;
   storyMode?: string;
+  storySetting?: string;
   siteSetting?: string;
   storyBackground?: string;
-  coverUrl?: string;
+  sceneImageUrl?: string;
   sceneId?: number;
   sceneNameSnapshot?: string;
   status?: number;
@@ -57,6 +60,50 @@ export type TsStory = {
   roleBindings?: TsStoryRoleBinding[];
 };
 
+function normalizeStoryText(value?: string | null) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  return value.trim();
+}
+
+export function buildStoryTextParts(story?: TsStory | null) {
+  if (!story) {
+    return [];
+  }
+  const values = [
+    story.storyIntro,
+    story.storySetting,
+    story.siteSetting,
+    story.storyBackground,
+    story.plotOutline,
+  ].map(normalizeStoryText).filter(Boolean);
+
+  return Array.from(new Set(values));
+}
+
+export function pickStoryPreviewText(story?: TsStory | null) {
+  return buildStoryTextParts(story)[0];
+}
+
+export function buildStoryDescriptionText(story?: TsStory | null, separator = '\n') {
+  const parts = buildStoryTextParts(story);
+  return parts.length > 0 ? parts.join(separator) : '';
+}
+
+export function extractStoryRoleIds(story?: TsStory | null) {
+  if (!story?.roleBindings?.length) {
+    return [];
+  }
+  return Array.from(
+    new Set(
+      story.roleBindings
+        .map(item => item.roleId)
+        .filter((roleId): roleId is number => typeof roleId === 'number' && Number.isFinite(roleId) && roleId > 0),
+    ),
+  );
+}
+
 export type TsStoryPage = {
   records?: TsStory[];
   total?: number;
@@ -68,9 +115,10 @@ export type TsStoryPage = {
 export type TsStoryPublic = {
   id: number;
   title?: string;
+  imageResources?: TsImageResource[];
   storyIntro?: string;
   storyMode?: string;
-  coverUrl?: string;
+  sceneImageUrl?: string;
   followerCount?: number;
   dialogueCount?: number;
   authorName?: string;

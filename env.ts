@@ -10,7 +10,12 @@ const envSchema = z.object({
   EXPO_PUBLIC_BUNDLE_ID: z.string(),
   EXPO_PUBLIC_PACKAGE: z.string(),
   EXPO_PUBLIC_VERSION: z.string(),
-  EXPO_PUBLIC_API_URL: z.string().url(),
+  EXPO_PUBLIC_API_URL: z
+    .string()
+    .refine(
+      value => value.startsWith('/') || /^https?:\/\//.test(value),
+      { message: 'EXPO_PUBLIC_API_URL must be an absolute url or a relative path starting with /' },
+    ),
   EXPO_PUBLIC_ASSOCIATED_DOMAIN: z.string().url().optional(),
   EXPO_PUBLIC_VAR_NUMBER: z.number(),
   EXPO_PUBLIC_VAR_BOOL: z.boolean(),
@@ -45,6 +50,9 @@ const NAME = 'ObytesApp';
 
 // Check if strict validation is required (before prebuild)
 const STRICT_ENV_VALIDATION = process.env.STRICT_ENV_VALIDATION === '1';
+const DEFAULT_API_URL = EXPO_PUBLIC_APP_ENV === 'development'
+  ? 'http://localhost:8080/jeecg-boot'
+  : '/jeecg-boot';
 
 // Build env object
 const _env: z.infer<typeof envSchema> = {
@@ -54,7 +62,7 @@ const _env: z.infer<typeof envSchema> = {
   EXPO_PUBLIC_BUNDLE_ID: BUNDLE_IDS[EXPO_PUBLIC_APP_ENV],
   EXPO_PUBLIC_PACKAGE: PACKAGES[EXPO_PUBLIC_APP_ENV],
   EXPO_PUBLIC_VERSION: packageJSON.version,
-  EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL ?? '',
+  EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL,
   EXPO_PUBLIC_ASSOCIATED_DOMAIN: process.env.EXPO_PUBLIC_ASSOCIATED_DOMAIN,
   EXPO_PUBLIC_VAR_NUMBER: Number(process.env.EXPO_PUBLIC_VAR_NUMBER ?? 0),
   EXPO_PUBLIC_VAR_BOOL: process.env.EXPO_PUBLIC_VAR_BOOL === 'true',

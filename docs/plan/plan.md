@@ -14,6 +14,8 @@
 | T2 前端 Nginx 反代补齐 | 已完成 | 为 `/jeecg-boot/**` 增加到 `jeecg-boot-system:8080` 的代理 | 同域 `/jeecg-boot` 请求可被转发到后端容器 | `deploy/nginx.default.conf` |
 | T3 部署文档回填 | 已完成 | 补充 Jenkins 环境变量与 Docker 网络依赖说明 | 部署说明可指导线上环境排查 | `docs/frontend-jenkins-docker-deploy.md` |
 | T4 Nginx upstream 启动风险修复 | 已完成 | 将 `/jeecg-boot/**` 代理改为 Docker DNS 延迟解析，避免后端暂未注册时前端容器启动失败 | 前端容器不再因 `jeecg-boot-system` 解析时机问题整站不可用 | `deploy/nginx.default.conf`、`docs/frontend-jenkins-docker-deploy.md` |
+| T5 conversation-detail 故事详情字段对齐 | 已完成 | 对齐故事详情接口出参与前端类型，补齐 `storySetting` 返回链路 | `/pages/conversation-detail` 可拿到并展示故事设定正文 | 后端 `TsStoryVo/TsStoryVoConverter`、前端 `src/lib/api/ts-story.ts` |
+| T6 chat-desc / conversation-detail 故事展示数据统一 | 已完成 | 将聊天页故事简介、头像列表与会话详情页角色列表统一改为基于故事详情接口和角色绑定计算 | 两处故事展示都使用真实 `story` 与 `roleBindings` 数据，不再各自散落拼接 | `src/lib/api/ts-story.ts`、`src/app/pages/chat/index.tsx`、`src/app/pages/conversation-detail/index.tsx` |
 ## 0. 任务背景（create-role 形象模板默认值置空，2026-05-22）
 - 目标：避免 `one-click-image` 模板变量被“角色时间戳/待定职业/等待完善背景”占位值污染，缺失字段按 `null` 语义传递。
 - 边界：仅修改后端字段归一化与模板拼接前清洗；不改动前端 UI 与页面结构。

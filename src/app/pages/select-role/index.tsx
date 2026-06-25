@@ -2,8 +2,9 @@ import type { TsRoleDetail } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Check, Inbox, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import { AiHeader } from '@/components/ai-company/ai-header';
-import { tsRoleApi } from '../../../lib/api';
+import { pickTsImageUrl, tsRoleApi } from '../../../lib/api';
 
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/select-role/bfc3c41d1a6b570e1b0987aedf706c872d00b6d5.png'));
 const imgFabAddRole = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/select-role/fab_add_role.svg'));
@@ -15,8 +16,27 @@ type SelectRoleItem = {
   avatarParam: string;
 };
 
+function normalizeRoleImageUrl(url?: string | null) {
+  if (typeof url !== 'string') {
+    return '';
+  }
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return '';
+  }
+  if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith('/')) {
+    return trimmed;
+  }
+  return `/jeecg-boot/sys/common/static/${trimmed.replace(/^\/+/, '')}`;
+}
+
 function mapRoleToItem(role: TsRoleDetail): SelectRoleItem {
-  const avatarParam = (role.avatarUrl || role.coverUrl || '').trim();
+  const avatarParam = (
+    pickTsImageUrl(role, 'character_avatar', 'character_image')
+    || normalizeRoleImageUrl(role.avatarUrl)
+    || normalizeRoleImageUrl(role.coverUrl)
+    || ''
+  ).trim();
   return {
     id: role.id,
     name: (role.roleName || `角色${role.id}`).trim(),
@@ -103,15 +123,12 @@ export default function App() {
       return;
     }
     if (fromPage === '\u521B\u5EFA\u6545\u4E8B' || fromPage === 'create-story') {
-      router.replace({
-        pathname: '/pages/create-story',
-        params: {
-          storyId: currentStoryId,
-          selectedRoleId: String(selectedRole.id),
-          selectedRoleName: selectedRole.name,
-          selectedRoleAvatar: selectedRole.avatarParam,
-        },
+      DeviceEventEmitter.emit('roleSelected', {
+        id: selectedRole.id,
+        name: selectedRole.name,
+        avatar: selectedRole.avatarParam,
       });
+      router.back();
     }
     else {
       router.back();

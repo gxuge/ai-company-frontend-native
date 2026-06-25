@@ -1,11 +1,11 @@
 import type { TsChatSession } from '@/lib/api';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
-import { tsChatApi } from '@/lib/api';
-import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import { AiSkeleton } from '@/components/ai-company/ai-skeleton';
+import { pickTsImageUrl, tsChatApi } from '@/lib/api';
 
 const imgCategoryBgBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_blue.svg'));
 const imgCategoryBgOrange = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/category_bg_orange.svg'));
@@ -125,7 +125,7 @@ async function buildConversationRows(sessions: TsChatSession[]) {
     time: formatConversationTime(session.lastMessageAt || session.updatedAt || session.createdAt),
     badge: normalizeBadge(session.unreadCount),
     isSystemSession: session.isSystemSession === true,
-    avatar: session.coverUrl || session.avatarUrl,
+    avatar: pickTsImageUrl(session, 'character_avatar', 'character_image', 'story_scene'),
   }));
 }
 
@@ -266,7 +266,7 @@ function ConversationItem({
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('关注');
-  const { conversations, loading, loadError } = useSessionListData();
+  const { conversations, loading } = useSessionListData();
   const handleOpenConversation = (conversation: Conversation) => {
     const pathname = conversation.isSystemSession ? '/pages/admin-chat' : '/pages/chat';
     router.push({

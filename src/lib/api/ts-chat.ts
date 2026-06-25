@@ -1,3 +1,4 @@
+import type { TsImageResource } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsChatSession = {
@@ -6,9 +7,11 @@ export type TsChatSession = {
   storyId?: number;
   targetRoleId?: number;
   roleId?: number;
+  imageResources?: TsImageResource[];
   sessionType?: string;
   isSystemSession?: boolean;
   sessionTitle?: string;
+  roleAvatarUrl?: string;
   coverUrl?: string;
   sessionStatus?: number;
   lastMessageId?: number;
@@ -96,6 +99,7 @@ export type TsChatAiReplyResult = {
   voiceId?: string;
   contentText?: string;
   audioUrl?: string;
+  audioCacheKey?: string;
   audioFileSize?: number;
   durationSec?: number;
   mimeType?: string;
@@ -121,6 +125,30 @@ export type TsChatTemplateReplyResult = {
   promptVersion?: string;
   renderedPrompt?: string;
   snapshotKey?: string;
+  createdAt?: string;
+};
+
+export type TsChatMessageTtsPayload = {
+  sessionId: number;
+  messageId: number;
+  voiceProfileId?: number;
+  voiceId?: string;
+  speed?: number;
+  pitch?: number;
+  volume?: number;
+};
+
+export type TsChatMessageTtsResult = {
+  sessionId?: number;
+  messageId?: number;
+  voiceProfileId?: number;
+  voiceId?: string;
+  ttsText?: string;
+  audioUrl?: string;
+  audioCacheKey?: string;
+  audioFileSize?: number;
+  durationSec?: number;
+  mimeType?: string;
   createdAt?: string;
 };
 
@@ -201,6 +229,13 @@ export const tsChatApi = {
   async createTemplateAiReply(payload: TsChatTemplateReplyPayload) {
     return defHttp.post<TsChatTemplateReplyResult>({
       url: '/sys/ts-chat-sessions/ai-reply-template',
+      data: payload,
+    });
+  },
+
+  async createMessageTts(payload: TsChatMessageTtsPayload) {
+    return defHttp.post<TsChatMessageTtsResult>({
+      url: '/sys/ts-chat-sessions/message-tts',
       data: payload,
     });
   },

@@ -222,7 +222,7 @@ export default function AccountSettings() {
               </div>
             )}
             <img
-              src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `http://localhost:8080/jeecg-boot/sys/common/static/${avatarUrl}`) : imgProfilePicture}
+              src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `/jeecg-boot/sys/common/static/${avatarUrl}`) : imgProfilePicture}
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             />

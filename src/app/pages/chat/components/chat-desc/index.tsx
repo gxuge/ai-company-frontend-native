@@ -21,8 +21,8 @@ type ChatDescProps = {
 
 // ─── Component ───
 export default function ChatDesc({
-  title = '顶级室友：五倍酸爽！',
-  description = '简介 。。。。。',
+  title = '',
+  description = '',
   avatarSources,
   mode,
 }: ChatDescProps) {

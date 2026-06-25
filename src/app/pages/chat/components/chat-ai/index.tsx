@@ -47,6 +47,7 @@ interface ChatAiProps {
   onThumbsUp?: () => void;
   onPlayAudio?: () => void;
   isPlaying?: boolean;
+  showActions?: boolean;
 }
 
 // ─── Main Component ───
@@ -60,6 +61,7 @@ export function ChatAi({
   onThumbsUp,
   onPlayAudio,
   isPlaying,
+  showActions = true,
 }: ChatAiProps) {
   const normalizedSegments = Array.isArray(segments) && segments.length > 0
     ? segments
@@ -101,16 +103,18 @@ export function ChatAi({
             </div>
           </div>
         </div>
-        <div style={webStyles.actionBar}>
-          <div style={webStyles.actionBarPill}>
-            <button type="button" style={webStyles.iconButton} onClick={onRefresh}>
-              <img src={toAssetUri(imgRefreshIcon)} style={{ width: 20, height: 20 }} />
-            </button>
-            <button type="button" style={webStyles.iconButton} onClick={onThumbsUp}>
-              <img src={toAssetUri(imgThumbsUpIcon)} style={{ width: 20, height: 20 }} />
-            </button>
+        {showActions && (
+          <div style={webStyles.actionBar}>
+            <div style={webStyles.actionBarPill}>
+              <button type="button" style={webStyles.iconButton} onClick={onRefresh}>
+                <img src={toAssetUri(imgRefreshIcon)} style={{ width: 20, height: 20 }} />
+              </button>
+              <button type="button" style={webStyles.iconButton} onClick={onThumbsUp}>
+                <img src={toAssetUri(imgThumbsUpIcon)} style={{ width: 20, height: 20 }} />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -149,16 +153,18 @@ export function ChatAi({
       </View>
 
       {/* ── Action bar: refresh + thumbs-up ── */}
-      <View style={styles.actionBar}>
-        <View style={styles.actionBarPill}>
-          <Pressable style={styles.actionIconBtn} onPress={onRefresh}>
-            <RefreshIcon />
-          </Pressable>
-          <Pressable style={styles.actionIconBtn} onPress={onThumbsUp}>
-            <ThumbsUpIcon />
-          </Pressable>
+      {showActions && (
+        <View style={styles.actionBar}>
+          <View style={styles.actionBarPill}>
+            <Pressable style={styles.actionIconBtn} onPress={onRefresh}>
+              <RefreshIcon />
+            </Pressable>
+            <Pressable style={styles.actionIconBtn} onPress={onThumbsUp}>
+              <ThumbsUpIcon />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 }

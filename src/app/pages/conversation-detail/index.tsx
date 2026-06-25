@@ -1,11 +1,10 @@
 import type { ImageSourcePropType } from 'react-native';
-import type { TsStory, TsStoryChapter } from '@/lib/api';
 import { useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
-import { tsChatApi, tsRoleApi, tsStoryApi } from '@/lib/api';
+import { buildStoryDescriptionText, extractStoryRoleIds, pickTsImageUrl, tsChatApi, tsRoleApi, tsStoryApi, type TsStory, type TsStoryChapter } from '@/lib/api';
 import StoryDetailModal from './components/StoryDetailModal';
 
 const imgCharacter1 = require('../../../assets/images/conversation-detail/imgCharacter1.png');
@@ -104,16 +103,8 @@ function buildFallbackCharacters() {
 }
 
 function buildDescription(story: TsStory | null) {
-  if (!story) {
-    return FALLBACK_DESCRIPTION;
-  }
-  const parts = [story.storyIntro, story.storySetting, story.storyBackground]
-    .map(item => (typeof item === 'string' ? item.trim() : ''))
-    .filter(Boolean);
-  if (parts.length === 0) {
-    return FALLBACK_DESCRIPTION;
-  }
-  return Array.from(new Set(parts)).join('\n');
+  const text = buildStoryDescriptionText(story);
+  return text || FALLBACK_DESCRIPTION;
 }
 
 async function resolveStoryId(params: {
@@ -154,13 +145,7 @@ async function resolveStoryId(params: {
 }
 
 async function buildCharacterCards(story: TsStory | null) {
-  const roleIds = Array.from(
-    new Set(
-      (story?.roleBindings || [])
-        .map(item => Number(item.roleId))
-        .filter(id => Number.isFinite(id) && id > 0),
-    ),
-  );
+  const roleIds = extractStoryRoleIds(story);
 
   if (roleIds.length === 0) {
     return buildFallbackCharacters();
@@ -185,7 +170,7 @@ async function buildCharacterCards(story: TsStory | null) {
     cards.push({
       id: role.id,
       name: role.roleName || role.roleSubtitle || `角色${role.id}`,
-      avatarSource: toRemoteSource(role.avatarUrl || role.coverUrl) ?? fallbackSource,
+      avatarSource: toRemoteSource(pickTsImageUrl(role, 'character_avatar', 'character_image')) ?? fallbackSource,
     });
   });
 
@@ -284,11 +269,12 @@ export default function Body() {
   const title = story?.title || FALLBACK_TITLE;
   const creatorName = story?.createdName || story?.updatedName || FALLBACK_AUTHOR;
   const description = buildDescription(story);
+  const storyBackgroundSource = toRemoteSource(pickTsImageUrl(story, 'story_scene')) ?? imgGrandAtmosphericPalaceInteriorWithChandelier;
 
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={imgGrandAtmosphericPalaceInteriorWithChandelier}
+        source={storyBackgroundSource}
         style={styles.backgroundImage}
       >
         <View style={styles.gradientOverlay} />

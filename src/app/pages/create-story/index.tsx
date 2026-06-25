@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, ScrollView, Modal } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { HelpCircle } from 'lucide-react';
+import { AiFormInput } from '../../../components/ai-company/ai-form-input';
 import { AiFormTextarea } from '../../../components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
 import { AiHeader } from '../../../components/ai-company/ai-header';
@@ -329,18 +330,20 @@ function CharacterListSection({
   onAddRole,
   onRemoveRole,
   onHelpClick,
+  onUserClick,
 }: {
   roles?: any[];
   onAddRole: () => void;
   onRemoveRole?: (role: any) => void;
   onHelpClick?: () => void;
+  onUserClick?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-[12px]">
       <SectionHeader title="角色列表" required showGenerate={false} onHelpClick={onHelpClick} />
       <div className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
         <div className="flex flex-wrap items-start gap-[24px]">
-          <div className="flex shrink-0 flex-col items-center">
+          <button onClick={onUserClick} type="button" className="flex shrink-0 flex-col items-center active:opacity-70 transition-opacity">
             <div className="relative">
               <div className="flex size-[61px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] bg-[#111] shadow-[0px_10px_15px_-3px_black,0px_4px_6px_-4px_black]">
                 <img src={imgUserDefault} alt="" className="h-[34px] w-[27px] object-contain" />
@@ -350,7 +353,7 @@ function CharacterListSection({
               </div>
             </div>
             <span className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">用户</span>
-          </div>
+          </button>
           
           {roles.map((role, idx) => (
             <div key={`${role.id}-${idx}`} className="relative flex shrink-0 flex-col items-center">
@@ -382,6 +385,50 @@ function CharacterListSection({
             <span className="mt-[12px] text-[#4b5563] text-[12px]">添加</span>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* —— Scene Image Section —— */
+function SceneImageSection({
+  imageUrl,
+  onAddImage,
+  generating,
+  onHelpClick,
+}: {
+  imageUrl?: string;
+  onAddImage: () => void;
+  generating?: boolean;
+  onHelpClick?: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[12px]">
+      <SectionHeader title="场景图片" showGenerate={false} onHelpClick={onHelpClick} />
+      <div className="my-2 flex w-full justify-center">
+        <button
+          onClick={generating ? undefined : onAddImage}
+          className="relative flex h-[184px] w-[135px] flex-col items-center justify-center overflow-hidden rounded-[15px] border-2 border-dashed border-[rgba(155,254,3,0.5)] bg-black active:opacity-80 disabled:opacity-50"
+          disabled={generating}
+        >
+          {generating ? (
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[13.5px] font-medium text-[#a1a1aa]">获取中...</span>
+            </div>
+          ) : imageUrl ? (
+            <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <>
+              <div className="mb-[12px] flex size-[34px] items-center justify-center rounded-full border border-[rgba(155,254,3,0.3)]">
+                <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
+                  <Line x1="12" y1="5" x2="12" y2="19" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                  <Line x1="5" y1="12" x2="19" y2="12" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                </Svg>
+              </div>
+              <span className="text-[13.5px] font-medium text-[#a1a1aa]">点击添加图片</span>
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
@@ -740,9 +787,14 @@ export default function App() {
   const [optimizingScene, setOptimizingScene] = useState(false);
   const [optimizingOutline, setOptimizingOutline] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
-  const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'scene' | 'outline'>('none');
+  const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'sceneImage' | 'scene' | 'outline'>('none');
   const [generateModalTarget, setGenerateModalTarget] = useState<'setting' | 'scene' | 'outline' | null>(null);
   const [confirmGenerateTarget, setConfirmGenerateTarget] = useState<GenerateConfirmTarget | null>(null);
+  const [userRoleModalVisible, setUserRoleModalVisible] = useState(false);
+  const [userRoleName, setUserRoleName] = useState('');
+  const [userRoleSetting, setUserRoleSetting] = useState('');
+  const [sceneImageUrl, setSceneImageUrl] = useState('');
+  const [generatingSceneImage, setGeneratingSceneImage] = useState(false);
 
   const hasOverwritableContent = useMemo(() => {
     const commonHasValue = [
@@ -1230,6 +1282,25 @@ export default function App() {
               onAddRole={() => router.push('/pages/select-role?from=create-story')}
               onRemoveRole={(role) => setSelectedRoles(prev => prev.filter(r => r.id !== role.id))}
               onHelpClick={() => setTooltipType('role')}
+              onUserClick={() => setUserRoleModalVisible(true)}
+            />
+            <SceneImageSection
+              imageUrl={sceneImageUrl}
+              generating={generatingSceneImage}
+              onHelpClick={() => setTooltipType('sceneImage')}
+              onAddImage={async () => {
+                setGeneratingSceneImage(true);
+                try {
+                  // 待对接接口：调用另外一个接口获取场景图片
+                  await new Promise(resolve => setTimeout(resolve, 1500));
+                  Alert.alert('提示', '场景图片生成接口待定，当前为模拟成功！');
+                  setSceneImageUrl('https://picsum.photos/400/600');
+                } catch (e) {
+                  Alert.alert('提示', '生成失败，请重试');
+                } finally {
+                  setGeneratingSceneImage(false);
+                }
+              }}
             />
             <LocationSection
               text={sceneSettingText}
@@ -1410,6 +1481,65 @@ export default function App() {
         </div>
       </Modal>
       <Modal
+        visible={userRoleModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setUserRoleModalVisible(false)}
+      >
+        <div 
+          className="flex h-full w-full items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setUserRoleModalVisible(false)}
+        >
+          <div 
+            className="relative w-[90%] max-w-[360px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">用户角色设定</h3>
+            
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-white">角色名称 <span className="text-xs text-[#a1a1aa]">(选填)</span></span>
+              <AiFormInput
+                value={userRoleName}
+                onChangeText={setUserRoleName}
+                placeholder="请输入您的角色名称"
+                customContainerClass="bg-black rounded-lg border border-[#494949] h-[44px]"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-white">角色设定 <span className="text-xs text-[#a1a1aa]">(选填)</span></span>
+              <AiFormTextarea
+                value={userRoleSetting}
+                onChangeText={setUserRoleSetting}
+                placeholder="例如性格、外貌特征等"
+                minHeight={80}
+                customContainerClass="bg-black rounded-lg border border-[#494949]"
+              />
+            </div>
+
+            <div className="mt-4 flex w-full">
+              <button
+                type="button"
+                className="flex-1 rounded-full bg-[rgba(155,254,3,0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
+                onClick={() => setUserRoleModalVisible(false)}
+              >
+                确定
+              </button>
+            </div>
+
+            <button
+              onClick={() => setUserRoleModalVisible(false)}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full bg-white/5 active:bg-white/10"
+            >
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Line x1="18" y1="6" x2="6" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+                <Line x1="6" y1="6" x2="18" y2="18" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
+              </Svg>
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
         visible={tooltipType !== 'none'}
         transparent={true}
         animationType="fade"
@@ -1450,6 +1580,14 @@ export default function App() {
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色列表提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
                   选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(155,254,3,0.9)] font-medium">剧情纠葛</span>。
+                </p>
+              </>
+            )}
+            {tooltipType === 'sceneImage' && (
+              <>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景图片提示</h3>
+                <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+                  图片生成会依赖下方的<span className="text-[rgba(155,254,3,0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
                 </p>
               </>
             )}

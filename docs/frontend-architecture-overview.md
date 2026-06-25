@@ -39,9 +39,9 @@
 | 界面 | 路由 | 入口文件 | 样式文件/样式位置 | 当前 API 对接 |
 | --- | --- | --- | --- | --- |
 | 页面导航 Hub | `/pages` | `src/app/pages/index.tsx` | `StyleSheet.create`（页面内） | 无（用于跳转所有页面） |
-| 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 暂未直接接业务 API |
+| 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi.getSessionList`、`getSessionDetail`、`createSession`、`createTemplateAiReply`、`createReplySuggestions`、`createAiReply` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
-| 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 暂未直接接业务 API |
+| 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
 | 浏览图片页 | `/pages/browse-images-list` | `src/app/pages/browse-images-list/index.tsx` | 页面内样式 + `components/*` | 暂未直接接业务 API |
 | 创建角色页 | `/pages/create-role` | `src/app/pages/create-role/index.tsx` | 页面内样式 + `components/basic-info.tsx` 等 | 暂未直接接业务 API |
@@ -64,6 +64,8 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `src/lib/api/ts-role.ts` | `getRoleDetail(roleId)` | GET | `/sys/ts-roles/detail` | `id` | `roleName`、`coverUrl`、`introText`、`storyText` 等 | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
+| `src/lib/api/ts-chat.ts` | `getSessionList / getSessionDetail / createSession / createAiReply / createTemplateAiReply / createReplySuggestions` | GET/POST | `/sys/ts-chat-sessions` 及子接口 | 会话、角色、故事、用户输入相关参数 | 会话列表、会话详情、AI 回复、候选建议 | 聊天页 / 我的页 |
+| `src/lib/api/ts-agent-chat.ts` | `getSessionList / getSessionDetail / createSession / deleteSession / getMessageList / getMessageDetail / createAiReply` | GET/POST/DELETE | `/sys/ts-agent-chat-sessions`、`/sys/ts-agent-chat-messages` 及子接口 | Agent 多会话、消息、回复生成相关参数 | Agent 会话、消息列表、回复文本 | Agent 聊天页（待接入） |
 | `src/lib/api/user.ts` | `phoneLogin(payload)` | POST | `/sys/phoneLogin` | `mobile`、`captcha` | `token`、`refreshToken`、`userInfo` | 验证码登录页 |
 | `src/lib/api/user.ts` | `quickLoginByPhone(mobile)` | POST（复用 phoneLogin） | `/sys/phoneLogin` | `mobile`（固定 `captcha=000000`） | 同 `phoneLogin` | 预留（当前页面未直接调用） |
 | `src/lib/api/user.ts` | `getUserInfo()` | GET | `/sys/user/getUserInfo` | 无 | `userInfo` | 预留 |

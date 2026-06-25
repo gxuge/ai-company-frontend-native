@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { motion } from 'motion/react';
 
 import { useEffect, useState } from 'react';
+import { Inbox } from 'lucide-react';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 
 const imgFes5 = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/ccea1aa2c0a290c2a877e1aa8cb2442ad7ddffc6.png'));
@@ -349,6 +350,32 @@ function CloseButton() {
 }
 
 /* ────────────────────────────────────────────
+   Draft Box Button
+──────────────────────────────────────────── */
+function DraftBoxButton() {
+  return (
+    <div className="absolute top-[46.15px] right-[46.15px] z-10">
+      <button
+        type="button"
+        onClick={() => router.push('/pages/draft')}
+        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)] px-[24px] backdrop-blur-[10px] active:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+      >
+        <Inbox size={32} color="#9ca3af" />
+        <span
+          className="text-[26px] font-bold text-white tracking-[1px]"
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+        >
+          草稿箱
+        </span>
+        <span className="flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-[#9bfe03] px-[10px] text-[20px] font-bold text-black">
+          0
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
    Root �?handles proportional scaling
 ──────────────────────────────────────────── */
 export default function App() {
@@ -384,6 +411,7 @@ export default function App() {
         <div className="relative flex flex-col items-start bg-[#0d0d11]">
           <Main />
           <CloseButton />
+          <DraftBoxButton />
         </div>
       </div>
     </div>

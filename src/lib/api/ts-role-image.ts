@@ -1,3 +1,4 @@
+import type { TsImageResource } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsRoleOneClickImageGeneratePayload = {
@@ -56,6 +57,7 @@ export type TsRoleImageProfile = {
   ownerUserId?: string;
   promptText?: string;
   styleName?: string;
+  imageResources?: TsImageResource[];
   selectedImageAssetId?: number;
   selectedImageUrl?: string;
   sourceType?: string;
@@ -89,6 +91,7 @@ export type TsRoleImageProfilePublic = {
   id: number;
   profileName?: string;
   styleName?: string;
+  imageResources?: TsImageResource[];
   selectedImageUrl?: string;
   sourceType?: string;
   promptText?: string;
