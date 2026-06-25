@@ -40,6 +40,7 @@
 | --- | --- | --- | --- | --- |
 | 页面导航 Hub | `/pages` | `src/app/pages/index.tsx` | `StyleSheet.create`（页面内） | 无（用于跳转所有页面） |
 | 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi.getSessionList`、`getSessionDetail`、`createSession`、`createTemplateAiReply`、`createReplySuggestions`、`createAiReply` |
+| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 `tsAgentChatApi.getSessionDetail`、`tsAgentChatApi.getMessageList`、`tsAgentChatApi.createAiReply` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
@@ -65,7 +66,10 @@
 | `src/lib/api/ts-role.ts` | `getRoleDetail(roleId)` | GET | `/sys/ts-roles/detail` | `id` | `roleName`、`coverUrl`、`introText`、`storyText` 等 | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
 | `src/lib/api/ts-chat.ts` | `getSessionList / getSessionDetail / createSession / createAiReply / createTemplateAiReply / createReplySuggestions` | GET/POST | `/sys/ts-chat-sessions` 及子接口 | 会话、角色、故事、用户输入相关参数 | 会话列表、会话详情、AI 回复、候选建议 | 聊天页 / 我的页 |
-| `src/lib/api/ts-agent-chat.ts` | `getSessionList / getSessionDetail / createSession / deleteSession / getMessageList / getMessageDetail / createAiReply` | GET/POST/DELETE | `/sys/ts-agent-chat-sessions`、`/sys/ts-agent-chat-messages` 及子接口 | Agent 多会话、消息、回复生成相关参数 | Agent 会话、消息列表、回复文本 | Agent 聊天页（待接入） |
+| `src/lib/api/ts-agent-chat.ts` | `getSessionList(params)` | GET | `/sys/ts-agent-chat-sessions` | `pageNo`、`pageSize`、`keyword`、`agentCode`、`sessionStatus` | `records`、`total`、`sessionTitle`、`sessionSummary`、`lastMessageAt` 等 | Agent 聊天页/会话列表 |
+| `src/lib/api/ts-agent-chat.ts` | `getSessionDetail(sessionId)` | GET | `/sys/ts-agent-chat-sessions/detail` | `id` | `sessionTitle`、`sessionSummary`、`agentCode`、`memoryJson` 等 | Agent 聊天页 |
+| `src/lib/api/ts-agent-chat.ts` | `getMessageList(params)` | GET | `/sys/ts-agent-chat-messages` | `sessionId`、`pageNo`、`pageSize`、`roleType`、`messageStatus`、`keyword` | `records`、`content`、`roleType`、`messageStatus` 等 | Agent 聊天页 |
+| `src/lib/api/ts-agent-chat.ts` | `createAiReply(payload)` | POST | `/sys/ts-agent-chat-sessions/ai-reply` | `sessionId`、`userInput`、`historyCount` | `contentText`、`assistantMessageId`、`promptCode` 等 | Agent 聊天页 |
 | `src/lib/api/user.ts` | `phoneLogin(payload)` | POST | `/sys/phoneLogin` | `mobile`、`captcha` | `token`、`refreshToken`、`userInfo` | 验证码登录页 |
 | `src/lib/api/user.ts` | `quickLoginByPhone(mobile)` | POST（复用 phoneLogin） | `/sys/phoneLogin` | `mobile`（固定 `captcha=000000`） | 同 `phoneLogin` | 预留（当前页面未直接调用） |
 | `src/lib/api/user.ts` | `getUserInfo()` | GET | `/sys/user/getUserInfo` | 无 | `userInfo` | 预留 |
@@ -90,6 +94,7 @@
 | 页面 | 已接接口 | 数据映射重点 | 未接/占位说明 |
 | --- | --- | --- | --- |
 | `role-detail` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 角色名、封面、作者名、作者头像、认证标识、关于/故事文案 | “连接者/粉丝/对话数”仍为 `--` 占位，不接数量接口 |
+| `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口 |
 | `verification-code-login` | `/sys/phoneLogin` | 手机号+验证码登录，写入 token 后跳转 `/pages/chat` | 验证码发送逻辑目前是前端倒计时模拟 |
 | 其余页面 | 暂无直接 API 调用 | 以静态界面和组件布局为主 | 后续按业务逐页补齐 |
 

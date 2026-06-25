@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type {
-  TsRoleImageProfile,
-  TsRoleImageProfilePublic,
+  TsRolePublicBrowse,
   TsStory,
   TsStoryPublic,
 } from '@/lib/api';
 import { View, ScrollView, SafeAreaView, Text } from 'react-native';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
-import { tsRoleImageApi, tsStoryApi } from '@/lib/api';
+import { tsRoleApi, tsStoryApi } from '@/lib/api';
 import { SearchBar } from '@/components/pages/browse-images-list/SearchBar';
 import { CategoryTabs } from '@/components/pages/browse-images-list/CategoryTabs';
 import { StoryGrid } from '@/components/pages/browse-images-list/StoryGrid';
@@ -22,11 +21,7 @@ type TabValue = 'story' | 'character';
 
 type CharacterCardItem = {
   id: string;
-  username: string;
-  author: string;
-  views: string;
   imageUrl?: string;
-  authorAvatarUrl?: string;
 };
 
 type PageState<T> = {
@@ -42,9 +37,6 @@ const PAGE_SIZE = 24;
 
 const FALLBACK_CHARACTER_CARDS: CharacterCardItem[] = Array.from({ length: 8 }, (_, index) => ({
   id: `fallback-${index}`,
-  username: '@user',
-  author: '--',
-  views: '--',
 }));
 
 const TAB_OPTIONS = [
@@ -63,37 +55,7 @@ function buildInitialState<T>(): PageState<T> {
   };
 }
 
-function toDisplayCount(value?: number) {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-    return '--';
-  }
-  if (value >= 10000) {
-    return `${(value / 10000).toFixed(1)}w`;
-  }
-  return String(value);
-}
-
-function normalizeText(value: unknown, fallback: string) {
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed.length > 0) {
-      return trimmed;
-    }
-  }
-  return fallback;
-}
-
 function resolveStoryModeByCategory(index: number) {
-  const map: Record<number, string> = {
-    3: '2D',
-    4: 'Urban',
-    5: 'Ancient',
-    6: 'Sci-Fi',
-  };
-  return map[index];
-}
-
-function resolveStyleByCategory(index: number) {
   const map: Record<number, string> = {
     3: '2D',
     4: 'Urban',
@@ -187,7 +149,9 @@ export default function BrowseImagesList() {
         const id = Number(item.id);
         return {
           id: Number.isFinite(id) ? `story-${id}` : `story-${Math.random()}`,
-          imageUrl: typeof item.coverUrl === 'string' ? item.coverUrl : undefined,
+          imageUrl: typeof item.coverUrl === 'string' && item.coverUrl.trim()
+            ? item.coverUrl.trim()
+            : (typeof item.sceneImageUrl === 'string' && item.sceneImageUrl.trim() ? item.sceneImageUrl.trim() : undefined),
         };
       });
 
@@ -237,22 +201,23 @@ export default function BrowseImagesList() {
       pageNo,
       pageSize: PAGE_SIZE,
       keyword: searchKeyword || undefined,
-      styleName: resolveStyleByCategory(activeCategory),
     };
 
     try {
       let pageData: {
-        records?: (TsRoleImageProfilePublic | TsRoleImageProfile)[];
+        records?: TsRolePublicBrowse[];
         total?: number;
         pages?: number;
       } | null = null;
 
       try {
-        pageData = await tsRoleImageApi.getPublicRoleImageProfileList(params);
+        pageData = await tsRoleApi.getPublicRoleList(params);
       }
       catch {
-        pageData = await tsRoleImageApi.getRoleImageProfileList({
-          ...params,
+        pageData = await tsRoleApi.getRoleList({
+          pageNo,
+          pageSize: PAGE_SIZE,
+          keyword: searchKeyword || undefined,
           isPublic: 1,
         });
       }
@@ -265,19 +230,12 @@ export default function BrowseImagesList() {
       const mapped = records.map((item, index) => {
         const rawId = Number(item.id);
         const id = Number.isFinite(rawId) ? String(rawId) : `${pageNo}-${index}`;
-        const author = normalizeText(
-          (item as TsRoleImageProfilePublic).authorName ?? (item as TsRoleImageProfile).ownerUserId,
-          '--',
-        );
-        const viewsSource = (item as TsStoryPublic).followerCount ?? (item as TsStoryPublic).dialogueCount;
 
         return {
           id: `character-${id}`,
-          username: normalizeText(item.profileName, '@user'),
-          author,
-          views: toDisplayCount(viewsSource),
-          imageUrl: typeof item.selectedImageUrl === 'string' ? item.selectedImageUrl : undefined,
-          authorAvatarUrl: (item as TsRoleImageProfilePublic).authorAvatar,
+          imageUrl: typeof item.coverUrl === 'string' && item.coverUrl.trim()
+            ? item.coverUrl.trim()
+            : (typeof item.avatarUrl === 'string' && item.avatarUrl.trim() ? item.avatarUrl.trim() : undefined),
         };
       });
 
@@ -440,10 +398,6 @@ export default function BrowseImagesList() {
                 <View key={card.id} style={{ width: '31.5%' }}>
                   <ImageCard
                     imageUrl={card.imageUrl}
-                    username={card.username}
-                    author={card.author}
-                    views={card.views}
-                    authorAvatarUrl={card.authorAvatarUrl}
                   />
                 </View>
               ))}

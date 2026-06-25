@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { AiFormInput } from "@/components/ai-company/ai-form-input";
 import { AiDateInput } from "@/components/ai-company/ai-date-input";
 import { AiSelectTab } from "@/components/ai-company/ai-select-tab";
+import Env from "env";
 import { userApi } from "@/lib/api";
 
 const imgAvatarEditButton = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/avatar_edit_button.svg"));
@@ -67,6 +68,12 @@ function toBackendBirthday(value: string) {
     return undefined;
   }
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function joinBaseUrl(baseUrl: string, path: string) {
+  const normalizedBase = baseUrl.replace(/\/+$/, "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
 }
 
 export default function AccountSettings() {
@@ -222,7 +229,7 @@ export default function AccountSettings() {
               </div>
             )}
             <img
-              src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : `/jeecg-boot/sys/common/static/${avatarUrl}`) : imgProfilePicture}
+              src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : joinBaseUrl(Env.EXPO_PUBLIC_API_URL, `/sys/common/static/${avatarUrl}`)) : imgProfilePicture}
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             />

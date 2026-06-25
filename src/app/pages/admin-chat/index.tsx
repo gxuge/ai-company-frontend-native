@@ -2,8 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
 import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
-import type { TsChatMessage } from "@/lib/api";
-import { tsChatApi } from "@/lib/api";
+import type { TsAgentChatMessage } from "@/lib/api";
+import { tsAgentChatApi } from "@/lib/api";
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const imgImage = require("@/assets/images/admin-chat/ecb7a353c6950598ee6e686ed5e5d05068e56c7f.png");
@@ -37,24 +37,8 @@ type ChatMessage = {
   role: ChatRole;
   content: string;
 };
-
-// ─── Mock 对话数据 ─────────────────────────────────────────────────────────────
-const INITIAL_MESSAGES: ChatMessage[] = [
-  { id: 1, role: "user", content: "如何快速清空当前对话记录？" },
-  {
-    id: 2,
-    role: "ai",
-    content: "您可以点击右上角菜单，选择\"清空对话\"即可快速清空当前的对话记录。",
-  },
-  { id: 3, role: "user", content: "明白了，还有其他功能吗？" },
-  {
-    id: 4,
-    role: "ai",
-    content: "当然！您还可以使用AI创作功能生成图片、文本等内容，也可以通过相机、图片等功能分享素材给我。",
-  },
-];
 const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
-const SESSION_INVALID_TEXT = "会话不存在，请返回会话列表重试。";
+const SESSION_INVALID_TEXT = "Agent 会话不存在，请返回上一页重试。";
 const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
 const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
 
@@ -77,15 +61,17 @@ function parseSessionId(value?: string | string[]) {
   return Math.trunc(parsed);
 }
 
-function toChatMessages(records: TsChatMessage[] | undefined) {
+function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
   const source = Array.isArray(records) ? [...records].reverse() : [];
-  return source.map((item, index) => ({
-    id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
-    role: item.senderType === "user" ? "user" as const : "ai" as const,
-    content: typeof item.contentText === "string" && item.contentText.trim()
-      ? item.contentText.trim()
-      : " ",
-  }));
+  return source.map((item, index) => {
+    const roleType = typeof item.roleType === "string" ? item.roleType.trim().toLowerCase() : "";
+    const content = typeof item.content === "string" && item.content.trim() ? item.content.trim() : " ";
+    return {
+      id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
+      role: roleType === "user" ? "user" as const : "ai" as const,
+      content,
+    };
+  });
 }
 
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
@@ -346,14 +332,16 @@ function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void
 
 /* ─── App ────────────────────────────────────────────────────────────────── */
 export default function App() {
-  const params = useLocalSearchParams<{ sessionId?: string | string[] }>();
+  const params = useLocalSearchParams<{ agentSessionId?: string | string[] }>();
   const [inputValue, setInputValue] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState("Agent 会话");
+  const [sessionSummary, setSessionSummary] = useState("内容由AI生成");
   const scrollViewRef = useRef<ScrollView>(null);
   const scale = useViewportScale();
-  const sessionId = parseSessionId(params.sessionId);
+  const agentSessionId = parseSessionId(params.agentSessionId);
   const plusRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
 
@@ -368,31 +356,56 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
-    if (!sessionId) {
+    if (!agentSessionId) {
+      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
       return () => {
         alive = false;
       };
     }
-    tsChatApi.getMessageList({
-      sessionId,
+    tsAgentChatApi.getSessionDetail(agentSessionId).then((detail) => {
+      if (!alive) {
+        return;
+      }
+      setSessionTitle(
+        typeof detail?.sessionTitle === "string" && detail.sessionTitle.trim()
+          ? detail.sessionTitle.trim()
+          : typeof detail?.agentCode === "string" && detail.agentCode.trim()
+            ? detail.agentCode.trim()
+            : "Agent 会话",
+      );
+      setSessionSummary(
+        typeof detail?.sessionSummary === "string" && detail.sessionSummary.trim()
+          ? detail.sessionSummary.trim()
+          : "内容由AI生成",
+      );
+    }).catch(() => {
+      if (!alive) {
+        return;
+      }
+      setSessionTitle("Agent 会话");
+      setSessionSummary("内容由AI生成");
+    });
+
+    tsAgentChatApi.getMessageList({
+      sessionId: agentSessionId,
       pageNo: 1,
       pageSize: 100,
     }).then((page) => {
       if (!alive) {
         return;
       }
-      const mapped = toChatMessages(page?.records);
+      const mapped = toAgentChatMessages(page?.records);
       setMessages(mapped);
     }).catch(() => {
       if (!alive) {
         return;
       }
-      setMessages([]);
+      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
     });
     return () => {
       alive = false;
     };
-  }, [sessionId]);
+  }, [agentSessionId]);
 
   const appendMessage = (next: ChatMessage) => {
     setMessages(prev => [...prev, next]);
@@ -404,7 +417,7 @@ export default function App() {
     if (!text || sending) {
       return;
     }
-    if (!sessionId) {
+    if (!agentSessionId) {
       appendMessage({ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT });
       return;
     }
@@ -414,11 +427,10 @@ export default function App() {
     setInputValue("");
     setSending(true);
     try {
-      const reply = await tsChatApi.createAiReply({
-        sessionId,
-        userContent: text,
+      const reply = await tsAgentChatApi.createAiReply({
+        sessionId: agentSessionId,
+        userInput: text,
         historyCount: 12,
-        generateVoice: false,
       });
       const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
         ? reply.contentText.trim()
@@ -497,12 +509,12 @@ export default function App() {
           {/* center title */}
           <View style={{ alignItems: "center" }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-              <Text style={{ color: "white", fontSize: 28.2, marginRight: 8 }}>系统小探</Text>
+              <Text style={{ color: "white", fontSize: 28.2, marginRight: 8 }}>{sessionTitle}</Text>
               <View style={{ width: 10, height: 21.4 }}>
                 <Image source={imgImage1} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
               </View>
             </View>
-            <Text style={{ color: "#9a8b7a", fontSize: 19.2 }}>内容由AI生成</Text>
+            <Text style={{ color: "#9a8b7a", fontSize: 19.2 }}>{sessionSummary}</Text>
           </View>
 
           {/* right menu icon */}
