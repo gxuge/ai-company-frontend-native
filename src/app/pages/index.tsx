@@ -29,6 +29,7 @@ const pageItems: PageItem[] = [
   { label: 'Generating Page', href: '/pages/generating-page' },
   { label: 'My Gallery', href: '/pages/my-gallery' },
   { label: 'Admin Chat', href: '/pages/admin-chat' },
+  { label: 'System Chat', href: '/pages/system-chat' },
 ];
 
 export default function PagesHubScreen() {

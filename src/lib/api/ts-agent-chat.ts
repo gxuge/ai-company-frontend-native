@@ -1,4 +1,5 @@
 import { defHttp } from './def-http';
+import { requestStream } from './stream';
 
 export type TsAgentChatSession = {
   id: number;
@@ -38,6 +39,13 @@ export type TsAgentChatSessionQuery = {
 export type TsAgentChatSessionSavePayload = {
   appId: string;
   agentCode: string;
+  sessionTitle?: string;
+  sessionSummary?: string;
+  memoryJson?: string;
+};
+
+export type TsAgentChatSessionUpdatePayload = {
+  id: number;
   sessionTitle?: string;
   sessionSummary?: string;
   memoryJson?: string;
@@ -84,6 +92,7 @@ export type TsAgentChatReplyPayload = {
   sessionId: number;
   userInput: string;
   historyCount?: number;
+  stream?: boolean;
 };
 
 export type TsAgentChatReplyResult = {
@@ -119,6 +128,13 @@ export const tsAgentChatApi = {
     });
   },
 
+  async updateSession(payload: TsAgentChatSessionUpdatePayload) {
+    return defHttp.put<TsAgentChatSession>({
+      url: '/sys/ts-agent-chat-sessions',
+      data: payload,
+    });
+  },
+
   async deleteSession(id: number) {
     return defHttp.delete({
       url: '/sys/ts-agent-chat-sessions',
@@ -145,5 +161,19 @@ export const tsAgentChatApi = {
       url: '/sys/ts-agent-chat-sessions/ai-reply',
       data: payload,
     });
+  },
+
+  async createAiReplyStream(payload: TsAgentChatReplyPayload, signal?: AbortSignal) {
+    return requestStream(
+      '/sys/ts-agent-chat-sessions/ai-reply',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          ...payload,
+          stream: true,
+        }),
+        signal,
+      },
+    );
   },
 };

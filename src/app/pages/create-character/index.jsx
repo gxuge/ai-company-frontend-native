@@ -216,12 +216,12 @@ function InputCard({
             <button
               onClick={onGenerate}
               disabled={generating}
-              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(155,254,3,0.9)] bg-[rgba(22,22,30,0.6)] px-5 py-3 shadow-[0px_0px_15px_0px_rgba(155,254,3,0.2)] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-brand-green-rgb), 0.9)] bg-[rgba(22,22,30,0.6)] px-5 py-3 shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb), 0.2)] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="size-5 shrink-0" fill="none" viewBox="0 0 38 40">
-                <path d={svgPaths.p6e49400} fill="rgba(155,254,3,0.9)" fillOpacity="0.9" />
+                <path d={svgPaths.p6e49400} fill="rgba(var(--color-brand-green-rgb), 0.9)" fillOpacity="0.9" />
               </svg>
-              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(155,254,3,0.9)]">
+              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(var(--color-brand-green-rgb), 0.9)]">
                 {generating ? '生成中...' : 'AI 生成'}
               </span>
             </button>

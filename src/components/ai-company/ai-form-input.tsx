@@ -38,7 +38,7 @@ export const AiFormInput = React.forwardRef<TextInput, AiFormInputProps>(
             ref={ref}
             placeholderTextColor={placeholderTextColor}
             className={className}
-            selectionColor="rgba(155,254,3,0.5)"
+            selectionColor="rgba(var(--color-brand-green-rgb), 0.5)"
             style={[
               webFocusStyle, 
               style, 

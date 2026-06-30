@@ -2,7 +2,8 @@ import { router } from 'expo-router';
 import { motion } from 'motion/react';
 
 import { useEffect, useState } from 'react';
-import { Inbox } from 'lucide-react';
+import { Bot, Inbox } from 'lucide-react';
+import Env from 'env';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 
 const imgFes5 = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/ccea1aa2c0a290c2a877e1aa8cb2442ad7ddffc6.png'));
@@ -38,7 +39,7 @@ function Frame2() {
         style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
       >
         <p className="mb-0">&nbsp;</p>
-        <p className="bg-linear-to-r from-[#9bfe03] to-white bg-clip-text text-transparent">
+        <p className="bg-linear-to-r from-brand-green to-white bg-clip-text text-transparent">
           创作之旅
         </p>
       </div>
@@ -60,7 +61,7 @@ function VerticalBorder() {
     <div className="relative w-full shrink-0">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 border-l-[3.846px] border-solid border-[rgba(155,254,3,0.5)]"
+        className="pointer-events-none absolute inset-0 border-l-[3.846px] border-solid border-brand-green/50"
       />
       <div className="relative flex w-full flex-col items-start pl-[11.538px]">
         <div
@@ -78,7 +79,7 @@ function HeaderContainer() {
   return (
     <div className="relative flex w-full shrink-0 flex-col items-start gap-[23.077px]">
       <div
-        className="absolute top-[-61.54px] left-[-30.77px] size-[153.846px] rounded-[9999px] bg-[#9bfe03] opacity-20 blur-[57.692px]"
+        className="absolute top-[-61.54px] left-[-30.77px] size-[153.846px] rounded-[9999px] bg-brand-green opacity-20 blur-[57.692px]"
       />
       <Heading />
       <VerticalBorder />
@@ -146,7 +147,7 @@ function Card1Content() {
       <div className="absolute top-[204px] right-0 left-0 flex flex-col items-start pt-0">
         <div className="relative flex w-full shrink-0 items-center gap-1">
           <div
-            className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-[#9bfe03]"
+            className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-brand-green"
             style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
           >
             <p className="leading-[28px]">开始创建</p>
@@ -170,7 +171,7 @@ function Card1() {
         <div className="relative min-h-[269.231px] w-full shrink-0">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 border-2 border-solid border-[#9bfe03]"
+            className="pointer-events-none absolute inset-0 border-2 border-solid border-brand-green"
           />
           <div className="flex size-full min-h-[inherit] flex-row items-center">
             <div className="relative flex min-h-[inherit] w-full items-center p-[46.154px]">
@@ -182,7 +183,7 @@ function Card1() {
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[46.154px] border-[1.923px] border-solid border-[#9bfe03]"
+        className="pointer-events-none absolute inset-0 rounded-[46.154px] border-[1.923px] border-solid border-brand-green"
       />
     </div>
   );
@@ -246,7 +247,7 @@ function Card2Content() {
       <div className="absolute top-[204px] right-0 left-0 flex flex-col items-start pt-0">
         <div className="relative flex w-full shrink-0 items-center gap-1">
           <div
-            className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-[#9bfe03]"
+            className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-brand-green"
             style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
           >
             <p className="leading-[28px]">开始创作</p>
@@ -270,20 +271,20 @@ function Card2() {
         <div className="relative min-h-[269.231px] w-full shrink-0">
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 border-2 border-solid border-[#9bfe03]"
+            className="pointer-events-none absolute inset-0 border-2 border-solid border-brand-green"
           />
           <div className="flex size-full min-h-[inherit] flex-row items-center">
             <div className="relative flex min-h-[inherit] w-full items-center p-[46.154px]">
               <Card2Background />
               <Card2Content />
-              <div className="absolute top-1/2 right-[-30.77px] mt-[0.01px] size-[184.615px] -translate-y-1/2 rounded-[9999px] bg-[rgba(155,254,3,0.05)] blur-[38.462px]" />
+              <div className="absolute top-1/2 right-[-30.77px] mt-[0.01px] size-[184.615px] -translate-y-1/2 rounded-[9999px] bg-brand-green/5 blur-[38.462px]" />
             </div>
           </div>
         </div>
       </div>
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[46.154px] border-[1.923px] border-solid border-[#9bfe03]"
+        className="pointer-events-none absolute inset-0 rounded-[46.154px] border-[1.923px] border-solid border-brand-green"
       />
     </div>
   );
@@ -367,7 +368,7 @@ function DraftBoxButton() {
         >
           草稿箱
         </span>
-        <span className="flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-[#9bfe03] px-[10px] text-[20px] font-bold text-black">
+        <span className="flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-brand-green px-[10px] text-[20px] font-bold text-black">
           0
         </span>
       </button>
@@ -376,7 +377,39 @@ function DraftBoxButton() {
 }
 
 /* ────────────────────────────────────────────
-   Root �?handles proportional scaling
+   AI Assistant Button
+──────────────────────────────────────────── */
+function AiAssistantButton() {
+  const appId = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || '';
+  const agentCode = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || 'admin_chat';
+
+  return (
+    <div className="absolute bottom-[46.15px] right-[46.15px] z-10">
+      <button
+        type="button"
+        onClick={() => router.push({
+          pathname: '/pages/admin-chat',
+          params: {
+            ...(appId ? { appId } : {}),
+            ...(agentCode ? { agentCode } : {}),
+          },
+        })}
+        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-brand-green bg-brand-green/10 px-[24px] backdrop-blur-[10px] active:bg-brand-green/20 transition-colors cursor-pointer shadow-[0_0_15px_rgba(155,254,3,0.3)]"
+      >
+        <Bot size={32} color='var(--color-brand-green)' />
+        <span
+          className="text-[26px] font-bold text-brand-green tracking-[1px]"
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+        >
+          AI 助手
+        </span>
+      </button>
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────
+   Root ?handles proportional scaling
 ──────────────────────────────────────────── */
 export default function App() {
   const [scale, setScale] = useState(1);
@@ -407,11 +440,12 @@ export default function App() {
           zoom: scale,
         }}
       >
-        {/* Body �?matches original Figma root structure */}
+        {/* Body ?matches original Figma root structure */}
         <div className="relative flex flex-col items-start bg-[#0d0d11]">
           <Main />
           <CloseButton />
           <DraftBoxButton />
+          <AiAssistantButton />
         </div>
       </div>
     </div>

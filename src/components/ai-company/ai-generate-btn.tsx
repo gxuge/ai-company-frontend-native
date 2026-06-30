@@ -4,7 +4,7 @@ import svgPaths from './svg-u5al272n02';
 function SparkleIcon() {
   return (
     <svg className="w-[14px] h-[14px] shrink-0" viewBox="0 0 26 27" fill="none">
-      <path d={svgPaths.p79c5600} fill="rgba(155,254,3,0.9)" />
+      <path d={svgPaths.p79c5600} fill="rgba(var(--color-brand-green-rgb), 0.9)" />
     </svg>
   );
 }
@@ -31,7 +31,7 @@ export function AiGenerateBtn({
     <button 
       onClick={isActionable ? onClick : undefined}
       disabled={!isActionable}
-      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(155,254,3,0.2)] shadow-[0px_0px_5px_0px_rgba(155,254,3,0.2),0px_0px_10px_0px_rgba(155,254,3,0.1)] bg-transparent shrink-0 transition-all duration-300 ${disabled ? 'cursor-not-allowed grayscale-[0.8] opacity-40' : (loading ? 'cursor-progress text-glow' : 'cursor-pointer active:opacity-70 text-glow')} ${className}`}
+      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(var(--color-brand-green-rgb), 0.2)] shadow-[0px_0px_5px_0px_rgba(var(--color-brand-green-rgb), 0.2),0px_0px_10px_0px_rgba(var(--color-brand-green-rgb), 0.1)] bg-transparent shrink-0 transition-all duration-300 ${disabled ? 'cursor-not-allowed grayscale-[0.8] opacity-40' : (loading ? 'cursor-progress text-glow' : 'cursor-pointer active:opacity-70 text-glow')} ${className}`}
       style={{
         animation: loading ? 'pulse-glow 2s ease-in-out infinite' : 'none'
       }}
@@ -45,9 +45,9 @@ export function AiGenerateBtn({
           fontFamily: "'Noto Sans SC', sans-serif",
           fontSize: "14px",
           fontWeight: 500,
-          color: disabled ? "#6b7280" : "rgba(155,254,3,0.9)",
+          color: disabled ? "#6b7280" : "rgba(var(--color-brand-green-rgb), 0.9)",
           ...(loading ? {
-            backgroundImage: "linear-gradient(90deg, rgba(155,254,3,0.9) 0%, #fff 50%, rgba(155,254,3,0.9) 100%)",
+            backgroundImage: "linear-gradient(90deg, rgba(var(--color-brand-green-rgb), 0.9) 0%, #fff 50%, rgba(var(--color-brand-green-rgb), 0.9) 100%)",
             backgroundSize: "200% auto",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
@@ -64,12 +64,12 @@ export function AiGenerateBtn({
         }
         @keyframes pulse-glow {
           0%, 100% { 
-            box-shadow: 0px 0px 5px 0px rgba(155,254,3,0.2), 0px 0px 10px 0px rgba(155,254,3,0.1);
-            border-color: rgba(155,254,3,0.2);
+            box-shadow: 0px 0px 5px 0px rgba(var(--color-brand-green-rgb), 0.2), 0px 0px 10px 0px rgba(var(--color-brand-green-rgb), 0.1);
+            border-color: rgba(var(--color-brand-green-rgb), 0.2);
           }
           50% { 
-            box-shadow: 0px 0px 12px 2px rgba(155,254,3,0.4), 0px 0px 20px 0px rgba(155,254,3,0.2);
-            border-color: rgba(155,254,3,0.5);
+            box-shadow: 0px 0px 12px 2px rgba(var(--color-brand-green-rgb), 0.4), 0px 0px 20px 0px rgba(var(--color-brand-green-rgb), 0.2);
+            border-color: rgba(var(--color-brand-green-rgb), 0.5);
           }
         }
         .animate-pulse-star {
@@ -79,12 +79,12 @@ export function AiGenerateBtn({
           0%, 100% { 
             transform: scale(1);
             opacity: 0.7;
-            filter: drop-shadow(0 0 2px rgba(155,254,3,0.4));
+            filter: drop-shadow(0 0 2px rgba(var(--color-brand-green-rgb), 0.4));
           }
           50% { 
             transform: scale(1.2);
             opacity: 1;
-            filter: drop-shadow(0 0 8px rgba(155,254,3,1));
+            filter: drop-shadow(0 0 8px rgba(var(--color-brand-green-rgb), 1));
           }
         }
       `}</style>

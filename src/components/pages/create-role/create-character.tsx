@@ -114,7 +114,7 @@ function Header({
         activeTab={activeTab}
         onTabChange={onTabChange}
         containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
-        activeBgClassName="bg-[rgba(155,254,3,0.9)] shadow-[0px_0px_15px_0px_rgba(155,254,3,0.5)] rounded-full"
+        activeBgClassName="bg-brand-green/90 shadow-[0px_0px_15px_0px_rgba(155,254,3,0.5)] rounded-full"
         activeTextClassName="text-[#3b3f34] font-bold"
         inactiveTextClassName="text-[#9ca3af]"
       />
@@ -159,7 +159,7 @@ function TagChip({
       onClick={onToggle}
       className={`rounded-full px-4 py-2 text-sm ${fontBase} font-medium transition-colors ${
         selected
-          ? 'border border-black bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
+          ? 'border border-black bg-brand-green/20 text-brand-green/90'
           : 'border border-[#4b5563] text-[#9ca3af]'
       }`}
     >
@@ -236,7 +236,7 @@ function TagsSection({
               maxLength={10}
               value={customTag}
               onChangeText={setCustomTag}
-              className={`w-full rounded-xl border border-[#494949] bg-black px-4 py-3 text-sm text-white focus:border-[rgba(155,254,3,0.5)] ${fontBase}`}
+              className={`w-full rounded-xl border border-[#494949] bg-black px-4 py-3 text-sm text-white focus:border-brand-green/50 ${fontBase}`}
               autoFocus
               style={[{ outlineStyle: 'none' } as any]}
             />
@@ -249,7 +249,7 @@ function TagsSection({
               </button>
               <button
                 onClick={handleConfirm}
-                className={`rounded-full bg-[rgba(155,254,3,0.9)] px-6 py-2 text-sm font-bold text-[#3b3f34] ${fontBase}`}
+                className={`rounded-full border-2 border-solid border-brand-green bg-transparent px-6 py-2 text-sm font-bold text-brand-green active:bg-brand-green/10 ${fontBase}`}
               >
                 确认
               </button>
@@ -275,7 +275,7 @@ function OptionButton({
       onClick={onClick}
       className={`rounded-xl px-3.5 py-1 text-xs ${fontBase} transition-colors ${
         selected
-          ? 'border border-[rgba(155,254,3,0.9)] bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
+          ? 'border border-brand-green/90 bg-brand-green/20 text-brand-green/90'
           : 'border border-[#4b5563] text-[#9ca3af]'
       }`}
     >
@@ -314,7 +314,7 @@ function DialogueStyleSection({
       <div className="overflow-hidden rounded-2xl border border-[#494949] bg-black">
         <div className="p-5">
           <div className="mb-4 flex items-center">
-            <div className="mr-3 h-5 w-[2.5px] rounded-full bg-[rgba(155,254,3,0.9)]" />
+            <div className="mr-3 h-5 w-[2.5px] rounded-full bg-brand-green/90" />
             <span className={`text-sm text-white ${fontBase} font-bold tracking-wide`}>对话风格预览</span>
           </div>
           <AiFormTextarea
@@ -326,7 +326,7 @@ function DialogueStyleSection({
           />
         </div>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <div className="mx-5 h-px bg-brand-green/20" />
 
         <div className="flex items-center justify-between px-5 py-4">
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>对话长度</span>
@@ -349,7 +349,7 @@ function DialogueStyleSection({
           </div>
         </div>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <div className="mx-5 h-px bg-brand-green/20" />
 
         <div 
           className="flex items-center justify-between px-5 py-4 cursor-pointer active:opacity-70"
@@ -357,12 +357,12 @@ function DialogueStyleSection({
         >
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>语气倾向</span>
           <div className="flex items-center gap-1.5">
-            <span className={`text-xs text-[rgba(155,254,3,0.9)] ${fontBase}`}>{toneTendency}</span>
+            <span className={`text-xs text-brand-green/90 ${fontBase}`}>{toneTendency}</span>
             <img src={imgChevronRightGreen} alt="" className="h-[10px] w-[6px] object-contain" />
           </div>
         </div>
 
-        <div className="mx-5 h-px bg-[rgba(155,254,3,0.2)]" />
+        <div className="mx-5 h-px bg-brand-green/20" />
 
         <div className="flex items-center justify-between px-5 py-4">
           <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>互动性</span>
@@ -405,7 +405,7 @@ function DialogueStyleSection({
                   }}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                     toneTendency === tone
-                      ? 'border border-[rgba(155,254,3,0.9)] bg-[rgba(155,254,3,0.2)] text-[rgba(155,254,3,0.9)]'
+                      ? 'border border-brand-green/90 bg-brand-green/20 text-brand-green/90'
                       : 'border border-[#4b5563] text-[#9ca3af]'
                   }`}
                 >
@@ -438,7 +438,7 @@ function SaveButton({
       <button
         onClick={onSave}
         disabled={saving}
-        className={`w-full rounded-full bg-[rgba(155,254,3,0.9)] py-4 text-lg text-[#3b3f34] ${fontBase} font-bold tracking-wider ${saving ? 'opacity-60' : ''}`}
+        className={`w-full rounded-full border-2 border-solid border-brand-green bg-transparent py-4 text-lg text-brand-green ${fontBase} font-bold tracking-wider active:bg-brand-green/10 ${saving ? 'opacity-60' : ''}`}
       >
         {saving ? '保存中...' : '完成并保存'}
       </button>
@@ -1188,7 +1188,7 @@ export function CreateCharacter() {
             <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
               <p>检测到您已填写了部分设定。您希望 AI 如何为您生成？</p>
               <div className="flex items-start gap-1">
-                <span className="text-[rgba(155,254,3,0.9)] mt-1">•</span>
+                <span className="text-brand-green/90 mt-1">•</span>
                 <p><span className="text-white font-medium">接着生成：</span>基于您当前的灵感，继续润色和扩写。</p>
               </div>
               <div className="flex items-start gap-1">
@@ -1199,7 +1199,7 @@ export function CreateCharacter() {
             <div className="flex flex-row gap-3 mt-4">
               <button
                 type="button"
-                className="flex-1 rounded-full border border-[rgba(155,254,3,0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(155,254,3,0.9)] active:bg-white/5"
+                className="flex-1 rounded-full border border-brand-green/90 bg-transparent py-3 text-center text-base font-bold text-brand-green/90 active:bg-white/5"
                 onClick={() => {
                   setGenerateModalVisible(false);
                   executeGenerateSetting('single');

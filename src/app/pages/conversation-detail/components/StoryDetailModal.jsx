@@ -39,7 +39,7 @@ function SectionHeading({ title }) {
     <div className="flex items-center overflow-hidden rounded-tr-[15px] rounded-br-[15px] py-[6px] md:rounded-tr-[30px] md:rounded-br-[30px] md:py-[11px]">
       <div
         className="w-[3px] shrink-0 self-stretch md:w-[4px]"
-        style={{ background: 'rgba(155,254,3,0.9)' }}
+        style={{ background: 'rgba(var(--color-brand-green-rgb), 0.9)' }}
       />
       <span
         className="pl-3 font-['Noto_Sans_SC',sans-serif] text-[18px] font-bold leading-[26px] text-white md:pl-5 md:text-[30px] md:leading-[44px]"

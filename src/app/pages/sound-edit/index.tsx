@@ -319,7 +319,7 @@ function Slider({ value, onChange, min, max, step }: { value: number; onChange: 
         })}
       </div>
       <div
-        className="pointer-events-none absolute top-1/2 z-10 size-[14px] -translate-y-1/2 rounded-full border-2 border-background bg-[rgba(155,254,3,0.9)] shadow-[0_0_8px_rgba(155,254,3,0.4)]"
+        className="pointer-events-none absolute top-1/2 z-10 size-[14px] -translate-y-1/2 rounded-full border-2 border-background bg-brand-green/90 shadow-[0_0_8px_rgba(155,254,3,0.4)]"
         style={{ left: `calc(${pct}% - ${pct * 0.14}px)` }}
       />
       <input
@@ -375,8 +375,8 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
       onTouchEnd={() => setIsPressed(false)}
       className={`group relative flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] ${isPressed ? 'scale-[0.98]' : ''} ${
         selected
-          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-[#9BFE03] shadow-[0_0_30px_rgba(155,254,3,0.35)]'
-          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
+          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-brand-green shadow-[0_0_30px_rgba(155,254,3,0.35)]'
+          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
       }`}
     >
       <div className="flex items-center gap-[12px]">
@@ -387,7 +387,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
               e.stopPropagation();
             }
           }}
-          className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden"
+          className="relative size-[48px] shrink-0 rounded-full ring-2 ring-white/10 group-hover:ring-brand-green/50 transition-all duration-300 overflow-hidden"
           style={{ backgroundImage: 'linear-gradient(135deg, rgb(55,65,81) 0%, rgb(17,24,39) 100%)' }}
         >
           <div className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)] text-[20px]">
@@ -397,17 +397,17 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           {selected && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[0.5px]">
               {isLoading ? (
-                <Loader2 className="size-6 animate-spin text-[#9BFE03]" />
+                <Loader2 className="size-6 animate-spin text-brand-green" />
               ) : isPlaying ? (
                 <img src={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
               ) : (
-                <Play className="ml-0.5 size-5 text-[#9BFE03] fill-[#9BFE03]" />
+                <Play className="ml-0.5 size-5 text-brand-green fill-[#9BFE03]" />
               )}
             </div>
           )}
         </div>
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</span>
+          <span className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-brand-green/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</span>
           <div className="flex gap-[4px]">
             {tags.map(tag => (
               <span key={tag} className="rounded-[5px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.05)] px-[7px] py-[3px] text-[10px] text-[#9ca3af]">{tag}</span>
@@ -420,13 +420,13 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
         <div
           className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
             selected
-              ? "bg-[#9BFE03] scale-100"
+              ? "bg-brand-green scale-100"
               : "bg-white/5 scale-0 group-hover:scale-100"
           }`}
         >
           <Check
             className={`w-3.5 h-3.5 ${
-              selected ? "text-black" : "text-[#9BFE03]"
+              selected ? "text-black" : "text-brand-green"
             }`}
             strokeWidth={3.5}
           />
@@ -932,10 +932,10 @@ export default function SoundEditPage() {
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleListen(); }}
                       disabled={isListening || !selectedVoice}
-                      className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-[rgba(155,254,3,0.2)] transition-colors hover:bg-[rgba(155,254,3,0.3)] disabled:opacity-50 disabled:grayscale ${!selectedVoice ? 'bg-white/5' : ''}`}
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-green/20 transition-colors hover:bg-brand-green/30 disabled:opacity-50 disabled:grayscale ${!selectedVoice ? 'bg-white/5' : ''}`}
                     >
                       {listenPhase === 'loading' ? (
-                        <Loader2 className="size-[16px] animate-spin text-[#9BFE03]" />
+                        <Loader2 className="size-[16px] animate-spin text-brand-green" />
                       ) : isListening ? (
                         <img src={imgWaveGreenTiny} alt="" className="size-[16px] object-contain" />
                       ) : (
@@ -950,7 +950,7 @@ export default function SoundEditPage() {
                         <button
                           type="button"
                           onClick={() => setIsEditSoundTextOpen(true)}
-                          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-[rgba(155,254,3,0.9)] bg-[#161616] hover:bg-white/5 transition-colors"
+                          className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-brand-green/90 bg-[#161616] hover:bg-white/5 transition-colors"
                           title="编辑试听文案"
                         >
                           <img src={imgEdit} alt="" className="size-[14px] object-contain" />
@@ -995,7 +995,7 @@ export default function SoundEditPage() {
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="rounded-[5px] border border-[rgba(155,254,3,0.9)] px-[9px] py-[3px] text-[10px] text-[rgba(155,254,3,0.9)]"
+                    className="rounded-[5px] border border-brand-green/90 px-[9px] py-[3px] text-[10px] text-brand-green/90"
                   >
                     {`\u91CD\u7F6E`}
                   </button>
@@ -1005,7 +1005,7 @@ export default function SoundEditPage() {
                   <div className="flex flex-1 flex-col gap-[8px]">
                     <div className="flex items-end justify-between">
                       <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u97F3\u8C03`}</span>
-                      <span className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                      <span className="font-mono text-[12px] text-brand-green/90" style={{ fontWeight: 700 }}>
                         {pitch > 0 ? '+' : ''}
                         {pitch}
                         %
@@ -1016,7 +1016,7 @@ export default function SoundEditPage() {
                   <div className="flex flex-1 flex-col gap-[8px]">
                     <div className="flex items-end justify-between">
                       <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u8BED\u901F`}</span>
-                      <span className="font-mono text-[12px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                      <span className="font-mono text-[12px] text-brand-green/90" style={{ fontWeight: 700 }}>
                         {speed.toFixed(1)}
                         x
                       </span>
@@ -1030,16 +1030,16 @@ export default function SoundEditPage() {
                     type="button"
                     onClick={handleListen}
                     disabled={isListening || !selectedVoice}
-                    className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-[rgba(155,254,3,0.9)] disabled:opacity-50 disabled:grayscale transition-all"
+                    className="flex h-[45px] w-full items-center justify-center gap-[10px] rounded-[16px] border-2 border-brand-green/90 disabled:opacity-50 disabled:grayscale transition-all"
                   >
                     {listenPhase === 'loading' ? (
-                      <Loader2 className="size-[19px] animate-spin text-[#9BFE03]" />
+                      <Loader2 className="size-[19px] animate-spin text-brand-green" />
                     ) : isListening ? (
                       <img src={imgWaveGreenTiny} alt="" className="size-[24px] object-contain" />
                     ) : (
                       <img src={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
                     )}
-                    <span className="text-[16px] text-[rgba(155,254,3,0.9)]" style={{ fontWeight: 700 }}>
+                    <span className="text-[16px] text-brand-green/90" style={{ fontWeight: 700 }}>
                       {isListening ? '试听中...' : '试听音色'}
                     </span>
                   </button>
@@ -1057,9 +1057,9 @@ export default function SoundEditPage() {
               ]} 
               activeValue={activeLibraryTab} 
               onChange={setActiveLibraryTab} 
-              activeTextClassName="text-[rgba(155,254,3,0.9)] text-[18px] font-bold pb-[10px]"
+              activeTextClassName="text-brand-green/90 text-[18px] font-bold pb-[10px]"
               inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
-              indicatorClassName="absolute bottom-[-1px] h-[4px] bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+              indicatorClassName="absolute bottom-[-1px] h-[4px] bg-brand-green/90 rounded-[2px]"
             />
           </div>
 
@@ -1070,7 +1070,7 @@ export default function SoundEditPage() {
                   <span className="pr-[4px] text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{`\u6027\u522B`}</span>
                   <div className="relative flex h-[31px] w-[150px] rounded-[8px] border border-[rgba(255,255,255,0.05)] bg-[#222] p-[3.5px]">
                     <div
-                      className="absolute top-[3.5px] bottom-[3.5px] w-[calc((100%-7px)/3)] rounded-[5px] bg-[rgba(155,254,3,0.2)] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
+                      className="absolute top-[3.5px] bottom-[3.5px] w-[calc((100%-7px)/3)] rounded-[5px] bg-brand-green/20 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
                       style={{ transform: `translateX(${GENDERS.indexOf(genderFilter) * 100}%)` }}
                     />
                     {GENDERS.map(g => (
@@ -1078,7 +1078,7 @@ export default function SoundEditPage() {
                         type="button"
                         key={g}
                         onClick={() => setGenderFilter(g)}
-                        className={`relative z-10 flex h-full flex-1 items-center justify-center rounded-[5px] text-[11px] transition-colors duration-300 ${genderFilter === g ? 'text-[#9bfe03]' : 'text-[#9ca3af]'}`}
+                        className={`relative z-10 flex h-full flex-1 items-center justify-center rounded-[5px] text-[11px] transition-colors duration-300 ${genderFilter === g ? 'text-brand-green' : 'text-[#9ca3af]'}`}
                         style={{ fontWeight: 500 }}
                       >
                         {g}
@@ -1150,9 +1150,9 @@ export default function SoundEditPage() {
         <button
           type="button"
           onClick={handleDone}
-          className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#9BFE03] shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 transition-all outline-none"
+          className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none"
         >
-          <span className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</span>
+          <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
         </button>
       </div>
     </div>

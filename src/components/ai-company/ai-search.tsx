@@ -60,7 +60,7 @@ export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
           ref={ref}
           placeholder="搜索角色"
           placeholderTextColor={placeholderTextColor}
-          selectionColor="rgba(155,254,3,0.5)"
+          selectionColor="rgba(var(--color-brand-green-rgb), 0.5)"
           className={`flex-1 bg-transparent text-[#909090] border-0 outline-none ${textSizeClasses} ${className}`}
           style={[
             webFocusStyle, 

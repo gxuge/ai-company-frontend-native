@@ -67,7 +67,7 @@ export function AiEmpty({
             style={({ pressed }) => ({
               paddingHorizontal: 28, 
               paddingVertical: 14,
-              backgroundColor: pressed ? 'rgba(155,254,3,0.7)' : 'rgba(155,254,3,0.9)', 
+              backgroundColor: pressed ? 'rgba(var(--color-brand-green-rgb), 0.7)' : 'rgba(var(--color-brand-green-rgb), 0.9)', 
               borderRadius: 14,
               transform: [{ scale: pressed ? 0.98 : 1 }],
               boxShadow: '0px 4px 8px rgba(155,254,3,0.2)',

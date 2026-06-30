@@ -11,6 +11,10 @@
   --color-white: #ffffff;
   --color-black: #000000;
 
+  /* Brand colors */
+  --color-brand-green: #9bfe03;
+  --color-brand-green-rgb: 155, 254, 3;
+
   /* Charcoal palette */
   --color-charcoal-50: #F2F2F2;
   --color-charcoal-100: #E5E5E5;

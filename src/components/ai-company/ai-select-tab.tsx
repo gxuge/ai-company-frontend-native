@@ -25,8 +25,8 @@ export function AiSelectTab<T extends string | number>({
   value,
   onChange,
   containerClassName = "bg-[#0c0c0c] border border-[rgba(255,255,255,0.3)] rounded-lg p-1",
-  activeBgClassName = "bg-[rgba(155,254,3,0.2)] rounded-[5px]",
-  activeTextClassName = "text-[#9bfe03] font-medium",
+  activeBgClassName = "bg-brand-green/20 rounded-[5px]",
+  activeTextClassName = "text-brand-green font-medium",
   inactiveTextClassName = "text-[#9ca3af]",
   itemClassName = "flex-1 py-1.5 items-center justify-center z-10",
 }: AiSelectTabProps<T>) {

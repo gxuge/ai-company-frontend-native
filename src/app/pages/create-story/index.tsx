@@ -15,6 +15,7 @@ import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
 import { AiHeader } from '../../../components/ai-company/ai-header';
 import { AiLoginBtn } from '../../../components/ai-company/ai-login-btn';
 import { AiTopTabs } from '../../../components/ai-company/ai-top-tabs';
+import { AiSwitch } from '../../../components/ai-company/ai-switch';
 import {
   tsStoryApi,
 
@@ -172,6 +173,29 @@ function Header() {
   );
 }
 
+function PublicStatusSection({
+  isPublic,
+  onPublicChange,
+}: {
+  isPublic: boolean;
+  onPublicChange: (value: boolean) => void;
+}) {
+  return (
+    <section className="flex flex-col gap-[12px] px-[16px] pt-[16px]">
+      <h2 className="text-[16px] font-bold tracking-wide text-white" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>
+        公开状态
+      </h2>
+      <div className="flex items-center justify-between rounded-2xl border border-[#494949] bg-black p-5">
+        <div>
+          <p className="text-[14px] font-medium text-white" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>是否公开故事</p>
+          <p className="mt-1 text-[12px] text-[#6b7280]" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>公开后其他用户可以体验该故事</p>
+        </div>
+        <AiSwitch checked={isPublic} onCheckedChange={onPublicChange} checkedColorClassName="bg-brand-green/90" />
+      </div>
+    </section>
+  );
+}
+
 /* —— Tab Toggle —— */
 function TabToggle({
   activeTab,
@@ -191,7 +215,7 @@ function TabToggle({
       activeTab={activeTab}
       onTabChange={tab => onChange(normalizeStoryMode(tab))}
       containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
-      activeBgClassName="bg-[rgba(155,254,3,0.9)] shadow-[0px_0px_15px_0px_rgba(155,254,3,0.5)] rounded-full"
+      activeBgClassName="bg-[rgba(var(--color-brand-green-rgb), 0.9)] shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb), 0.5)] rounded-full"
       activeTextClassName="text-[#3b3f34] font-bold"
       inactiveTextClassName="text-[#9ca3af]"
     />
@@ -235,7 +259,7 @@ function SectionHeader({
         </span>
         {required && (
           <span
-            className="ml-[2px] text-[rgba(155,254,3,0.9)]"
+            className="ml-[2px] text-[rgba(var(--color-brand-green-rgb), 0.9)]"
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
               fontSize: large ? '20px' : '16px',
@@ -408,7 +432,7 @@ function SceneImageSection({
       <div className="my-2 flex w-full justify-center">
         <button
           onClick={generating ? undefined : onAddImage}
-          className="relative flex h-[184px] w-[135px] flex-col items-center justify-center overflow-hidden rounded-[15px] border-2 border-dashed border-[rgba(155,254,3,0.5)] bg-black active:opacity-80 disabled:opacity-50"
+          className="relative flex h-[184px] w-[135px] flex-col items-center justify-center overflow-hidden rounded-[15px] border-2 border-dashed border-[rgba(var(--color-brand-green-rgb), 0.5)] bg-black active:opacity-80 disabled:opacity-50"
           disabled={generating}
         >
           {generating ? (
@@ -419,7 +443,7 @@ function SceneImageSection({
             <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <>
-              <div className="mb-[12px] flex size-[34px] items-center justify-center rounded-full border border-[rgba(155,254,3,0.3)]">
+              <div className="mb-[12px] flex size-[34px] items-center justify-center rounded-full border border-[rgba(var(--color-brand-green-rgb), 0.3)]">
                 <Svg width={17} height={17} viewBox="0 0 24 24" fill="none">
                   <Line x1="12" y1="5" x2="12" y2="19" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
                   <Line x1="5" y1="12" x2="19" y2="12" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
@@ -480,7 +504,7 @@ function LocationSection({
 /* —— Glow Dot —— */
 function GlowDot() {
   return (
-    <div className="size-[6px] shrink-0 rounded-full bg-white shadow-[0px_0px_4px_0px_#9bfe03]" />
+    <div className="size-[6px] shrink-0 rounded-full bg-white shadow-[0px_0px_4px_0px_var(--color-brand-green)]" />
   );
 }
 
@@ -508,14 +532,14 @@ function ChapterCard({
               fontSize: '18px',
               fontWeight: 700,
               letterSpacing: '0.9px',
-              textShadow: '0px 0px 8px rgba(155,254,3,0.5)',
+              textShadow: '0px 0px 8px rgba(var(--color-brand-green-rgb), 0.5)',
             }}
           >
             {chapter.chapterTitle || `第${index + 1}章`}
           </span>
         </div>
 
-        <div className="border-l-2 border-[rgba(155,254,3,0.9)] pl-[14px]">
+        <div className="border-l-2 border-[rgba(var(--color-brand-green-rgb), 0.9)] pl-[14px]">
           <p
             className="m-0 text-[#9ca3af]"
             style={{
@@ -529,7 +553,7 @@ function ChapterCard({
           </p>
         </div>
 
-        <div className="h-px w-full bg-linear-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
+        <div className="h-px w-full bg-linear-to-r from-transparent via-[rgba(var(--color-brand-green-rgb), 0.3)] to-transparent" />
 
         <div className="flex flex-col gap-[8px]">
           <div className="flex items-center justify-between px-[4px]">
@@ -550,7 +574,7 @@ function ChapterCard({
             </div>
             <button className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
               <span
-                className="text-white underline decoration-[rgba(155,254,3,0.3)]"
+                className="text-white underline decoration-[rgba(var(--color-brand-green-rgb), 0.3)]"
                 style={{
                   fontFamily: '\'Noto Sans SC\', sans-serif',
                   fontSize: '12px',
@@ -608,7 +632,7 @@ function ChapterCard({
         </div>
 
         <div className="relative flex items-center justify-between pr-[3px] pl-[12px]">
-          <div className="absolute top-1/2 left-0 h-[16px] w-[2px] -translate-y-1/2 rounded-full bg-[rgba(155,254,3,0.3)]" />
+          <div className="absolute top-1/2 left-0 h-[16px] w-[2px] -translate-y-1/2 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.3)]" />
           <span
             className="text-[#6b7280]"
             style={{
@@ -709,11 +733,11 @@ function PlotOutlineSection({
       ))}
       <button
         onClick={onAddChapter}
-        className="mt-[4px] flex w-full cursor-pointer items-center justify-center gap-[8px] rounded-[16px] border border-dashed border-[rgba(155,254,3,0.5)] bg-transparent py-[18px]"
+        className="mt-[4px] flex w-full cursor-pointer items-center justify-center gap-[8px] rounded-[16px] border border-dashed border-[rgba(var(--color-brand-green-rgb), 0.5)] bg-transparent py-[18px]"
       >
         <img src={imgAddChapterGreen} alt="" className="size-[20px] shrink-0 object-contain" />
         <span
-          className="text-[rgba(155,254,3,0.9)]"
+          className="text-[rgba(var(--color-brand-green-rgb), 0.9)]"
           style={{
             fontFamily: '\'Noto Sans SC\', sans-serif',
             fontSize: '14px',
@@ -767,6 +791,8 @@ export default function App() {
   );
 
   const [activeTab, setActiveTab] = useState<StoryMode>('normal');
+  const [activeTopTab, setActiveTopTab] = useState<'basic' | 'advanced'>('basic');
+  const [isPublic, setIsPublic] = useState(true);
   const [storyId, setStoryId] = useState<number | null>(null);
   const [storyTitle, setStoryTitle] = useState('');
   const [storyIntro, setStoryIntro] = useState('');
@@ -1197,7 +1223,7 @@ export default function App() {
         storyBackground: storyBackground.trim() || undefined,
         sceneNameSnapshot: sceneSettingText.trim() || undefined,
         status: 1,
-        isPublic: 1,
+        isPublic: isPublic ? 1 : 0,
         isAiStorySetting: isAiStorySetting ? 1 : 0,
         isAiOutline: isAiOutline ? 1 : 0,
         plotOutline: activeTab === 'normal' ? (outlineText.trim() || undefined) : undefined,
@@ -1265,69 +1291,89 @@ export default function App() {
     <div className="flex min-h-full justify-center bg-background">
       <div className="flex min-h-full w-full max-w-[420px] flex-col bg-black">
         <Header />
+        <div className="sticky top-[65px] z-40 bg-black px-[16px] pb-[10px] border-b border-white/10">
+          <AiTopTabs
+            tabs={[
+              { id: 'basic', label: '基础信息' },
+              { id: 'advanced', label: '高级设定' },
+            ]}
+            activeTab={activeTopTab}
+            onTabChange={setActiveTopTab}
+            containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
+            activeBgClassName="bg-brand-green/90 shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb),0.5)] rounded-full"
+            activeTextClassName="text-[#3b3f34] font-bold"
+            inactiveTextClassName="text-[#9ca3af]"
+          />
+        </div>
         <ScrollView className="flex-1">
           <div className="flex flex-col gap-[32px] px-[16px] pt-[10px] pb-[8px]">
-            <TabToggle activeTab={activeTab} onChange={setActiveTab} />
-            <StorySettingsSection
-              text={storySettingText}
-              onChange={setStorySettingText}
-              onGenerate={() => setGenerateModalTarget('setting')}
-              onOptimize={() => void handleOptimizeStorySetting()}
-              generateLoading={generatingSetting}
-              optimizeLoading={optimizingSetting}
-              onHelpClick={() => setTooltipType('story')}
-            />
-            <CharacterListSection
-              roles={selectedRoles}
-              onAddRole={() => router.push('/pages/select-role?from=create-story')}
-              onRemoveRole={(role) => setSelectedRoles(prev => prev.filter(r => r.id !== role.id))}
-              onHelpClick={() => setTooltipType('role')}
-              onUserClick={() => setUserRoleModalVisible(true)}
-            />
-            <SceneImageSection
-              imageUrl={sceneImageUrl}
-              generating={generatingSceneImage}
-              onHelpClick={() => setTooltipType('sceneImage')}
-              onAddImage={async () => {
-                setGeneratingSceneImage(true);
-                try {
-                  // 待对接接口：调用另外一个接口获取场景图片
-                  await new Promise(resolve => setTimeout(resolve, 1500));
-                  Alert.alert('提示', '场景图片生成接口待定，当前为模拟成功！');
-                  setSceneImageUrl('https://picsum.photos/400/600');
-                } catch (e) {
-                  Alert.alert('提示', '生成失败，请重试');
-                } finally {
-                  setGeneratingSceneImage(false);
-                }
-              }}
-            />
-            <LocationSection
-              text={sceneSettingText}
-              onChange={setSceneSettingText}
-              onGenerate={() => setGenerateModalTarget('scene')}
-              onOptimize={() => void handleOptimizeSceneSetting()}
-              generateLoading={generatingScene}
-              optimizeLoading={optimizingScene}
-              onHelpClick={() => setTooltipType('scene')}
-            />
-            <PlotOutlineSection
-              activeTab={activeTab}
-              outlineText={outlineText}
-              onOutlineChange={setOutlineText}
-              chapters={chapters}
-              onChapterChange={(index, chapter) => {
-                setChapters(prev => prev.map((item, current) => (current === index ? chapter : item)));
-              }}
-              onAddChapter={() => {
-                setChapters(prev => [...prev, createDefaultChapter(prev.length + 1)]);
-              }}
-              onGenerate={() => setGenerateModalTarget('outline')}
-              onOptimize={() => void handleOptimizePlotOutline()}
-              generateLoading={generatingOutline}
-              optimizeLoading={optimizingOutline}
-              onHelpClick={() => setTooltipType('outline')}
-            />
+            {activeTopTab === 'basic' ? (
+              <>
+                <StorySettingsSection
+                  text={storySettingText}
+                  onChange={setStorySettingText}
+                  onGenerate={() => setGenerateModalTarget('setting')}
+                  onOptimize={() => void handleOptimizeStorySetting()}
+                  generateLoading={generatingSetting}
+                  optimizeLoading={optimizingSetting}
+                  onHelpClick={() => setTooltipType('story')}
+                />
+                <CharacterListSection
+                  roles={selectedRoles}
+                  onAddRole={() => router.push('/pages/select-role?from=create-story')}
+                  onRemoveRole={(role) => setSelectedRoles(prev => prev.filter(r => r.id !== role.id))}
+                  onHelpClick={() => setTooltipType('role')}
+                  onUserClick={() => setUserRoleModalVisible(true)}
+                />
+                <SceneImageSection
+                  imageUrl={sceneImageUrl}
+                  generating={generatingSceneImage}
+                  onHelpClick={() => setTooltipType('sceneImage')}
+                  onAddImage={async () => {
+                    setGeneratingSceneImage(true);
+                    try {
+                      // 待对接接口：调用另外一个接口获取场景图片
+                      await new Promise(resolve => setTimeout(resolve, 1500));
+                      Alert.alert('提示', '场景图片生成接口待定，当前为模拟成功！');
+                      setSceneImageUrl('https://picsum.photos/400/600');
+                    } catch (e) {
+                      Alert.alert('提示', '生成失败，请重试');
+                    } finally {
+                      setGeneratingSceneImage(false);
+                    }
+                  }}
+                />
+                <LocationSection
+                  text={sceneSettingText}
+                  onChange={setSceneSettingText}
+                  onGenerate={() => setGenerateModalTarget('scene')}
+                  onOptimize={() => void handleOptimizeSceneSetting()}
+                  generateLoading={generatingScene}
+                  optimizeLoading={optimizingScene}
+                  onHelpClick={() => setTooltipType('scene')}
+                />
+                <TabToggle activeTab={activeTab} onChange={setActiveTab} />
+                <PlotOutlineSection
+                  activeTab={activeTab}
+                  outlineText={outlineText}
+                  onOutlineChange={setOutlineText}
+                  chapters={chapters}
+                  onChapterChange={(index, chapter) => {
+                    setChapters(prev => prev.map((item, current) => (current === index ? chapter : item)));
+                  }}
+                  onAddChapter={() => {
+                    setChapters(prev => [...prev, createDefaultChapter(prev.length + 1)]);
+                  }}
+                  onGenerate={() => setGenerateModalTarget('outline')}
+                  onOptimize={() => void handleOptimizePlotOutline()}
+                  generateLoading={generatingOutline}
+                  optimizeLoading={optimizingOutline}
+                  onHelpClick={() => setTooltipType('outline')}
+                />
+              </>
+            ) : (
+              <PublicStatusSection isPublic={isPublic} onPublicChange={setIsPublic} />
+            )}
             <div className="h-[20px] shrink-0" />
           </div>
         </ScrollView>
@@ -1353,18 +1399,18 @@ export default function App() {
             <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
               <p>您希望 AI 如何为您扩写？</p>
               <div className="flex items-start gap-1">
-                <span className="text-[rgba(155,254,3,0.9)] mt-1">•</span>
+                <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] mt-1">•</span>
                 <p><span className="text-white font-medium">仅当前：</span>只针对您刚点击的模块进行扩写。</p>
               </div>
               <div className="flex items-start gap-1">
-                <span className="text-[rgba(155,254,3,0.9)] mt-1">•</span>
+                <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] mt-1">•</span>
                 <p><span className="text-white font-medium">全生成：</span>依次为您自动补全故事、场景和大纲。</p>
               </div>
             </div>
             <div className="flex flex-row gap-3 mt-4">
               <button
                 type="button"
-                className="flex-1 rounded-full border border-[rgba(155,254,3,0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(155,254,3,0.9)] active:bg-white/5"
+                className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb), 0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb), 0.9)] active:bg-white/5"
                 onClick={() => {
                   const target = generateModalTarget;
                   setGenerateModalTarget(null);
@@ -1377,7 +1423,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                className="flex-1 rounded-full bg-[rgba(155,254,3,0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
+                className="flex-1 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
                 onClick={() => {
                   setGenerateModalTarget(null);
                   triggerGenerateAll();
@@ -1520,7 +1566,7 @@ export default function App() {
             <div className="mt-4 flex w-full">
               <button
                 type="button"
-                className="flex-1 rounded-full bg-[rgba(155,254,3,0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
+                className="flex-1 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
                 onClick={() => setUserRoleModalVisible(false)}
               >
                 确定
@@ -1563,15 +1609,15 @@ export default function App() {
               </Svg>
             </button>
             <div className="mb-4 flex justify-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-[rgba(155,254,3,0.15)]">
-                <HelpCircle size={24} color="rgba(155,254,3,0.9)" />
+              <div className="flex size-12 items-center justify-center rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.15)]">
+                <HelpCircle size={24} color="rgba(var(--color-brand-green-rgb), 0.9)" />
               </div>
             </div>
             {tooltipType === 'story' && (
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">故事设定提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(155,254,3,0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(155,254,3,0.9)] font-medium">章节细节</span>。
+                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">章节细节</span>。
                 </p>
               </>
             )}
@@ -1579,7 +1625,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色列表提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(155,254,3,0.9)] font-medium">剧情纠葛</span>。
+                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">剧情纠葛</span>。
                 </p>
               </>
             )}
@@ -1587,7 +1633,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景图片提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  图片生成会依赖下方的<span className="text-[rgba(155,254,3,0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
+                  图片生成会依赖下方的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
                 </p>
               </>
             )}
@@ -1603,7 +1649,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">剧情大纲提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(155,254,3,0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
+                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
                 </p>
               </>
             )}

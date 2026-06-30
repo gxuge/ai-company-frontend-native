@@ -53,7 +53,7 @@ export default function EditSoundText(props: EditSoundTextProps) {
           <button
             type="button"
             onClick={() => onConfirm(text)}
-            className="flex-1 rounded-[10px] bg-[rgba(155,254,3,0.9)] text-[14px] font-bold text-[#3b3f34]"
+            className="flex-1 rounded-[10px] bg-brand-green/90 text-[14px] font-bold text-[#3b3f34]"
           >
             确认
           </button>

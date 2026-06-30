@@ -23,8 +23,8 @@ export function AiTopTabs<T extends string>({
   tabs,
   activeTab,
   onTabChange,
-  containerClassName = "bg-black rounded-full border border-[rgba(155,254,3,0.3)] p-1",
-  activeBgClassName = "bg-[rgba(155,254,3,0.9)] rounded-full",
+  containerClassName = "bg-black rounded-full border border-brand-green/30 p-1",
+  activeBgClassName = "bg-brand-green/90 rounded-full",
   activeTextClassName = "text-[#3b3f34] font-bold",
   inactiveTextClassName = "text-[#9ca3af]",
 }: AiTopTabsProps<T>) {

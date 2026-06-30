@@ -106,13 +106,13 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
             <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
               <View style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                borderRadius: 16, borderWidth: 2, borderColor: 'rgba(155,254,3,0.9)',
+                borderRadius: 16, borderWidth: 2, borderColor: 'rgba(var(--color-brand-green-rgb), 0.9)',
               }} />
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(155,254,3,0.1)' }} />
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(var(--color-brand-green-rgb), 0.1)' }} />
               <View style={{
                 position: 'absolute', top: 10, right: 10,
                 width: 28, height: 28, borderRadius: 14,
-                backgroundColor: 'rgba(155,254,3,0.9)', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'rgba(var(--color-brand-green-rgb), 0.9)', alignItems: 'center', justifyContent: 'center',
               }}>
                 <Image source={imgCheckBlack} style={{ width: 15, height: 15 }} resizeMode="contain" />
               </View>
@@ -331,7 +331,7 @@ export default function MyGallery() {
       style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
     >
       <Text style={{
-        color: isManageMode ? 'rgba(155,254,3,0.9)' : '#a1a1aa',
+        color: isManageMode ? 'rgba(var(--color-brand-green-rgb), 0.9)' : '#a1a1aa',
         fontSize: 14,
         fontWeight: '500',
         fontFamily: 'Noto Sans SC',
@@ -406,7 +406,7 @@ export default function MyGallery() {
             onPress={handleUseImage}
             style={{
               paddingVertical: 16, borderRadius: 16,
-              backgroundColor: 'rgba(155,254,3,0.9)',
+              backgroundColor: 'rgba(var(--color-brand-green-rgb), 0.9)',
               alignItems: 'center',
               opacity: selectedImageItem?.url ? 1 : 0.6,
             }}
@@ -456,7 +456,7 @@ export default function MyGallery() {
             borderRadius: 28,
             backgroundColor: 'rgba(0,0,0,0.6)',
             borderWidth: 1.5,
-            borderColor: 'rgba(155,254,3,0.9)',
+            borderColor: 'rgba(var(--color-brand-green-rgb), 0.9)',
             alignItems: 'center',
             justifyContent: 'center',
             opacity: pressed ? 0.7 : 1,

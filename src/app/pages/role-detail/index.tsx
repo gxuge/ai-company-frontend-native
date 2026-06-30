@@ -198,9 +198,9 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
             ]}
             activeValue={activeTab}
             onChange={val => onTabChange(val as TabKey)}
-            activeTextClassName="text-[rgba(155,254,3,0.9)] text-[20px] font-bold pb-[8px]"
+            activeTextClassName="text-brand-green/90 text-[20px] font-bold pb-[8px]"
             inactiveTextClassName="text-[#e7e7e7] text-[20px] pb-[8px]"
-            indicatorClassName="absolute bottom-0 h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+            indicatorClassName="absolute bottom-0 h-1 bg-brand-green/90 rounded-[2px]"
             containerClassName="flex-row items-center gap-[30px]"
           />
         </div>
@@ -277,9 +277,9 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
           ]}
           activeValue={activeTab}
           onChange={val => onTabChange(val as TabKey)}
-          activeTextClassName="text-[rgba(155,254,3,0.9)] text-[20px] font-bold pb-[8px]"
+          activeTextClassName="text-brand-green/90 text-[20px] font-bold pb-[8px]"
           inactiveTextClassName="text-[#e7e7e7] text-[20px] pb-[8px]"
-          indicatorClassName="absolute bottom-0 h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+          indicatorClassName="absolute bottom-0 h-1 bg-brand-green/90 rounded-[2px]"
           containerClassName="flex-row items-center gap-[30px]"
         />
       </View>
@@ -313,7 +313,7 @@ export default function RoleDetail() {
   const displayAuthorName = author?.displayName || '作者';
   const tabContent = activeTab === 'about'
     ? (role?.greeting?.trim() || '')
-    : (role?.storyText || role?.backgroundStory || '暂无故事内容');
+    : (role?.backgroundStory || '暂无故事内容');
 
   if (Platform.OS === 'web') {
     return (
@@ -521,7 +521,7 @@ const webStyles: Record<string, React.CSSProperties> = {
     objectFit: 'contain',
   },
   followText: {
-    color: 'rgba(155,254,3,0.9)',
+    color: 'rgba(var(--color-brand-green-rgb), 0.9)',
     fontSize: 16,
     fontWeight: 700,
     lineHeight: '20px',
@@ -545,7 +545,7 @@ const webStyles: Record<string, React.CSSProperties> = {
     objectFit: 'cover',
   },
   authorName: {
-    color: 'rgba(155,254,3,0.9)',
+    color: 'rgba(var(--color-brand-green-rgb), 0.9)',
     fontSize: 14,
     marginRight: 4,
   },
@@ -602,7 +602,7 @@ const webStyles: Record<string, React.CSSProperties> = {
     paddingBottom: 8,
   },
   activeTabText: {
-    color: 'rgba(155,254,3,0.9)',
+    color: 'rgba(var(--color-brand-green-rgb), 0.9)',
     fontSize: 20,
     fontWeight: 700,
     lineHeight: '28px',
@@ -615,7 +615,7 @@ const webStyles: Record<string, React.CSSProperties> = {
     bottom: 0,
     height: 4,
     borderRadius: 2,
-    background: 'rgba(155,254,3,0.9)',
+    background: 'rgba(var(--color-brand-green-rgb), 0.9)',
   },
   contentWrap: {
     marginTop: 14,

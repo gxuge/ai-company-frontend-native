@@ -209,7 +209,7 @@ export default function AccountSettings() {
         <button
           onClick={handleSave}
           disabled={isSaving || isLoading}
-          className="text-[16px] text-[rgba(155,254,3,0.9)] active:opacity-60 transition-opacity disabled:opacity-50"
+          className="text-[16px] text-brand-green/90 active:opacity-60 transition-opacity disabled:opacity-50"
           style={{ fontFamily: "sans-serif" }}
         >
           保存
@@ -220,12 +220,12 @@ export default function AccountSettings() {
       <div className="flex justify-center pt-4 pb-8">
         <div className="relative cursor-pointer group" onClick={handleTriggerUpload}>
           <div
-            className="w-[120px] h-[120px] rounded-full border-[2.5px] border-[rgba(155,254,3,0.9)] overflow-hidden p-[7px] relative"
+            className="w-[120px] h-[120px] rounded-full border-[2.5px] border-brand-green/90 overflow-hidden p-[7px] relative"
             style={{ boxShadow: "0 0 20px rgba(155,254,3,0.3)" }}
           >
             {isUploading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 rounded-full">
-                <div className="w-5 h-5 border-2 border-[rgba(155,254,3,0.9)] border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-brand-green/90 border-t-transparent rounded-full animate-spin" />
               </div>
             )}
             <img
@@ -291,7 +291,7 @@ export default function AccountSettings() {
               setGender(value);
             }}
             containerClassName="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px] p-1"
-            activeBgClassName="bg-[rgba(155,254,3,0.2)] rounded-[16px]"
+            activeBgClassName="bg-brand-green/20 rounded-[16px]"
             itemClassName="flex-1 py-4 items-center justify-center z-10"
           />
         </div>

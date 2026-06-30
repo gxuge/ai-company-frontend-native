@@ -1,0 +1,675 @@
+import { useEffect, useState, useRef } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
+import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
+import type { TsAgentChatMessage } from "@/lib/api";
+import { tsAgentChatApi } from "@/lib/api";
+
+const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
+const imgImage = require("@/assets/images/admin-chat/ecb7a353c6950598ee6e686ed5e5d05068e56c7f.png");
+const imgImage1 = require("@/assets/images/admin-chat/a5ca4172116f94768b6109da1c02910fc74f649b.png");
+const imgAiSpark = resolveAsset(require("@/assets/images/admin-chat/ai_spark.svg"));
+const imgMenuWhite = resolveAsset(require("@/assets/images/admin-chat/menu_white.svg"));
+const imgMenuActive = resolveAsset(require("@/assets/images/admin-chat/menu_active.svg"));
+const imgVoiceWhite = resolveAsset(require("@/assets/images/admin-chat/voice_white.svg"));
+const imgVoiceActive = resolveAsset(require("@/assets/images/admin-chat/voice_active.svg"));
+const imgSendWhite = resolveAsset(require("@/assets/images/admin-chat/send_white.svg"));
+const imgSendActive = resolveAsset(require("@/assets/images/admin-chat/send_active.svg"));
+const imgFeatureCamera = resolveAsset(require("@/assets/images/admin-chat/feature_camera.svg"));
+const imgFeatureImage = resolveAsset(require("@/assets/images/admin-chat/feature_image.svg"));
+const imgFeatureFile = resolveAsset(require("@/assets/images/admin-chat/feature_file.svg"));
+const imgFeatureCall = resolveAsset(require("@/assets/images/admin-chat/feature_call.svg"));
+
+/** 原始设计稿宽度（2× Figma 导出） */
+const DESIGN_WIDTH = 750;
+
+/** 根据当前视口宽度计算等比缩放因子 */
+function useViewportScale() {
+  const { width } = useWindowDimensions();
+  return width / DESIGN_WIDTH;
+}
+
+// ─── 对话消息类型 ──────────────────────────────────────────────────────────────
+type ChatRole = "ai" | "user";
+
+type ChatMessage = {
+  id: number;
+  role: ChatRole;
+  content: string;
+};
+const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
+const SESSION_INVALID_TEXT = "Agent 会话不存在，请返回上一页重试。";
+const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
+const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
+
+function firstParam(value?: string | string[]) {
+  if (Array.isArray(value)) {
+    return value[0];
+  }
+  return value;
+}
+
+function parseSessionId(value?: string | string[]) {
+  const raw = firstParam(value);
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return Math.trunc(parsed);
+}
+
+function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
+  const source = Array.isArray(records) ? [...records].reverse() : [];
+  return source.map((item, index) => {
+    const roleType = typeof item.roleType === "string" ? item.roleType.trim().toLowerCase() : "";
+    const content = typeof item.content === "string" && item.content.trim() ? item.content.trim() : " ";
+    return {
+      id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
+      role: roleType === "user" ? "user" as const : "ai" as const,
+      content,
+    };
+  });
+}
+
+/* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
+function AIBubble({ content }: { content: string }) {
+  return (
+    <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
+      <View
+        style={{
+          maxWidth: 492,
+          borderRadius: 25,
+          backgroundColor: "#2d2520",
+          paddingHorizontal: 34,
+          paddingVertical: 27,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 30,
+            lineHeight: 45,
+            color: "rgba(255,255,255,0.9)",
+            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+          }}
+        >
+          {content}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/* ─── 用户气泡（右对齐）──────────────────────────────────────────────────── */
+function UserBubble({ content }: { content: string }) {
+  return (
+    <View style={{ alignSelf: "flex-end", marginBottom: 30 }}>
+      {/* 橙色发光底层 */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0, left: 0, right: 0, bottom: 0,
+          borderRadius: 34,
+          backgroundColor: "rgba(255,137,4,0.2)",
+          // RN 不支持 CSS blur，用阴影近似
+          boxShadow: "0px 0px 18px rgba(251,191,36,0.35)",
+        }}
+      />
+      <View
+        style={{
+          maxWidth: 492,
+          borderRadius: 34,
+          // 橙色渐变近似：单色取中间值
+          backgroundColor: "#e54500",
+          paddingHorizontal: 34,
+          paddingVertical: 27,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 30,
+            lineHeight: 45,
+            color: "rgba(255,255,255,0.95)",
+            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+          }}
+        >
+          {content}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+/* ─── Feature Card ──────────────────────────────────────────────────────── */
+function FeatureCard({ icon, label }: { icon: React.ReactNode; label: string }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handleHoverIn = () => {
+    setIsHovered(true);
+    scale.value = withSpring(1.05, { damping: 15, stiffness: 300 });
+  };
+
+  const handleHoverOut = () => {
+    setIsHovered(false);
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(isHovered ? 1.05 : 1, { damping: 15, stiffness: 300 });
+  };
+
+  return (
+    <Animated.View style={[{ flexShrink: 0, width: 160, height: 160, borderRadius: 24 }, animatedStyle]}>
+      <Pressable
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          borderRadius: 24,
+          backgroundColor: "#1e1916",
+        }}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        {/* 渐变底色 */}
+        <View style={{ position: "absolute", top: 1, left: 1, right: 1, bottom: 1, backgroundColor: "#201b17", borderRadius: 23 }} />
+
+        {/* Hover 发光效果层 */}
+        {isHovered && (
+          <View
+            style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(245, 158, 11, 0.15)", borderRadius: 24 }}
+          />
+        )}
+
+        {/* icon */}
+        <View
+          style={{
+            position: "absolute",
+            left: 58,
+            right: 57,
+            top: 48,
+            height: 45,
+            justifyContent: "center",
+            alignItems: "center"
+          }}
+        >
+          {icon}
+        </View>
+
+        {/* label */}
+        <Text
+          style={{
+            position: "absolute",
+            bottom: 28,
+            left: 0,
+            right: 0,
+            textAlign: "center",
+            fontSize: 23.5,
+            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans JP', sans-serif",
+            color: "rgba(255,255,255,0.9)",
+          }}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/* ─── AI Creation Button ─────────────────────────────────────────────────── */
+function AIButton() {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={[{ borderRadius: 15 }, animatedStyle]}>
+      <Pressable
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+          height: 75,
+          paddingVertical: 7,
+          paddingHorizontal: 20,
+          borderRadius: 15,
+          overflow: "hidden",
+          backgroundColor: "#d97706",
+        }}
+        onHoverIn={() => { scale.value = withSpring(1.05, { damping: 15, stiffness: 300 }); }}
+        onHoverOut={() => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
+        onPressIn={() => { scale.value = withSpring(0.95, { damping: 15, stiffness: 400 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { damping: 15, stiffness: 300 }); }}
+      >
+        {/* AI spark icon */}
+        <View style={{ width: 35, height: 35, position: "relative", marginRight: 5 }}>
+          <View style={{ position: "absolute", top: '8%', bottom: '8%', left: '4%', right: '12%' }}>
+            <Image source={imgAiSpark} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+          </View>
+        </View>
+
+        <Text
+          style={{
+            color: "white",
+            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+            fontSize: 26,
+          }}
+        >
+          AI创作
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/* ─── Suggested Button ───────────────────────────────────────────────────── */
+// 左对齐推荐问题按钮，宽度与 AI 气泡对齐（Figma: w=390px in 750px grid）
+function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handleHoverIn = () => {
+    setIsHovered(true);
+    scale.value = withSpring(1.02, { damping: 15, stiffness: 300 });
+  };
+
+  const handleHoverOut = () => {
+    setIsHovered(false);
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
+  return (
+    // alignSelf: 'flex-start' 确保按钮左对齐，宽度跟随 Figma 固定值
+    <Animated.View style={[{ alignSelf: "flex-start", borderRadius: 15 }, animatedStyle]}>
+      <Pressable
+        style={{
+          height: 80,
+          width: 390,           // Figma: w=390px in 750px design grid
+          paddingHorizontal: 30,
+          borderRadius: 15,
+          justifyContent: "center",
+          overflow: "hidden",
+          backgroundColor: isHovered ? "#5a5a54" : "#4a4a45",  // Figma: #4a4a45
+        }}
+        onHoverIn={handleHoverIn}
+        onHoverOut={handleHoverOut}
+        onPressIn={() => { scale.value = withSpring(0.97, { damping: 15, stiffness: 400 }); }}
+        onPressOut={() => { scale.value = withSpring(isHovered ? 1.02 : 1, { damping: 15, stiffness: 300 }); }}
+        onPress={onPress}
+      >
+        <Text
+          style={{
+            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+            fontSize: 24.8,
+            color: "white",
+          }}
+        >
+          {text}
+        </Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+/* ─── App ────────────────────────────────────────────────────────────────── */
+export default function App() {
+  const params = useLocalSearchParams<{ agentSessionId?: string | string[]; sessionId?: string | string[] }>();
+  const [inputValue, setInputValue] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [sending, setSending] = useState(false);
+  const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
+  const [sessionTitle, setSessionTitle] = useState("Agent 会话");
+  const [sessionSummary, setSessionSummary] = useState("内容由AI生成");
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scale = useViewportScale();
+  const agentSessionId = parseSessionId(params.agentSessionId ?? params.sessionId);
+  const plusRotate = useSharedValue(0);
+  const featureExpandProgress = useSharedValue(0);
+
+  const { height } = useWindowDimensions();
+  const innerHeight = height / scale;
+
+  useEffect(() => {
+    const target = isFeatureExpanded ? 1 : 0;
+    plusRotate.value = withTiming(target * 45, { duration: 220 });
+    featureExpandProgress.value = withTiming(target, { duration: 260 });
+  }, [featureExpandProgress, isFeatureExpanded, plusRotate]);
+
+  useEffect(() => {
+    let alive = true;
+    if (!agentSessionId) {
+      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
+      return () => {
+        alive = false;
+      };
+    }
+    tsAgentChatApi.getSessionDetail(agentSessionId).then((detail) => {
+      if (!alive) {
+        return;
+      }
+      setSessionTitle(
+        typeof detail?.sessionTitle === "string" && detail.sessionTitle.trim()
+          ? detail.sessionTitle.trim()
+          : typeof detail?.agentCode === "string" && detail.agentCode.trim()
+            ? detail.agentCode.trim()
+            : "Agent 会话",
+      );
+      setSessionSummary(
+        typeof detail?.sessionSummary === "string" && detail.sessionSummary.trim()
+          ? detail.sessionSummary.trim()
+          : "内容由AI生成",
+      );
+    }).catch(() => {
+      if (!alive) {
+        return;
+      }
+      setSessionTitle("Agent 会话");
+      setSessionSummary("内容由AI生成");
+    });
+
+    tsAgentChatApi.getMessageList({
+      sessionId: agentSessionId,
+      pageNo: 1,
+      pageSize: 100,
+    }).then((page) => {
+      if (!alive) {
+        return;
+      }
+      const mapped = toAgentChatMessages(page?.records);
+      setMessages(mapped);
+    }).catch(() => {
+      if (!alive) {
+        return;
+      }
+      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [agentSessionId]);
+
+  const appendMessage = (next: ChatMessage) => {
+    setMessages(prev => [...prev, next]);
+    setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const sendMessage = async (rawText: string) => {
+    const text = rawText.trim();
+    if (!text || sending) {
+      return;
+    }
+    if (!agentSessionId) {
+      appendMessage({ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT });
+      return;
+    }
+
+    const userMessageId = Date.now();
+    appendMessage({ id: userMessageId, role: "user", content: text });
+    setInputValue("");
+    setSending(true);
+    try {
+      const reply = await tsAgentChatApi.createAiReply({
+        sessionId: agentSessionId,
+        userInput: text,
+        historyCount: 12,
+      });
+      const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
+        ? reply.contentText.trim()
+        : DEFAULT_AI_REPLY_TEXT;
+      const aiId = typeof reply?.assistantMessageId === "number" && Number.isFinite(reply.assistantMessageId)
+        ? reply.assistantMessageId
+        : Date.now() + 1;
+      appendMessage({ id: aiId, role: "ai", content: aiText });
+    } catch {
+      appendMessage({ id: Date.now() + 1, role: "ai", content: SEND_ERROR_TEXT });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  /** 发送消息（用户） */
+  const handleSend = () => {
+    void sendMessage(inputValue);
+  };
+
+  /** 点击推荐问题快速发送 */
+  const handleSuggestedMessage = (text: string) => {
+    void sendMessage(text);
+  };
+
+  const toggleFeatureExpanded = () => {
+    setIsFeatureExpanded(prev => !prev);
+  };
+
+  const plusIconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${plusRotate.value}deg` }],
+  }));
+
+  const featureCardsAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: featureExpandProgress.value,
+    height: interpolate(featureExpandProgress.value, [0, 1], [0, FEATURE_CARDS_EXPANDED_HEIGHT]),
+    transform: [{ translateY: interpolate(featureExpandProgress.value, [0, 1], [12, 0]) }],
+  }));
+
+  return (
+    <View style={{ flex: 1, backgroundColor: "#1c1613", overflow: "hidden" }}>
+      {/* 内层：750px 宽，等比缩放，transform-origin 左上角 */}
+      <View
+        style={{
+          width: DESIGN_WIDTH,
+          height: innerHeight,
+          transform: [
+            { scale: scale },
+            { translateX: (DESIGN_WIDTH * (scale - 1)) / (2 * scale) },
+            { translateY: (innerHeight * (scale - 1)) / (2 * scale) }
+          ],
+          left: 0,
+          top: 0,
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        {/* HEADER */}
+        <View
+          style={{
+            height: 170,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: 38,
+            backgroundColor: "rgba(0,0,0,0.4)",
+            borderBottomWidth: 1,
+            borderBottomColor: "rgba(255,255,255,0.05)",
+          }}
+        >
+          {/* left logo */}
+          <View style={{ width: 38.3, height: 19.2 }}>
+            <Image source={imgImage} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+          </View>
+
+          {/* center title */}
+          <View style={{ alignItems: "center" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ color: "white", fontSize: 28.2, marginRight: 8 }}>{sessionTitle}</Text>
+              <View style={{ width: 10, height: 21.4 }}>
+                <Image source={imgImage1} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+              </View>
+            </View>
+            <Text style={{ color: "#9a8b7a", fontSize: 19.2 }}>{sessionSummary}</Text>
+          </View>
+
+          {/* right menu icon */}
+          <Pressable style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}>
+            {({ hovered }) => (
+              <View style={{ width: "80%", height: "80%" }}>
+                <Image source={hovered ? imgMenuActive : imgMenuWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+              </View>
+            )}
+          </Pressable>
+        </View>
+
+        {/* CHAT AREA ─────────────────────────────────────────────────────── */}
+        <ScrollView
+          ref={scrollViewRef}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingTop: 36, paddingHorizontal: 26.5, paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
+        >
+          {/* 对话气泡列表 */}
+          {messages.map(msg =>
+            msg.role === "ai"
+              ? <AIBubble key={msg.id} content={msg.content} />
+              : <UserBubble key={msg.id} content={msg.content} />
+          )}
+
+          {/* 聊聊新话题 + 推荐问题：紧跟在最后一条 AI 气泡下方，左对齐 */}
+          <View style={{ alignItems: "center", marginTop: 10, marginBottom: 20 }}>
+            <Text style={{ fontSize: 22.6, color: "#7a6b5a" }}>聊聊新话题</Text>
+          </View>
+          <View style={{ gap: 25, alignItems: "flex-start" }}>
+            <SuggestedButton text="如何快速清空当前对话记录？" onPress={() => handleSuggestedMessage("如何快速清空当前对话记录？")} />
+            <SuggestedButton text="有哪些AI创作功能？" onPress={() => handleSuggestedMessage("有哪些AI创作功能？")} />
+            <SuggestedButton text="怎么上传图片素材？" onPress={() => handleSuggestedMessage("怎么上传图片素材？")} />
+          </View>
+        </ScrollView>
+
+        {/* INPUT BAR */}
+        <View style={{ paddingTop: 24, paddingLeft: 26.5, paddingRight: 20.5 }}>
+          <View style={{ flexDirection: "row", gap: 15, marginBottom: 15 }}>
+            <AIButton />
+            <AIButton />
+          </View>
+          <View
+            style={{
+              height: 100,
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 25,
+              backgroundColor: "rgba(45, 37, 32, 0.8)",
+              borderRadius: 30,
+              borderWidth: 2,
+              borderColor: "rgba(251, 191, 36, 0.2)",
+            }}
+          >
+            {/* voice icon */}
+            <Pressable style={{ width: 50, height: 50, marginRight: 20 }}>
+              {({ hovered }) => (
+                <View style={{ width: "100%", height: "100%", padding: 4 }}>
+                  <Image source={hovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+                </View>
+              )}
+            </Pressable>
+
+            {/* text input */}
+            <TextInput
+              value={inputValue}
+              onChangeText={setInputValue}
+              onSubmitEditing={handleSend}
+              placeholder="发消息或按住说话..."
+              placeholderTextColor="#5a4a3a"
+              returnKeyType="send"
+              style={{
+                flex: 1,
+                fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+                fontSize: 30,
+                color: "white",
+                outlineStyle: 'none' // Remove focus outline on web
+              }}
+            />
+
+            <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15 }}>
+              {/* Feature Expand Button (Plus rotates to X) */}
+              <Pressable
+                style={{
+                  width: 45.7,
+                  height: 47.2,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={toggleFeatureExpanded}
+              >
+                <Animated.View style={plusIconAnimatedStyle}>
+                  <Image 
+                    source={imgSendWhite} 
+                    style={{ width: 42, height: 42 }} // Larger size as requested
+                    resizeMode="contain" 
+                  />
+                </Animated.View>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+
+        {/* FEATURE CARDS */}
+        <Animated.View
+          style={{
+            overflow: "hidden",
+          }}
+        >
+          <Animated.View style={featureCardsAnimatedStyle}>
+            <View
+              style={{
+                paddingTop: 31,
+                paddingLeft: 17,
+                paddingRight: 20.3,
+                paddingBottom: 60,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}
+            >
+              <FeatureCard
+                label="相机"
+                icon={
+                  <Image source={imgFeatureCamera} style={{ width: 37.5, height: 33.75 }} resizeMode="contain" />
+                }
+              />
+
+              <FeatureCard
+                label="图片"
+                icon={
+                  <Image source={imgFeatureImage} style={{ width: 42.3, height: 42.3 }} resizeMode="contain" />
+                }
+              />
+
+              <FeatureCard
+                label="文件"
+                icon={
+                  <Image source={imgFeatureFile} style={{ width: 38.8, height: 38.8 }} resizeMode="contain" />
+                }
+              />
+
+              <FeatureCard
+                label="通话"
+                icon={
+                  <Image source={imgFeatureCall} style={{ width: 48, height: 48 }} resizeMode="contain" />
+                }
+              />
+            </View>
+          </Animated.View>
+        </Animated.View>
+      </View>
+    </View>
+  );
+}

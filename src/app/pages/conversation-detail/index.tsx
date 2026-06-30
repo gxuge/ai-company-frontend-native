@@ -460,7 +460,9 @@ const styles = StyleSheet.create({
   followButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#9bfe03',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: 'var(--color-brand-green)',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
@@ -468,13 +470,13 @@ const styles = StyleSheet.create({
   addIcon: {
     width: 14,
     height: 14,
-    tintColor: '#000000',
+    tintColor: 'var(--color-brand-green)',
     marginRight: 4,
   },
   followText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#000000',
+    color: 'var(--color-brand-green)',
   },
   descriptionContainer: {
     width: '100%',
@@ -493,19 +495,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 30,
     borderWidth: 1,
-    borderColor: 'rgba(155, 254, 3, 0.8)',
+    borderColor: 'rgba(var(--color-brand-green-rgb), 0.8)',
     backgroundColor: 'transparent',
   },
   storyDetailText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#9bfe03',
+    color: 'var(--color-brand-green)',
     marginRight: 8,
   },
   chevronIcon: {
     width: 8,
     height: 12,
-    tintColor: '#9bfe03',
+    tintColor: 'var(--color-brand-green)',
   },
   dataHintText: {
     marginTop: 10,
@@ -651,10 +653,10 @@ const debugStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#9bfe03',
+    backgroundColor: 'transparent',
     padding: '8px 16px',
     borderRadius: 20,
-    border: 'none',
+    border: '1.5px solid #9bfe03',
   },
   addIcon: {
     width: 14,
@@ -663,7 +665,7 @@ const debugStyles: Record<string, React.CSSProperties> = {
   followText: {
     fontSize: 14,
     fontWeight: 700,
-    color: '#000000',
+    color: 'var(--color-brand-green)',
   },
   descriptionContainer: {
     width: '100%',
@@ -688,7 +690,7 @@ const debugStyles: Record<string, React.CSSProperties> = {
   storyDetailText: {
     fontSize: 16,
     fontWeight: 500,
-    color: '#9bfe03',
+    color: 'var(--color-brand-green)',
   },
   chevronIcon: {
     width: 8,

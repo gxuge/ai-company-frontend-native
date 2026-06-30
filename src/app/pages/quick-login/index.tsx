@@ -89,7 +89,7 @@ export default function QuickLoginPage() {
             customWidth="w-[627px]"
             customHeight="h-[85px]"
             radius="rounded-[44px]"
-            className="bg-[#9bfe03]"
+            className="bg-brand-green"
             textClassName="text-[30px] font-bold font-sans text-black"
           />
         </View>

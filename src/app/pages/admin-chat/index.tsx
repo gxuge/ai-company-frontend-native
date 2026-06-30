@@ -1,9 +1,12 @@
-import { useEffect, useState, useRef } from "react";
-import { useLocalSearchParams } from "expo-router";
-import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView } from "react-native";
+import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
+import { useLocalSearchParams, router } from "expo-router";
+import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView, Modal } from "react-native";
 import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
-import type { TsAgentChatMessage } from "@/lib/api";
-import { tsAgentChatApi } from "@/lib/api";
+import Env from "env";
+import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
+import { iterateSseEvents, tsAgentChatApi } from "@/lib/api";
+import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
+import { useAgentChatStream } from "@/hooks";
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const imgImage = require("@/assets/images/admin-chat/ecb7a353c6950598ee6e686ed5e5d05068e56c7f.png");
@@ -36,11 +39,20 @@ type ChatMessage = {
   id: number;
   role: ChatRole;
   content: string;
+  status?: string;
+  loading?: boolean;
+  streamState?: AgentChatStreamState | null;
 };
 const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
+const SESSION_CREATE_ERROR_TEXT = "Agent 会话创建失败，请稍后重试。";
 const SESSION_INVALID_TEXT = "Agent 会话不存在，请返回上一页重试。";
+const SESSION_LOAD_ERROR_TEXT = "Agent 会话加载失败，请稍后重试。";
+const DEFAULT_SESSION_TITLE = "Agent 会话";
+const DEFAULT_SESSION_SUMMARY = "内容由AI生成";
 const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
 const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
+const DEFAULT_AGENT_CHAT_APP_ID = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || "";
+const DEFAULT_AGENT_CHAT_AGENT_CODE = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || "admin_chat";
 
 function firstParam(value?: string | string[]) {
   if (Array.isArray(value)) {
@@ -75,7 +87,7 @@ function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
 }
 
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
-function AIBubble({ content }: { content: string }) {
+function AIBubble({ content, streamState }: { content: string; streamState?: AgentChatStreamState | null }) {
   return (
     <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
       <View
@@ -87,6 +99,11 @@ function AIBubble({ content }: { content: string }) {
           paddingVertical: 27,
         }}
       >
+        {streamState ? (
+          <View style={{ marginBottom: 18 }}>
+            <AdminChatThinkingPanel state={streamState} />
+          </View>
+        ) : null}
         <Text
           style={{
             fontSize: 30,
@@ -143,7 +160,7 @@ function UserBubble({ content }: { content: string }) {
 }
 
 /* ─── Feature Card ──────────────────────────────────────────────────────── */
-function FeatureCard({ icon, label }: { icon: React.ReactNode; label: string }) {
+function FeatureCard({ icon, label }: { icon: ReactNode; label: string }) {
   const [isHovered, setIsHovered] = useState(false);
   const scale = useSharedValue(1);
 
@@ -330,20 +347,144 @@ function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void
   );
 }
 
+/* ─── Admin Sidebar ──────────────────────────────────────────────────────── */
+function AdminSidebar({
+  isOpen,
+  onClose,
+  currentSessionId,
+  agentCode,
+  onRenameSession,
+  onDeleteSession,
+  reloadToken,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  currentSessionId: number | null;
+  agentCode?: string | null;
+  onRenameSession: (id: number, currentTitle: string) => void;
+  onDeleteSession: (id: number) => void;
+  reloadToken: number;
+}) {
+  const [sessions, setSessions] = useState<{id: number; title: string; summary: string; appId: string | null; agentCode: string | null}[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      const query: Parameters<typeof tsAgentChatApi.getSessionList>[0] = {
+        pageNo: 1,
+        pageSize: 20,
+      };
+      if (agentCode) {
+        query.agentCode = agentCode;
+      }
+      tsAgentChatApi.getSessionList(query).then(res => {
+        const mapped = (res.records || []).map(r => ({
+          id: r.id,
+          title: r.sessionTitle || r.agentCode || "Agent 会话",
+          summary: r.sessionSummary || "内容由AI生成",
+          appId: typeof r.appId === "string" && r.appId.trim() ? r.appId.trim() : null,
+          agentCode: typeof r.agentCode === "string" && r.agentCode.trim() ? r.agentCode.trim() : null,
+        }));
+        setSessions(mapped);
+      }).catch(console.error);
+    }
+  }, [agentCode, isOpen, reloadToken]);
+
+  return (
+    <div
+      className={`absolute inset-0 z-[9999] overflow-hidden transition-opacity duration-300 ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 cursor-pointer"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        className={`absolute right-0 top-0 bottom-0 w-[525px] bg-[#2d2520] pt-[50px] px-[20px] shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >
+        <h2 className="text-[28px] text-white mb-[20px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif]">
+          会话列表
+        </h2>
+
+        <div className="flex flex-col gap-[10px] overflow-y-auto" style={{ maxHeight: 'calc(100% - 80px)' }}>
+          {sessions.map(s => (
+            <div
+              key={s.id}
+              className={`flex items-center justify-between py-[20px] px-[15px] border-b border-white/5 rounded-[12px] mb-[10px] ${s.id === currentSessionId ? 'bg-[#ff8904]/10' : 'bg-transparent'}`}
+            >
+              <div
+                className="flex-1 cursor-pointer overflow-hidden"
+                onClick={() => {
+                  router.replace({
+                    pathname: "/pages/admin-chat",
+                    params: {
+                      agentSessionId: String(s.id),
+                      ...(s.agentCode ? { agentCode: s.agentCode } : agentCode ? { agentCode } : {}),
+                      ...(s.appId ? { appId: s.appId } : {}),
+                    },
+                  });
+                  onClose();
+                }}
+              >
+                <div className="text-[24px] text-white font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] truncate">
+                  {s.title}
+                </div>
+                <div className="text-[18px] text-white/50 mt-[8px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] truncate">
+                  {s.summary}
+                </div>
+              </div>
+              <div className="flex items-center ml-[10px] shrink-0 gap-[15px]">
+                <button
+                  onClick={() => onRenameSession(s.id, s.title)}
+                  className="text-[#4da6ff] text-[20px] p-[10px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] active:scale-95 transition-transform bg-transparent border-none cursor-pointer"
+                >
+                  重命名
+                </button>
+                <button
+                  onClick={() => onDeleteSession(s.id)}
+                  className="text-[#ff4444] text-[20px] p-[10px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] active:scale-95 transition-transform bg-transparent border-none cursor-pointer"
+                >
+                  删除
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── App ────────────────────────────────────────────────────────────────── */
 export default function App() {
-  const params = useLocalSearchParams<{ agentSessionId?: string | string[] }>();
+  const params = useLocalSearchParams<{ agentSessionId?: string | string[]; agentCode?: string | string[]; appId?: string | string[] }>();
+  const initialSessionId = parseSessionId(params.agentSessionId);
+  const initialAgentCode = firstParam(params.agentCode)?.trim() || DEFAULT_AGENT_CHAT_AGENT_CODE;
+  const initialAppId = firstParam(params.appId)?.trim() || DEFAULT_AGENT_CHAT_APP_ID;
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState("Agent 会话");
-  const [sessionSummary, setSessionSummary] = useState("内容由AI生成");
+  const [sessionTitle, setSessionTitle] = useState(DEFAULT_SESSION_TITLE);
+  const [sessionSummary, setSessionSummary] = useState(DEFAULT_SESSION_SUMMARY);
+  const [resolvedAgentCode, setResolvedAgentCode] = useState<string | null>(initialAgentCode);
+  const [resolvedAppId, setResolvedAppId] = useState<string | null>(initialAppId);
+  const [currentSessionId, setCurrentSessionId] = useState<number | null>(initialSessionId);
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [renameTargetId, setRenameTargetId] = useState<number | null>(null);
+  const [renameDraft, setRenameDraft] = useState("");
+  const [sidebarReloadToken, setSidebarReloadToken] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const agentStream = useAgentChatStream();
+  const streamAbortRef = useRef<AbortController | null>(null);
   const scale = useViewportScale();
-  const agentSessionId = parseSessionId(params.agentSessionId);
   const plusRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
+  const [menuHovered, setMenuHovered] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
+  const [voiceHovered, setVoiceHovered] = useState(false);
 
   const { height } = useWindowDimensions();
   const innerHeight = height / scale;
@@ -356,60 +497,195 @@ export default function App() {
 
   useEffect(() => {
     let alive = true;
-    if (!agentSessionId) {
-      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
-      return () => {
-        alive = false;
-      };
-    }
-    tsAgentChatApi.getSessionDetail(agentSessionId).then((detail) => {
-      if (!alive) {
-        return;
-      }
+    const applyBlankState = () => {
+      setCurrentSessionId(null);
+      setSessionTitle(DEFAULT_SESSION_TITLE);
+      setSessionSummary(DEFAULT_SESSION_SUMMARY);
+      setMessages([]);
+      setResolvedAgentCode(initialAgentCode);
+      setResolvedAppId(initialAppId);
+    };
+
+    const applySessionSnapshot = (sessionId: number, detail: TsAgentChatSession | undefined, pageRecords: TsAgentChatMessage[] | undefined) => {
+      const nextAgentCode = typeof detail?.agentCode === "string" && detail.agentCode.trim()
+        ? detail.agentCode.trim()
+        : null;
+      const nextAppId = typeof detail?.appId === "string" && detail.appId.trim()
+        ? detail.appId.trim()
+        : null;
+      setCurrentSessionId(sessionId);
       setSessionTitle(
         typeof detail?.sessionTitle === "string" && detail.sessionTitle.trim()
           ? detail.sessionTitle.trim()
-          : typeof detail?.agentCode === "string" && detail.agentCode.trim()
-            ? detail.agentCode.trim()
-            : "Agent 会话",
+          : nextAgentCode || DEFAULT_SESSION_TITLE,
       );
       setSessionSummary(
         typeof detail?.sessionSummary === "string" && detail.sessionSummary.trim()
           ? detail.sessionSummary.trim()
-          : "内容由AI生成",
+          : DEFAULT_SESSION_SUMMARY,
       );
-    }).catch(() => {
-      if (!alive) {
-        return;
-      }
-      setSessionTitle("Agent 会话");
-      setSessionSummary("内容由AI生成");
-    });
+      setResolvedAgentCode(nextAgentCode || initialAgentCode);
+      setResolvedAppId(nextAppId || initialAppId);
+      setMessages(
+        toAgentChatMessages(pageRecords).map((item) => ({
+          ...item,
+          loading: false,
+          status: item.role === "ai" ? "success" : "local",
+          streamState: null,
+        })),
+      );
+    };
 
-    tsAgentChatApi.getMessageList({
-      sessionId: agentSessionId,
-      pageNo: 1,
-      pageSize: 100,
-    }).then((page) => {
+    const loadSessionSnapshot = async (sessionId: number) => {
+      const [detail, page] = await Promise.all([
+        tsAgentChatApi.getSessionDetail(sessionId),
+        tsAgentChatApi.getMessageList({
+          sessionId,
+          pageNo: 1,
+          pageSize: 100,
+        }),
+      ]);
       if (!alive) {
         return;
       }
-      const mapped = toAgentChatMessages(page?.records);
-      setMessages(mapped);
-    }).catch(() => {
+      applySessionSnapshot(sessionId, detail, page?.records);
+    };
+
+    const resolveLatestSession = async () => {
+      const query: Parameters<typeof tsAgentChatApi.getSessionList>[0] = {
+        pageNo: 1,
+        pageSize: 1,
+      };
+      if (initialAgentCode) {
+        query.agentCode = initialAgentCode;
+      }
+      const sessionPage = await tsAgentChatApi.getSessionList(query);
       if (!alive) {
         return;
       }
-      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT }]);
+      const latestSession = sessionPage?.records?.[0];
+      if (latestSession?.id && Number.isFinite(latestSession.id)) {
+        await loadSessionSnapshot(latestSession.id);
+        return;
+      }
+      applyBlankState();
+    };
+
+    if (!initialSessionId) {
+      void resolveLatestSession().catch(() => {
+        if (!alive) {
+          return;
+        }
+        setCurrentSessionId(null);
+        setSessionTitle(DEFAULT_SESSION_TITLE);
+        setSessionSummary(DEFAULT_SESSION_SUMMARY);
+        setMessages([{ id: Date.now(), role: "ai", content: SESSION_LOAD_ERROR_TEXT, loading: false, status: "error", streamState: null }]);
+      });
+      return () => {
+        alive = false;
+      };
+    }
+
+    void loadSessionSnapshot(initialSessionId).catch(() => {
+      if (!alive) {
+        return;
+      }
+      setCurrentSessionId(initialSessionId);
+      setSessionTitle(DEFAULT_SESSION_TITLE);
+      setSessionSummary(DEFAULT_SESSION_SUMMARY);
+      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT, loading: false, status: "error", streamState: null }]);
     });
     return () => {
       alive = false;
     };
-  }, [agentSessionId]);
+  }, [initialAgentCode, initialAppId, initialSessionId]);
 
   const appendMessage = (next: ChatMessage) => {
     setMessages(prev => [...prev, next]);
     setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const updateMessageById = useCallback(
+    (messageId: number, updater: (item: ChatMessage) => ChatMessage) => {
+      setMessages((prev) => prev.map((item) => (item.id === messageId ? updater(item) : item)));
+    },
+    [],
+  );
+
+  const syncStreamMessage = (messageId: number, nextState: AgentChatStreamState) => {
+    if (!agentStream.isActiveTurn(messageId)) {
+      return;
+    }
+
+    updateMessageById(messageId, (item) => ({
+      ...item,
+      content: nextState.finalText || item.content,
+      streamState: nextState,
+      status: nextState.active
+        ? "running"
+        : nextState.finalStatus === "error"
+          ? "error"
+          : "success",
+      loading: nextState.active,
+    } as ChatMessage));
+  };
+
+  const refreshSessionTitleIfNeeded = (sessionId: number, nextTitle: string) => {
+    if (currentSessionId === sessionId) {
+      setSessionTitle(nextTitle);
+    }
+  };
+
+  const handleRenameSession = (id: number, currentTitle: string) => {
+    setRenameTargetId(id);
+    setRenameDraft(currentTitle);
+    setRenameModalVisible(true);
+  };
+
+  const confirmRenameSession = async () => {
+    if (renameTargetId == null) {
+      setRenameModalVisible(false);
+      return;
+    }
+    const nextTitle = renameDraft.trim();
+    if (!nextTitle) {
+      appendMessage({ id: Date.now(), role: "ai", content: "会话标题不能为空。" });
+      return;
+    }
+    try {
+      const updated = await tsAgentChatApi.updateSession({
+        id: renameTargetId,
+        sessionTitle: nextTitle,
+      });
+      refreshSessionTitleIfNeeded(renameTargetId, updated?.sessionTitle?.trim() || nextTitle);
+      setRenameModalVisible(false);
+      setRenameTargetId(null);
+      setSidebarReloadToken(prev => prev + 1);
+    } catch {
+      appendMessage({ id: Date.now(), role: "ai", content: "重命名失败，请稍后重试。" });
+    }
+  };
+
+  const handleDeleteSession = async (id: number) => {
+    const confirmDelete = typeof globalThis.confirm === "function"
+      ? globalThis.confirm("确定删除这个会话吗？")
+      : true;
+    if (!confirmDelete) {
+      return;
+    }
+    try {
+      await tsAgentChatApi.deleteSession(id);
+      if (currentSessionId === id) {
+        setCurrentSessionId(null);
+        setSessionTitle(DEFAULT_SESSION_TITLE);
+        setSessionSummary(DEFAULT_SESSION_SUMMARY);
+        setMessages([]);
+      }
+      setSidebarReloadToken(prev => prev + 1);
+      setIsSidebarOpen(false);
+    } catch {
+      appendMessage({ id: Date.now(), role: "ai", content: "删除失败，请稍后重试。" });
+    }
   };
 
   const sendMessage = async (rawText: string) => {
@@ -417,32 +693,147 @@ export default function App() {
     if (!text || sending) {
       return;
     }
-    if (!agentSessionId) {
-      appendMessage({ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT });
-      return;
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      const nextAppId = (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim();
+      const nextAgentCode = (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim();
+      if (!nextAppId || !nextAgentCode) {
+        appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT });
+        return;
+      }
+      try {
+        const created = await tsAgentChatApi.createSession({
+          appId: nextAppId,
+          agentCode: nextAgentCode,
+        });
+        if (!created?.id || !Number.isFinite(created.id)) {
+          throw new Error("创建会话失败");
+        }
+        sessionId = created.id;
+        setCurrentSessionId(sessionId);
+        setResolvedAppId(typeof created.appId === "string" && created.appId.trim() ? created.appId.trim() : nextAppId);
+        setResolvedAgentCode(typeof created.agentCode === "string" && created.agentCode.trim() ? created.agentCode.trim() : nextAgentCode);
+        setSessionTitle(typeof created.sessionTitle === "string" && created.sessionTitle.trim() ? created.sessionTitle.trim() : DEFAULT_SESSION_TITLE);
+        setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : DEFAULT_SESSION_SUMMARY);
+      } catch {
+        appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT });
+        return;
+      }
     }
 
     const userMessageId = Date.now();
+    const aiId = userMessageId + 1;
     appendMessage({ id: userMessageId, role: "user", content: text });
+    agentStream.startTurn(aiId);
+    appendMessage({
+      id: aiId,
+      role: "ai",
+      content: "",
+      loading: true,
+      status: "loading",
+      streamState: agentStream.stateRef.current,
+    });
     setInputValue("");
     setSending(true);
+    streamAbortRef.current?.abort();
+    streamAbortRef.current = new AbortController();
     try {
-      const reply = await tsAgentChatApi.createAiReply({
-        sessionId: agentSessionId,
+      const streamPayload = {
+        sessionId,
         userInput: text,
         historyCount: 12,
-      });
-      const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
-        ? reply.contentText.trim()
-        : DEFAULT_AI_REPLY_TEXT;
-      const aiId = typeof reply?.assistantMessageId === "number" && Number.isFinite(reply.assistantMessageId)
-        ? reply.assistantMessageId
-        : Date.now() + 1;
-      appendMessage({ id: aiId, role: "ai", content: aiText });
-    } catch {
-      appendMessage({ id: Date.now() + 1, role: "ai", content: SEND_ERROR_TEXT });
+      };
+
+      let streamedAny = false;
+
+      try {
+        const stream = await tsAgentChatApi.createAiReplyStream(streamPayload, streamAbortRef.current.signal);
+        for await (const chunk of iterateSseEvents(stream)) {
+          const eventName = typeof chunk.event === "string" ? chunk.event.trim() : "";
+          if (!eventName) {
+            continue;
+          }
+          streamedAny = true;
+          const dataText = typeof chunk.data === "string" ? chunk.data : "";
+          const nextState = agentStream.applyEvent(aiId, eventName, dataText);
+          if (nextState) {
+            syncStreamMessage(aiId, nextState);
+          }
+        }
+      } catch (streamError) {
+        const aborted =
+          streamError instanceof DOMException && streamError.name === "AbortError"
+          || (typeof streamError === "object" && streamError !== null && "name" in streamError && (streamError as { name?: string }).name === "AbortError");
+
+        if (aborted) {
+          agentStream.stopTurn(aiId);
+          updateMessageById(aiId, (item) => ({
+            ...item,
+            loading: false,
+            status: "stopped",
+          }));
+          return;
+        }
+
+        if (!streamedAny) {
+          agentStream.stopTurn(aiId);
+          const reply = await tsAgentChatApi.createAiReply({
+            sessionId,
+            userInput: text,
+            historyCount: 12,
+          });
+          const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
+            ? reply.contentText.trim()
+            : DEFAULT_AI_REPLY_TEXT;
+          updateMessageById(aiId, (item) => ({
+            ...item,
+            content: aiText,
+            loading: false,
+            status: "success",
+            streamState: null,
+          }));
+          return;
+        }
+
+        const errMsg = streamError instanceof Error ? streamError.message : String(streamError);
+        const failedState = agentStream.markError(aiId, errMsg);
+        if (!failedState) {
+          return;
+        }
+        syncStreamMessage(aiId, failedState);
+        return;
+      }
+
+      const completedState = agentStream.completeTurn(aiId);
+      if (!completedState) {
+        return;
+      }
+      syncStreamMessage(aiId, completedState);
+    } catch (error) {
+      const aborted =
+        error instanceof DOMException && error.name === "AbortError"
+        || (typeof error === "object" && error !== null && "name" in error && (error as { name?: string }).name === "AbortError");
+      if (aborted) {
+        updateMessageById(aiId, (item) => ({
+          ...item,
+          loading: false,
+          status: "stopped",
+        }));
+        return;
+      }
+
+      const errMsg = error instanceof Error ? error.message : String(error);
+      updateMessageById(aiId, (item) => ({
+        ...item,
+        content: errMsg,
+        loading: false,
+        status: "error",
+        streamState: null,
+      }));
     } finally {
       setSending(false);
+      streamAbortRef.current = null;
+      agentStream.stopTurn(aiId);
     }
   };
 
@@ -517,14 +908,31 @@ export default function App() {
             <Text style={{ color: "#9a8b7a", fontSize: 19.2 }}>{sessionSummary}</Text>
           </View>
 
-          {/* right menu icon */}
-          <Pressable style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}>
-            {({ hovered }) => (
+          {/* right side icons container */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            {/* right menu icon (volume) */}
+            <Pressable
+              style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}
+              onHoverIn={() => setMenuHovered(true)}
+              onHoverOut={() => setMenuHovered(false)}
+            >
               <View style={{ width: "80%", height: "80%" }}>
-                <Image source={hovered ? imgMenuActive : imgMenuWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+                <Image source={menuHovered ? imgMenuActive : imgMenuWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
               </View>
-            )}
-          </Pressable>
+            </Pressable>
+
+            {/* sidebar toggle icon (hamburger) */}
+            <Pressable
+              onPress={() => setIsSidebarOpen(true)}
+              style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}
+              onHoverIn={() => setSidebarHovered(true)}
+              onHoverOut={() => setSidebarHovered(false)}
+            >
+              <View style={{ width: "70%", height: "70%", opacity: sidebarHovered ? 0.7 : 1 }}>
+                <Image source={{ uri: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PGxpbmUgeDE9IjMiIHkxPSIxMiIgeDI9IjIxIiB5Mj0iMTIiPjwvbGluZT48bGluZSB4MT0iMyIgeTE9IjYiIHgyPSIyMSIgeTI9IjYiPjwvbGluZT48bGluZSB4MT0iMyIgeTE9IjE4IiB4Mj0iMjEiIHkyPSIxOCI+PC9saW5lPjwvc3ZnPg==' }} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         {/* CHAT AREA ─────────────────────────────────────────────────────── */}
@@ -538,15 +946,15 @@ export default function App() {
           {/* 对话气泡列表 */}
           {messages.map(msg =>
             msg.role === "ai"
-              ? <AIBubble key={msg.id} content={msg.content} />
+              ? <AIBubble key={msg.id} content={msg.content} streamState={msg.streamState} />
               : <UserBubble key={msg.id} content={msg.content} />
           )}
 
           {/* 聊聊新话题 + 推荐问题：紧跟在最后一条 AI 气泡下方，左对齐 */}
-          <View style={{ alignItems: "center", marginTop: 10, marginBottom: 20 }}>
+          <View style={{ display: "none", alignItems: "center", marginTop: 10, marginBottom: 20 }}>
             <Text style={{ fontSize: 22.6, color: "#7a6b5a" }}>聊聊新话题</Text>
           </View>
-          <View style={{ gap: 25, alignItems: "flex-start" }}>
+          <View style={{ display: "none", gap: 25, alignItems: "flex-start" }}>
             <SuggestedButton text="如何快速清空当前对话记录？" onPress={() => handleSuggestedMessage("如何快速清空当前对话记录？")} />
             <SuggestedButton text="有哪些AI创作功能？" onPress={() => handleSuggestedMessage("有哪些AI创作功能？")} />
             <SuggestedButton text="怎么上传图片素材？" onPress={() => handleSuggestedMessage("怎么上传图片素材？")} />
@@ -572,12 +980,14 @@ export default function App() {
             }}
           >
             {/* voice icon */}
-            <Pressable style={{ width: 50, height: 50, marginRight: 20 }}>
-              {({ hovered }) => (
-                <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                  <Image source={hovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-                </View>
-              )}
+            <Pressable
+              style={{ width: 50, height: 50, marginRight: 20 }}
+              onHoverIn={() => setVoiceHovered(true)}
+              onHoverOut={() => setVoiceHovered(false)}
+            >
+              <View style={{ width: "100%", height: "100%", padding: 4 }}>
+                <Image source={voiceHovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+              </View>
             </Pressable>
 
             {/* text input */}
@@ -593,7 +1003,6 @@ export default function App() {
                 fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
                 fontSize: 30,
                 color: "white",
-                outlineStyle: 'none' // Remove focus outline on web
               }}
             />
 
@@ -669,6 +1078,53 @@ export default function App() {
             </View>
           </Animated.View>
         </Animated.View>
+
+        <AdminSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          currentSessionId={currentSessionId}
+          agentCode={resolvedAgentCode || initialAgentCode}
+          onRenameSession={handleRenameSession}
+          onDeleteSession={handleDeleteSession}
+          reloadToken={sidebarReloadToken}
+        />
+
+        <Modal
+          visible={renameModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => { setRenameModalVisible(false); setRenameTargetId(null); }}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", padding: 24 }}>
+            <View style={{ width: "100%", maxWidth: 520, borderRadius: 20, backgroundColor: "#2d2520", padding: 20 }}>
+              <Text style={{ color: "#fff", fontSize: 24, marginBottom: 12 }}>重命名会话</Text>
+              <TextInput
+                value={renameDraft}
+                onChangeText={setRenameDraft}
+                placeholder="请输入会话标题"
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                style={{
+                  borderRadius: 14,
+                  borderWidth: 1,
+                  borderColor: "rgba(255,255,255,0.12)",
+                  backgroundColor: "#1f1a17",
+                  color: "#fff",
+                  fontSize: 18,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                }}
+              />
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 18 }}>
+                <Pressable onPress={() => { setRenameModalVisible(false); setRenameTargetId(null); }} style={{ paddingHorizontal: 18, paddingVertical: 12 }}>
+                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 16 }}>取消</Text>
+                </Pressable>
+                <Pressable onPress={() => void confirmRenameSession()} style={{ paddingHorizontal: 18, paddingVertical: 12, borderRadius: 12, backgroundColor: "#ff8904" }}>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>确定</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </View>
   );

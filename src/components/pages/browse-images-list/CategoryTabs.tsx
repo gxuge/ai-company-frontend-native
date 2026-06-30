@@ -34,16 +34,16 @@ export function CategoryTabs({ active: externalActive, onChange }: CategoryTabsP
               paddingHorizontal: 20,
               borderRadius: 18,
               justifyContent: 'center',
-              backgroundColor: isActive ? 'rgba(155,254,3,0.9)' : 'rgba(155,254,3,0.2)',
+              backgroundColor: isActive ? 'rgba(var(--color-brand-green-rgb), 0.9)' : 'rgba(var(--color-brand-green-rgb), 0.2)',
               borderWidth: 1.5,
-              borderColor: isActive ? 'transparent' : 'rgba(155,254,3,0.9)',
+              borderColor: isActive ? 'transparent' : 'rgba(var(--color-brand-green-rgb), 0.9)',
             }}
           >
             <Text
               style={{
                 fontWeight: '700',
                 fontSize: 15,
-                color: isActive ? '#202020' : 'rgba(155,254,3,0.9)',
+                color: isActive ? '#202020' : 'rgba(var(--color-brand-green-rgb), 0.9)',
               }}
             >
               {cat}

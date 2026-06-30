@@ -8,7 +8,7 @@ export interface AiSwitchProps extends SwitchPrimitives.RootProps, React.RefAttr
 
 export function AiSwitch({
   className,
-  checkedColorClassName = 'bg-[rgba(155,254,3,0.9)]',
+  checkedColorClassName = 'bg-brand-green/90',
   ...props
 }: AiSwitchProps) {
   return (

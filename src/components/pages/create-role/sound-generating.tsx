@@ -9,15 +9,15 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
         {/* Left: Shrunk Sound Wave Icon */}
         <div className="relative size-8 shrink-0 flex items-center justify-center">
           <div
-            className="absolute inset-0 rounded-full border-2 border-[rgba(155,254,3,0.3)]"
+            className="absolute inset-0 rounded-full border-2 border-brand-green/30"
             style={{ animation: 'pulse-ring 2s ease-in-out infinite' }}
           />
-          <div className="relative size-6 rounded-full bg-[rgba(155,254,3,0.15)] flex items-center justify-center">
+          <div className="relative size-6 rounded-full bg-brand-green/15 flex items-center justify-center">
             <div className="flex items-center gap-[2px]">
               {[0, 150, 300].map((delay, i) => (
                 <div
                   key={i}
-                  className="w-[2px] rounded-full bg-[rgba(155,254,3,0.9)]"
+                  className="w-[2px] rounded-full bg-brand-green/90"
                   style={{
                     animation: 'wave-bar-mini 0.8s ease-in-out infinite',
                     animationDelay: `${delay}ms`,
@@ -30,7 +30,7 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
         </div>
 
         {/* Text Content */}
-        <span className="text-[14px] font-medium text-[rgba(155,254,3,0.9)] font-['Noto_Sans_SC',sans-serif]">
+        <span className="text-[14px] font-medium text-brand-green/90 font-['Noto_Sans_SC',sans-serif]">
           正在生成声音...
         </span>
 
@@ -55,16 +55,16 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
         <div className="relative shrink-0 w-12 h-12 flex items-center justify-center">
           {/* Outer pulse ring */}
           <div
-            className="absolute inset-0 rounded-full border-2 border-[rgba(155,254,3,0.3)]"
+            className="absolute inset-0 rounded-full border-2 border-brand-green/30"
             style={{ animation: 'pulse-ring 2s ease-in-out infinite' }}
           />
           {/* Inner circle with sound waves */}
-          <div className="relative w-10 h-10 rounded-full bg-[rgba(155,254,3,0.15)] flex items-center justify-center">
+          <div className="relative w-10 h-10 rounded-full bg-brand-green/15 flex items-center justify-center">
             <div className="flex items-center gap-[3px]">
               {[0, 150, 300].map((delay, i) => (
                 <div
                   key={i}
-                  className="w-[2.5px] rounded-full bg-[rgba(155,254,3,0.9)]"
+                  className="w-[2.5px] rounded-full bg-brand-green/90"
                   style={{
                     animation: 'wave-bar 0.8s ease-in-out infinite',
                     animationDelay: `${delay}ms`,
@@ -78,14 +78,14 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
 
         {/* Middle: Text Content */}
         <div className="flex-1 flex flex-col gap-1">
-          <p className="text-[15px] leading-tight text-[rgba(155,254,3,0.9)] font-['Noto_Sans_SC',sans-serif]">
+          <p className="text-[15px] leading-tight text-brand-green/90 font-['Noto_Sans_SC',sans-serif]">
             正在生成声音
           </p>
           <p className="text-[13px] leading-tight text-[#9ca3af] font-['Noto_Sans_SC',sans-serif]">
             匹配角色声线中
           </p>
           {/* Thin progress bar */}
-          <div className="relative w-[120px] h-[2px] bg-[rgba(155,254,3,0.1)] rounded-full mt-2 overflow-hidden">
+          <div className="relative w-[120px] h-[2px] bg-brand-green/10 rounded-full mt-2 overflow-hidden">
             <div
               className="absolute inset-y-0 left-0 w-[40%] bg-gradient-to-r from-transparent via-[rgba(155,254,3,0.9)] to-transparent"
               style={{ animation: 'progress-flow 1.5s linear infinite' }}
@@ -98,7 +98,7 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
           {[0, 200, 400].map((delay, i) => (
             <div
               key={i}
-              className="w-[5px] h-[5px] rounded-full bg-[rgba(155,254,3,0.6)]"
+              className="w-[5px] h-[5px] rounded-full bg-brand-green/60"
               style={{
                 animation: 'dot-pulse 1.2s ease-in-out infinite',
                 animationDelay: `${delay}ms`,

@@ -1,6 +1,6 @@
-﻿# Frontend Architecture Overview
+# Frontend Architecture Overview
 
-更新时间：2026-04-09  
+更新时间：2026-06-30  
 项目根目录：`D:\project_demo\ai-company-frontend-native`
 
 ## 1. 项目目录与职责（根目录）
@@ -27,7 +27,8 @@
 | `src/components/reusables/` | 通用可复用基础组件 | button/input/dialog 等 |
 | `src/components/ui/` | UI 原子组件与主题适配 | text/list/modal/checkbox 等 |
 | `src/features/auth/` | 业务状态模块（认证） | `use-auth-store.tsx` |
-| `src/lib/api/` | 统一 API 封装层 | `ts-role.ts`、`user.ts`、`def-http.ts` |
+| `src/hooks/` | 页面级可复用 Hook | `use-agent-chat-stream.ts` 等 |
+| `src/lib/api/` | 统一 API 封装层 | `ts-role.ts`、`user.ts`、`def-http.ts`、`stream.ts`、`ts-agent-chat-stream.ts` |
 | `src/lib/auth/` | token 存取与认证工具 | access/refresh token 工具函数 |
 | `src/lib/i18n/` | 国际化配置 | i18n 初始化、类型定义 |
 | `src/assets/images/` | 页面资源图目录（按页面分文件夹） | `role-detail/`、`chat/`、`verification-code-login/` |
@@ -40,7 +41,8 @@
 | --- | --- | --- | --- | --- |
 | 页面导航 Hub | `/pages` | `src/app/pages/index.tsx` | `StyleSheet.create`（页面内） | 无（用于跳转所有页面） |
 | 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi.getSessionList`、`getSessionDetail`、`createSession`、`createTemplateAiReply`、`createReplySuggestions`、`createAiReply` |
-| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 `tsAgentChatApi.getSessionDetail`、`tsAgentChatApi.getMessageList`、`tsAgentChatApi.createAiReply` |
+| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 `tsAgentChatApi.getSessionDetail`、`tsAgentChatApi.getMessageList`、`tsAgentChatApi.createAiReply`；新增 SSE 流式接收与 `admin-chat-thinking-panel`，并通过 `useAgentChatStream` 复用状态机，无 `agentSessionId` 时优先加载最近会话，列表为空则空白进入 |
+| System 聊天页 | `/pages/system-chat` | `src/app/pages/system-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 复制自原始 `admin-chat` 的简单聊天逻辑，需要显式 `agentSessionId` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
@@ -69,7 +71,8 @@
 | `src/lib/api/ts-agent-chat.ts` | `getSessionList(params)` | GET | `/sys/ts-agent-chat-sessions` | `pageNo`、`pageSize`、`keyword`、`agentCode`、`sessionStatus` | `records`、`total`、`sessionTitle`、`sessionSummary`、`lastMessageAt` 等 | Agent 聊天页/会话列表 |
 | `src/lib/api/ts-agent-chat.ts` | `getSessionDetail(sessionId)` | GET | `/sys/ts-agent-chat-sessions/detail` | `id` | `sessionTitle`、`sessionSummary`、`agentCode`、`memoryJson` 等 | Agent 聊天页 |
 | `src/lib/api/ts-agent-chat.ts` | `getMessageList(params)` | GET | `/sys/ts-agent-chat-messages` | `sessionId`、`pageNo`、`pageSize`、`roleType`、`messageStatus`、`keyword` | `records`、`content`、`roleType`、`messageStatus` 等 | Agent 聊天页 |
-| `src/lib/api/ts-agent-chat.ts` | `createAiReply(payload)` | POST | `/sys/ts-agent-chat-sessions/ai-reply` | `sessionId`、`userInput`、`historyCount` | `contentText`、`assistantMessageId`、`promptCode` 等 | Agent 聊天页 |
+| `src/lib/api/ts-agent-chat.ts` | `createAiReply(payload)` | POST | `/sys/ts-agent-chat-sessions/ai-reply` | `sessionId`、`userInput`、`historyCount`、`stream`（可选） | `contentText`、`assistantMessageId`、`promptCode` 等 | Agent 聊天页 |
+| `src/lib/api/ts-agent-chat.ts` | `createAiReplyStream(payload, signal?)` | POST | `/sys/ts-agent-chat-sessions/ai-reply` | `sessionId`、`userInput`、`historyCount`、`stream=true` | SSE 事件流，事件名包含 `agent.start`、`llm.delta`、`tool.end` 等 | Agent 聊天页 |
 | `src/lib/api/user.ts` | `phoneLogin(payload)` | POST | `/sys/phoneLogin` | `mobile`、`captcha` | `token`、`refreshToken`、`userInfo` | 验证码登录页 |
 | `src/lib/api/user.ts` | `quickLoginByPhone(mobile)` | POST（复用 phoneLogin） | `/sys/phoneLogin` | `mobile`（固定 `captcha=000000`） | 同 `phoneLogin` | 预留（当前页面未直接调用） |
 | `src/lib/api/user.ts` | `getUserInfo()` | GET | `/sys/user/getUserInfo` | 无 | `userInfo` | 预留 |
@@ -87,6 +90,8 @@
 | `src/lib/api/types.ts` | 返回结果类型 | `ApiResult<T>` 等 |
 | `src/lib/api/provider.tsx` | React Query Provider | `queryClient` 统一注入 |
 | `src/lib/api/utils.tsx` | 分页/queryKey 等工具 | Query 参数与分页辅助 |
+| `src/lib/api/stream.ts` | 通用 SSE 读取封装 | `fetch` + `ReadableStream` + SSE block 解析，输出标准化事件迭代器 |
+| `src/lib/api/ts-agent-chat-stream.ts` | Agent SSE 状态机 reducer | 把 `agent.start` / `llm.delta` / `tool.error` / `agent.end` 归并为前端展示状态 |
 | `src/lib/api/index.ts` | API 统一导出 | 页面统一从这里 import |
 
 ## 5. 页面与 API 对接矩阵（当前状态）
@@ -94,7 +99,9 @@
 | 页面 | 已接接口 | 数据映射重点 | 未接/占位说明 |
 | --- | --- | --- | --- |
 | `role-detail` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 角色名、封面、作者名、作者头像、认证标识、关于/故事文案 | “连接者/粉丝/对话数”仍为 `--` 占位，不接数量接口 |
-| `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口 |
+| `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口；进入页时先取最近会话，若列表为空则空白进入，首条消息发送时懒创建 session |
+| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、LLM/Tool 片段、最终结果 | `llm.error` 会归入当前节点片段，`agent.end` 作为整轮收尾 |
+| `system-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 简单 Agent 聊天、消息列表、用户输入、AI 回复 | 原始 admin-chat 逻辑的独立复制页 |
 | `verification-code-login` | `/sys/phoneLogin` | 手机号+验证码登录，写入 token 后跳转 `/pages/chat` | 验证码发送逻辑目前是前端倒计时模拟 |
 | 其余页面 | 暂无直接 API 调用 | 以静态界面和组件布局为主 | 后续按业务逐页补齐 |
 
@@ -117,3 +124,4 @@
 - 角色 API：`src/lib/api/ts-role.ts`  
 - 用户 API：`src/lib/api/user.ts`  
 - 请求拦截器：`src/lib/api/def-http.ts`
+

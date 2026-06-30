@@ -367,9 +367,9 @@ function MineGridSection(props: MineGridSectionProps) {
             options={TABS}
             activeValue={activeTab}
             onChange={value => onTabChange(Number(value))}
-            activeTextClassName="text-[rgba(155,254,3,0.9)] text-[18px] font-bold pb-[10px]"
+            activeTextClassName="text-brand-green/90 text-[18px] font-bold pb-[10px]"
             inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
-            indicatorClassName="absolute bottom-[-1px] h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+            indicatorClassName="absolute bottom-[-1px] h-1 bg-brand-green/90 rounded-[2px]"
           />
         </div>
 
@@ -407,9 +407,9 @@ function MineGridSection(props: MineGridSectionProps) {
           options={TABS}
           activeValue={activeTab}
           onChange={value => onTabChange(Number(value))}
-          activeTextClassName="text-[rgba(155,254,3,0.9)] text-[18px] font-bold pb-[10px]"
+          activeTextClassName="text-brand-green/90 text-[18px] font-bold pb-[10px]"
           inactiveTextClassName="text-[#e7e7e7] text-[18px] pb-[10px]"
-          indicatorClassName="absolute bottom-[-1px] h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]"
+          indicatorClassName="absolute bottom-[-1px] h-1 bg-brand-green/90 rounded-[2px]"
         />
       </View>
 
@@ -672,8 +672,8 @@ export default function Mine() {
   );
 }
 
-const ACCENT = 'rgba(155, 254, 3, 0.9)';
-const ACCENT_DIM = 'rgba(155, 254, 3, 0.2)';
+const ACCENT = 'rgba(var(--color-brand-green-rgb), 0.9)';
+const ACCENT_DIM = 'rgba(var(--color-brand-green-rgb), 0.2)';
 
 const styles = StyleSheet.create({
   container: {
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
   vipBadge: {
     backgroundColor: ACCENT_DIM,
     borderWidth: 1,
-    borderColor: 'rgba(155, 254, 3, 0.3)',
+    borderColor: 'rgba(var(--color-brand-green-rgb), 0.3)',
     borderRadius: 5,
     paddingHorizontal: 8,
     paddingVertical: 3,

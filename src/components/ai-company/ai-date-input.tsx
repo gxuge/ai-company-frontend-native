@@ -36,7 +36,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
 
   const webFocusStyle = Platform.OS === 'web' ? { 
     outlineStyle: 'none' as any,
-    borderColor: focused ? 'rgba(155,254,3,0.5)' : 'rgba(255,255,255,0.3)'
+    borderColor: focused ? 'rgba(var(--color-brand-green-rgb), 0.5)' : 'rgba(255,255,255,0.3)'
   } : {};
 
   // Calendar rendering logic
@@ -77,7 +77,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
                   setMode('date');
                 }}
                 className={`w-[30%] h-12 items-center justify-center rounded-xl mb-3 ${
-                  y === year ? 'bg-[rgba(155,254,3,0.9)] shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5 bg-white/5'
+                  y === year ? 'bg-brand-green/90 shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5 bg-white/5'
                 }`}
               >
                 <Text className={`text-[16px] ${y === year ? 'text-black font-bold' : 'text-white'}`}>{y}</Text>
@@ -100,7 +100,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
               setMode('date');
             }}
             className={`w-[30%] h-14 items-center justify-center rounded-xl mb-4 ${
-              i === month ? 'bg-[rgba(155,254,3,0.9)] shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5 bg-white/5'
+              i === month ? 'bg-brand-green/90 shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5 bg-white/5'
             }`}
           >
             <Text className={`text-[16px] ${i === month ? 'text-black font-bold' : 'text-white'}`}>{mName}</Text>
@@ -137,7 +137,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
             key={`day-${currentDay}`}
             onPress={() => handleSelectDay(currentDay)}
             className={`w-[14%] aspect-square items-center justify-center rounded-full transition-colors ${
-              isSelected ? 'bg-[rgba(155,254,3,0.9)] shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5'
+              isSelected ? 'bg-brand-green/90 shadow-[0_0_10px_rgba(155,254,3,0.5)]' : 'active:bg-white/10 hover:bg-white/5'
             }`}
           >
             <Text className={`text-[17px] ${isSelected ? 'text-[#0a0a0a] font-bold' : 'text-white font-medium'}`}>
@@ -158,7 +158,7 @@ export const AiDateInput: React.FC<AiDateInputProps> = ({
           onPress={handleClose}
         >
           <Pressable 
-            className="w-full max-w-[340px] bg-[#1a1a1a] rounded-[24px] p-5 border border-[rgba(155,254,3,0.2)] shadow-[0_0_40px_rgba(155,254,3,0.15)]"
+            className="w-full max-w-[340px] bg-[#1a1a1a] rounded-[24px] p-5 border border-brand-green/20 shadow-[0_0_40px_rgba(155,254,3,0.15)]"
             onPress={(e) => e.stopPropagation()}
           >
             {/* Header */}

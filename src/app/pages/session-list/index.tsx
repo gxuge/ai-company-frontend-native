@@ -268,7 +268,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('关注');
   const { conversations, loading } = useSessionListData();
   const handleOpenConversation = (conversation: Conversation) => {
-    const pathname = conversation.isSystemSession ? '/pages/admin-chat' : '/pages/chat';
+    const pathname = conversation.isSystemSession ? '/pages/system-chat' : '/pages/chat';
     router.push({
       pathname,
       params: { sessionId: String(conversation.id) },
@@ -284,9 +284,9 @@ export default function App() {
             activeValue={activeTab}
             onChange={setActiveTab}
             containerClassName="flex-row items-center gap-8"
-            activeTextClassName="text-[18px] text-[rgba(155,254,3,0.9)] font-bold pb-1"
+            activeTextClassName="text-[18px] text-brand-green/90 font-bold pb-1"
             inactiveTextClassName="text-[18px] text-[#e7e7e7] pb-1"
-            indicatorClassName="absolute bottom-[-2px] h-[3px] bg-[rgba(155,254,3,0.9)] rounded-full"
+            indicatorClassName="absolute bottom-[-2px] h-[3px] bg-brand-green/90 rounded-full"
           />
           <div className="size-[22px]">
             <img src={imgImage} alt="search" className="size-full object-contain" />

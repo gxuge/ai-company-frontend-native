@@ -12,9 +12,7 @@ export type TsRoleDetail = {
   gender?: string;
   occupation?: string;
   greeting?: string;
-  personaText?: string;
   backgroundStory?: string;
-  storyText?: string;
   dialoguePreview?: string;
   dialogueLength?: string;
   toneTendency?: string;
@@ -98,9 +96,7 @@ export type TsRoleSavePayload = {
   gender?: Exclude<TsRoleGender, 'random'>;
   occupation?: string;
   greeting?: string;
-  personaText?: string;
   backgroundStory?: string;
-  storyText?: string;
   dialoguePreview?: string;
   dialogueLength?: string;
   toneTendency?: string;

@@ -27,9 +27,9 @@ export function AiNavigateTabs<T extends string | number>({
   activeValue,
   onChange,
   containerClassName = "flex-row items-center gap-[30px]",
-  activeTextClassName = "text-[rgba(155,254,3,0.9)] text-[20px] font-bold pb-2",
+  activeTextClassName = "text-brand-green/90 text-[20px] font-bold pb-2",
   inactiveTextClassName = "text-[#e7e7e7] text-[20px] pb-2",
-  indicatorClassName = "absolute bottom-0 h-1 bg-[rgba(155,254,3,0.9)] rounded-[2px]",
+  indicatorClassName = "absolute bottom-0 h-1 bg-brand-green/90 rounded-[2px]",
 }: AiNavigateTabsProps<T>) {
   const [layouts, setLayouts] = useState<Record<string, TabLayout>>({});
 

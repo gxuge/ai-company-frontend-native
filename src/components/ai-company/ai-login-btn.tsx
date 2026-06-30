@@ -6,7 +6,7 @@ const aiLoginBtnBgVariants = tv({
   base: 'group flex-row items-center justify-center shadow-none',
   variants: {
     themeColor: {
-      primary: 'bg-[#9bfe03] active:bg-[#9bfe03]/60 shadow-sm shadow-black/5',
+      primary: 'bg-brand-green active:bg-brand-green/60 shadow-sm shadow-black/5',
       secondary: 'bg-[#28292d] active:bg-[#28292d]/80 shadow-sm shadow-black/5',
     },
   },

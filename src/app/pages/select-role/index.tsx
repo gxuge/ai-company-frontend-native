@@ -166,7 +166,7 @@ export default function App() {
               className="w-full h-[56px] sm:h-[68px] bg-gradient-to-br from-[#222] to-[#1a1a1a] rounded-full pl-[56px] sm:pl-[72px] pr-6 sm:pr-8 text-white text-[18px] sm:text-[24px] placeholder-[#707070] outline-none border-2 border-white/10 transition-all duration-300"
             />
             <div className="absolute left-[20px] sm:left-[28px] top-1/2 -translate-y-1/2 transition-all duration-300 group-focus-within:scale-110">
-              <Search className="w-5 h-5 sm:w-6 sm:h-6 text-[#707070] group-focus-within:text-[#9BFE03] transition-colors duration-300" strokeWidth={2.5} />
+              <Search className="w-5 h-5 sm:w-6 sm:h-6 text-[#707070] group-focus-within:text-brand-green transition-colors duration-300" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -183,14 +183,14 @@ export default function App() {
                       onClick={() => setSelectedId(item.id)}
                       className={`group w-full rounded-2xl p-4 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02] active:scale-[0.98] ${
                         selected
-                          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-2 border-[#9BFE03] shadow-[0_0_30px_rgba(155,254,3,0.35)]'
-                          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-2 border-white/5 hover:border-[#9BFE03]/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
+                          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-2 border-brand-green shadow-[0_0_30px_rgba(155,254,3,0.35)]'
+                          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-2 border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
                       }`}
                     >
                       <div className="flex items-center gap-4">
                         {/* Avatar */}
                         <div className="relative">
-                          <div className="size-12 rounded-full shrink-0 ring-2 ring-white/10 group-hover:ring-[#9BFE03]/50 transition-all duration-300 overflow-hidden">
+                          <div className="size-12 rounded-full shrink-0 ring-2 ring-white/10 group-hover:ring-brand-green/50 transition-all duration-300 overflow-hidden">
                             <img
                               src={item.avatar}
                               alt={item.name}
@@ -201,7 +201,7 @@ export default function App() {
 
                         {/* Name */}
                         <div className="flex-1 text-left">
-                          <p className="text-base font-medium transition-colors duration-300 text-white group-hover:text-[#9BFE03]/90">
+                          <p className="text-base font-medium transition-colors duration-300 text-white group-hover:text-brand-green/90">
                             {item.name}
                           </p>
                         </div>
@@ -210,13 +210,13 @@ export default function App() {
                         <div
                           className={`size-5 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ${
                             selected
-                              ? 'bg-[#9BFE03] scale-100'
+                              ? 'bg-brand-green scale-100'
                               : 'bg-white/5 scale-0 group-hover:scale-100'
                           }`}
                         >
                           <Check
                             className={`w-3.5 h-3.5 ${
-                              selected ? 'text-black' : 'text-[#9BFE03]'
+                              selected ? 'text-black' : 'text-brand-green'
                             }`}
                             strokeWidth={3.5}
                           />
@@ -244,9 +244,9 @@ export default function App() {
             type="button"
             onClick={handleDone}
             disabled={!selectedRole}
-            className="flex h-[50px] w-full items-center justify-center rounded-[16px] bg-[#9BFE03] shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 transition-all outline-none disabled:opacity-50 disabled:grayscale"
+            className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none disabled:opacity-50 disabled:grayscale"
           >
-            <span className="text-[16px] font-bold text-black">{`\u5B8C\u6210`}</span>
+            <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
           </button>
         </div>
       )}
