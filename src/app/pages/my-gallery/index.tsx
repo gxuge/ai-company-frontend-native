@@ -4,6 +4,7 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { brandGreenRgba } from '@/components/ui/brand';
 import { tsRoleImageApi } from '@/lib/api';
 import type { TsUserImageAsset } from '@/lib/api';
 
@@ -169,7 +170,7 @@ export default function MyGallery() {
     const progress = (pulse.value - 1) * 10; // 0 -> 1 range
     return {
       transform: [{ scale: pulse.value }],
-      boxShadow: `0px 0px ${10 + progress * 10}px rgba(155,254,3,${0.6 + progress * 0.4})`,
+      boxShadow: `0px 0px ${10 + progress * 10}px ${brandGreenRgba(0.6 + progress * 0.4)}`,
       elevation: 8 + progress * 4,
       borderRadius: 28,
     };

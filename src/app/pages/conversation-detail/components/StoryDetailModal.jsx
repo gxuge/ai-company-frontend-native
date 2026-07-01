@@ -5,8 +5,8 @@ function GlowText({ children }) {
     <span
       className="inline text-white font-['Noto_Sans_SC',sans-serif]"
       style={{
-        borderBottom: '2px solid rgba(155,254,3,0.5)',
-        textShadow: '0px 0px 10px rgba(155,254,3,0.6)',
+        borderBottom: '2px solid rgba(var(--color-brand-green-rgb),0.5)',
+        textShadow: '0px 0px 10px rgba(var(--color-brand-green-rgb),0.6)',
       }}
     >
       {children}

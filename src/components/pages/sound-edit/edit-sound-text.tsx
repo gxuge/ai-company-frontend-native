@@ -35,7 +35,7 @@ export default function EditSoundText(props: EditSoundTextProps) {
             }}
             maxLength={maxLen}
           />
-          <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgba(155,254,3,0.3)] to-transparent" />
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-[rgba(var(--color-brand-green-rgb),0.3)] to-transparent" />
           <div className="w-full text-right text-[12px] leading-[16px] font-medium text-[#6b7280]">
             {text.length}/{maxLen}
           </div>

@@ -319,7 +319,7 @@ function Slider({ value, onChange, min, max, step }: { value: number; onChange: 
         })}
       </div>
       <div
-        className="pointer-events-none absolute top-1/2 z-10 size-[14px] -translate-y-1/2 rounded-full border-2 border-background bg-brand-green/90 shadow-[0_0_8px_rgba(155,254,3,0.4)]"
+        className="pointer-events-none absolute top-1/2 z-10 size-[14px] -translate-y-1/2 rounded-full border-2 border-background bg-brand-green/90 shadow-[0_0_8px_rgba(var(--color-brand-green-rgb),0.4)]"
         style={{ left: `calc(${pct}% - ${pct * 0.14}px)` }}
       />
       <input
@@ -375,8 +375,8 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
       onTouchEnd={() => setIsPressed(false)}
       className={`group relative flex w-full cursor-pointer items-center justify-between rounded-[15px] p-[12px] border-2 transition-all duration-300 hover:scale-[1.01] ${isPressed ? 'scale-[0.98]' : ''} ${
         selected
-          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-brand-green shadow-[0_0_30px_rgba(155,254,3,0.35)]'
-          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
+                      ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-brand-green shadow-[0_0_30px_rgba(var(--color-brand-green-rgb),0.35)]'
+                      : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(var(--color-brand-green-rgb),0.2)]'
       }`}
     >
       <div className="flex items-center gap-[12px]">
@@ -401,7 +401,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
               ) : isPlaying ? (
                 <img src={imgWaveGreenTiny} alt="" className="size-6 object-contain" />
               ) : (
-                <Play className="ml-0.5 size-5 text-brand-green fill-[#9BFE03]" />
+                <Play className="ml-0.5 size-5 text-brand-green fill-[var(--color-brand-green)]" />
               )}
             </div>
           )}
@@ -906,7 +906,7 @@ export default function SoundEditPage() {
     <div className="flex h-screen w-full flex-col bg-background font-['Noto_Sans_SC',sans-serif] overflow-hidden">
       <div className="flex-1 w-full flex flex-col items-stretch gap-0 overflow-hidden py-[8px] px-[12.5px]">
           <div
-            className={`flex flex-col border shadow-[0_0_20px_rgba(155,254,3,0.05)] transition-all duration-500 ${
+          className={`flex flex-col border shadow-[0_0_20px_rgba(var(--color-brand-green-rgb),0.05)] transition-all duration-500 ${
               isSettingsCollapsed
                 ? 'cursor-pointer rounded-xl border-[#4c4c4c] bg-[#161616] p-3'
                 : 'rounded-[21px] border-[#4c4c4c] bg-[#161616] p-[16px]'
@@ -1150,7 +1150,7 @@ export default function SoundEditPage() {
         <button
           type="button"
           onClick={handleDone}
-          className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none"
+          className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(var(--color-brand-green-rgb),0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none"
         >
           <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
         </button>

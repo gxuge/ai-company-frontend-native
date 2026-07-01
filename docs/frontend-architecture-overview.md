@@ -91,7 +91,7 @@
 | `src/lib/api/provider.tsx` | React Query Provider | `queryClient` 统一注入 |
 | `src/lib/api/utils.tsx` | 分页/queryKey 等工具 | Query 参数与分页辅助 |
 | `src/lib/api/stream.ts` | 通用 SSE 读取封装 | `fetch` + `ReadableStream` + SSE block 解析，输出标准化事件迭代器 |
-| `src/lib/api/ts-agent-chat-stream.ts` | Agent SSE 状态机 reducer | 把 `agent.start` / `llm.delta` / `tool.error` / `agent.end` 归并为前端展示状态 |
+| `src/lib/api/ts-agent-chat-stream.ts` | Agent SSE 状态机 reducer | 把 `agent.start` / `llm.delta` / `tool.error` / `agent.end` 归并为前端展示状态；默认以 `content`/`summary` 作为正文，`data` 仅保留轻量元信息 |
 | `src/lib/api/index.ts` | API 统一导出 | 页面统一从这里 import |
 
 ## 5. 页面与 API 对接矩阵（当前状态）

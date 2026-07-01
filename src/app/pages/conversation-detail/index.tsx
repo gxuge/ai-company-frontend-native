@@ -656,7 +656,7 @@ const debugStyles: Record<string, React.CSSProperties> = {
     backgroundColor: 'transparent',
     padding: '8px 16px',
     borderRadius: 20,
-    border: '1.5px solid #9bfe03',
+    border: '1.5px solid var(--color-brand-green)',
   },
   addIcon: {
     width: 14,

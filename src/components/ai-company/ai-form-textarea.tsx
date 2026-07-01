@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from 'react-native-reanimated';
 import { Wand2 } from 'lucide-react';
+import { brandGreenRgba } from '@/components/ui/brand';
 
 export function ShimmerLine({ className }: { className?: string }) {
   const sv = useSharedValue(-400);
@@ -131,10 +132,10 @@ export function AiFormTextarea({
                   <Wand2 
                     size={12} 
                     color='var(--color-brand-green)' 
-                    style={{ filter: 'drop-shadow(0 0 8px rgba(155,254,3,1))' }}
+                    style={{ filter: `drop-shadow(0 0 8px ${brandGreenRgba(1)})` }}
                     className={`opacity-90 group-hover:opacity-100 transition-opacity ${isOptimizing ? 'animate-wand-draw' : ''}`}
                   />
-                  <span className="relative text-[12px] font-bold tracking-wide bg-linear-to-r from-brand-green to-[#4ade80] bg-clip-text text-transparent drop-shadow-sm after:absolute after:-bottom-[2px] after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-linear-to-r after:from-brand-green after:to-[#4ade80] after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
+                  <span className="relative text-[12px] font-bold tracking-wide bg-linear-to-r from-brand-green to-brand-green/70 bg-clip-text text-transparent drop-shadow-sm after:absolute after:-bottom-[2px] after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-linear-to-r after:from-brand-green after:to-brand-green/70 after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
                     {isOptimizing ? '润色中...' : '美化'}
                   </span>
                 </button>

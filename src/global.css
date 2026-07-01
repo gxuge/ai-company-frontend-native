@@ -41,17 +41,39 @@
   --color-neutral-800: #262626;
   --color-neutral-900: #171717;
 
+  /* Theme colors */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #9bfe03;
+  --primary: #9bfe03;
+  --primary-foreground: #0a0a0a;
+  --secondary: #f5f5f5;
+  --secondary-foreground: #0a0a0a;
+  --secondary-600: #52525b;
+  --accent: #f5f5f5;
+  --accent-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
   /* Primary palette */
-  --color-primary-50: #FFE2CC;
-  --color-primary-100: #FFC499;
-  --color-primary-200: #FFA766;
-  --color-primary-300: #FF984C;
-  --color-primary-400: #FF8933;
-  --color-primary-500: #FF7B1A;
-  --color-primary-600: #FF6C00;
-  --color-primary-700: #E56100;
-  --color-primary-800: #CC5600;
-  --color-primary-900: #B24C00;
+  --color-primary-50: #f5ffe0;
+  --color-primary-100: #eaffb8;
+  --color-primary-200: #dcff8a;
+  --color-primary-300: #cbff5d;
+  --color-primary-400: #b8ff2e;
+  --color-primary-500: #9bfe03;
+  --color-primary-600: #84dc00;
+  --color-primary-700: #6cb800;
+  --color-primary-800: #529200;
+  --color-primary-900: #3e6e00;
 
   /* Success palette */
   --color-success-50: #F0FDF4;
@@ -89,39 +111,53 @@
   --color-danger-800: #991B1B;
   --color-danger-900: #7F1D1D;
 
-  /* Semantic colors - using primary for main brand color */
-  --color-background: #ffffff;
-  --color-foreground: #0a0a0a;
-
-  --color-card: #ffffff;
-  --color-card-foreground: #0a0a0a;
-
-  --color-muted: #f5f5f5;
-  --color-muted-foreground: #737373;
-
-  --color-border: #e5e5e5;
-  --color-input: #e5e5e5;
-  --color-ring: #FF6C00;
-
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-600: var(--secondary-600);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
 }
 
-/* Dark mode colors */
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-background: #0a0a0a;
-    --color-foreground: #fafafa;
+:root {
+  color-scheme: light;
+}
 
-    --color-card: #171717;
-    --color-card-foreground: #fafafa;
-
-    --color-muted: #262626;
-    --color-muted-foreground: #a3a3a3;
-
-    --color-border: #404040;
-    --color-input: #404040;
-  }
+.dark {
+  --background: #0d0d11;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --border: #404040;
+  --input: #404040;
+  --ring: #9bfe03;
+  --primary: #9bfe03;
+  --primary-foreground: #0a0a0a;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  color-scheme: dark;
 }
 
 /* AI generating-page theme variables */

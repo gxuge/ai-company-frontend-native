@@ -22,6 +22,7 @@ const imgFeatureCamera = resolveAsset(require("@/assets/images/admin-chat/featur
 const imgFeatureImage = resolveAsset(require("@/assets/images/admin-chat/feature_image.svg"));
 const imgFeatureFile = resolveAsset(require("@/assets/images/admin-chat/feature_file.svg"));
 const imgFeatureCall = resolveAsset(require("@/assets/images/admin-chat/feature_call.svg"));
+const imgFluentAdd12Filled = resolveAsset(require("@/assets/images/conversation-detail/imgFluentAdd12Filled.svg"));
 
 /** 原始设计稿宽度（2× Figma 导出） */
 const DESIGN_WIDTH = 750;
@@ -45,7 +46,6 @@ type ChatMessage = {
 };
 const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
 const SESSION_CREATE_ERROR_TEXT = "Agent 会话创建失败，请稍后重试。";
-const SESSION_INVALID_TEXT = "Agent 会话不存在，请返回上一页重试。";
 const SESSION_LOAD_ERROR_TEXT = "Agent 会话加载失败，请稍后重试。";
 const DEFAULT_SESSION_TITLE = "Agent 会话";
 const DEFAULT_SESSION_SUMMARY = "内容由AI生成";
@@ -53,6 +53,14 @@ const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
 const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
 const DEFAULT_AGENT_CHAT_APP_ID = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || "";
 const DEFAULT_AGENT_CHAT_AGENT_CODE = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || "admin_chat";
+const LAST_AGENT_SESSION_STORAGE_KEY = "ts_agent_chat:last_session_id";
+
+type PendingSessionState = {
+  appId: string;
+  agentCode: string;
+  sessionTitle: string;
+  sessionSummary: string;
+};
 
 function firstParam(value?: string | string[]) {
   if (Array.isArray(value)) {
@@ -71,6 +79,33 @@ function parseSessionId(value?: string | string[]) {
     return null;
   }
   return Math.trunc(parsed);
+}
+
+function readLastAgentSessionId() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(LAST_AGENT_SESSION_STORAGE_KEY);
+    return parseSessionId(raw ?? undefined);
+  } catch {
+    return null;
+  }
+}
+
+function writeLastAgentSessionId(sessionId: number | null) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    if (sessionId && Number.isFinite(sessionId) && sessionId > 0) {
+      window.localStorage.setItem(LAST_AGENT_SESSION_STORAGE_KEY, String(Math.trunc(sessionId)));
+      return;
+    }
+    window.localStorage.removeItem(LAST_AGENT_SESSION_STORAGE_KEY);
+  } catch {
+    // ignore localStorage errors on Web/private mode
+  }
 }
 
 function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
@@ -104,16 +139,18 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
             <AdminChatThinkingPanel state={streamState} />
           </View>
         ) : null}
-        <Text
-          style={{
-            fontSize: 30,
-            lineHeight: 45,
-            color: "rgba(255,255,255,0.9)",
-            fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
-          }}
-        >
-          {content}
-        </Text>
+        {streamState?.finalStatus === "error" ? null : (
+          <Text
+            style={{
+              fontSize: 30,
+              lineHeight: 45,
+              color: "rgba(255,255,255,0.9)",
+              fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
+            }}
+          >
+            {content}
+          </Text>
+        )}
       </View>
     </View>
   );
@@ -353,17 +390,21 @@ function AdminSidebar({
   onClose,
   currentSessionId,
   agentCode,
+  onCreateSession,
   onRenameSession,
   onDeleteSession,
   reloadToken,
+  creatingSession,
 }: {
   isOpen: boolean;
   onClose: () => void;
   currentSessionId: number | null;
   agentCode?: string | null;
+  onCreateSession: () => void;
   onRenameSession: (id: number, currentTitle: string) => void;
   onDeleteSession: (id: number) => void;
   reloadToken: number;
+  creatingSession: boolean;
 }) {
   const [sessions, setSessions] = useState<{id: number; title: string; summary: string; appId: string | null; agentCode: string | null}[]>([]);
 
@@ -403,9 +444,19 @@ function AdminSidebar({
       <div
         className={`absolute right-0 top-0 bottom-0 w-[525px] bg-[#2d2520] pt-[50px] px-[20px] shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        <h2 className="text-[28px] text-white mb-[20px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif]">
-          会话列表
-        </h2>
+        <div className="mb-[20px] flex items-center justify-between gap-[14px]">
+          <h2 className="text-[28px] text-white font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif]">
+            会话列表
+          </h2>
+          <button
+            onClick={onCreateSession}
+            disabled={creatingSession}
+            className="inline-flex items-center gap-[8px] rounded-[14px] border border-white/10 bg-[#ff8904] px-[16px] py-[11px] text-[18px] text-white active:scale-95 transition-transform disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Image source={imgFluentAdd12Filled} style={{ width: 16, height: 16 }} resizeMode="contain" />
+            {creatingSession ? "创建中..." : "新建会话"}
+          </button>
+        </div>
 
         <div className="flex flex-col gap-[10px] overflow-y-auto" style={{ maxHeight: 'calc(100% - 80px)' }}>
           {sessions.map(s => (
@@ -472,13 +523,21 @@ export default function App() {
   const [resolvedAgentCode, setResolvedAgentCode] = useState<string | null>(initialAgentCode);
   const [resolvedAppId, setResolvedAppId] = useState<string | null>(initialAppId);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(initialSessionId);
+  const [pendingSession, setPendingSession] = useState<PendingSessionState | null>(() => ({
+    appId: initialAppId,
+    agentCode: initialAgentCode,
+    sessionTitle: DEFAULT_SESSION_TITLE,
+    sessionSummary: DEFAULT_SESSION_SUMMARY,
+  }));
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTargetId, setRenameTargetId] = useState<number | null>(null);
   const [renameDraft, setRenameDraft] = useState("");
   const [sidebarReloadToken, setSidebarReloadToken] = useState(0);
+  const [creatingSession, setCreatingSession] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const agentStream = useAgentChatStream();
   const streamAbortRef = useRef<AbortController | null>(null);
+  const creatingSessionRef = useRef(false);
   const scale = useViewportScale();
   const plusRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
@@ -504,6 +563,12 @@ export default function App() {
       setMessages([]);
       setResolvedAgentCode(initialAgentCode);
       setResolvedAppId(initialAppId);
+      setPendingSession({
+        appId: initialAppId,
+        agentCode: initialAgentCode,
+        sessionTitle: DEFAULT_SESSION_TITLE,
+        sessionSummary: DEFAULT_SESSION_SUMMARY,
+      });
     };
 
     const applySessionSnapshot = (sessionId: number, detail: TsAgentChatSession | undefined, pageRecords: TsAgentChatMessage[] | undefined) => {
@@ -526,6 +591,8 @@ export default function App() {
       );
       setResolvedAgentCode(nextAgentCode || initialAgentCode);
       setResolvedAppId(nextAppId || initialAppId);
+      setPendingSession(null);
+      writeLastAgentSessionId(sessionId);
       setMessages(
         toAgentChatMessages(pageRecords).map((item) => ({
           ...item,
@@ -571,30 +638,42 @@ export default function App() {
       applyBlankState();
     };
 
-    if (!initialSessionId) {
-      void resolveLatestSession().catch(() => {
+    const restorePreferredSession = async () => {
+      const storedSessionId = readLastAgentSessionId();
+      const candidates = initialSessionId ? [initialSessionId, storedSessionId] : [storedSessionId];
+      for (const candidate of candidates) {
+        if (!candidate) {
+          continue;
+        }
+        try {
+          await loadSessionSnapshot(candidate);
+          writeLastAgentSessionId(candidate);
+          return;
+        } catch {
+          continue;
+        }
+      }
+
+      try {
+        await resolveLatestSession();
+      } catch {
         if (!alive) {
           return;
         }
         setCurrentSessionId(null);
         setSessionTitle(DEFAULT_SESSION_TITLE);
         setSessionSummary(DEFAULT_SESSION_SUMMARY);
+        setPendingSession({
+          appId: initialAppId,
+          agentCode: initialAgentCode,
+          sessionTitle: DEFAULT_SESSION_TITLE,
+          sessionSummary: DEFAULT_SESSION_SUMMARY,
+        });
         setMessages([{ id: Date.now(), role: "ai", content: SESSION_LOAD_ERROR_TEXT, loading: false, status: "error", streamState: null }]);
-      });
-      return () => {
-        alive = false;
-      };
-    }
-
-    void loadSessionSnapshot(initialSessionId).catch(() => {
-      if (!alive) {
-        return;
       }
-      setCurrentSessionId(initialSessionId);
-      setSessionTitle(DEFAULT_SESSION_TITLE);
-      setSessionSummary(DEFAULT_SESSION_SUMMARY);
-      setMessages([{ id: Date.now(), role: "ai", content: SESSION_INVALID_TEXT, loading: false, status: "error", streamState: null }]);
-    });
+    };
+
+    void restorePreferredSession();
     return () => {
       alive = false;
     };
@@ -603,6 +682,75 @@ export default function App() {
   const appendMessage = (next: ChatMessage) => {
     setMessages(prev => [...prev, next]);
     setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+  };
+
+  const createAndActivateSession = async (options?: {
+    clearMessages?: boolean;
+    clearInput?: boolean;
+    closeSidebar?: boolean;
+    useDefaultDraft?: boolean;
+  }) => {
+    if (creatingSessionRef.current) {
+      return null;
+    }
+    creatingSessionRef.current = true;
+    setCreatingSession(true);
+    try {
+      const draftSession = options?.useDefaultDraft
+        ? {
+            appId: (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim(),
+            agentCode: (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim(),
+            sessionTitle: DEFAULT_SESSION_TITLE,
+            sessionSummary: DEFAULT_SESSION_SUMMARY,
+          }
+        : pendingSession ?? {
+            appId: (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim(),
+            agentCode: (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim(),
+            sessionTitle: sessionTitle.trim() || DEFAULT_SESSION_TITLE,
+            sessionSummary: sessionSummary.trim() || DEFAULT_SESSION_SUMMARY,
+          };
+      const nextAppId = draftSession.appId.trim();
+      const nextAgentCode = draftSession.agentCode.trim();
+      if (!nextAppId || !nextAgentCode) {
+        throw new Error(SESSION_CREATE_ERROR_TEXT);
+      }
+
+      const created = await tsAgentChatApi.createSession({
+        appId: nextAppId,
+        agentCode: nextAgentCode,
+        sessionTitle: draftSession.sessionTitle.trim() || DEFAULT_SESSION_TITLE,
+        sessionSummary: draftSession.sessionSummary.trim() || DEFAULT_SESSION_SUMMARY,
+      });
+      if (!created?.id || !Number.isFinite(created.id)) {
+        throw new Error("创建会话失败");
+      }
+
+      const nextSessionId = created.id;
+      setCurrentSessionId(nextSessionId);
+      setResolvedAppId(typeof created.appId === "string" && created.appId.trim() ? created.appId.trim() : nextAppId);
+      setResolvedAgentCode(typeof created.agentCode === "string" && created.agentCode.trim() ? created.agentCode.trim() : nextAgentCode);
+      setSessionTitle(typeof created.sessionTitle === "string" && created.sessionTitle.trim() ? created.sessionTitle.trim() : DEFAULT_SESSION_TITLE);
+      setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : DEFAULT_SESSION_SUMMARY);
+      setPendingSession(null);
+      if (options?.clearMessages) {
+        setMessages([]);
+      }
+      if (options?.clearInput) {
+        setInputValue("");
+      }
+      if (options?.closeSidebar) {
+        setIsSidebarOpen(false);
+      }
+      writeLastAgentSessionId(nextSessionId);
+      setSidebarReloadToken((prev) => prev + 1);
+      return nextSessionId;
+    } catch {
+      appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT, loading: false, status: "error", streamState: null });
+      return null;
+    } finally {
+      creatingSessionRef.current = false;
+      setCreatingSession(false);
+    }
   };
 
   const updateMessageById = useCallback(
@@ -680,6 +828,13 @@ export default function App() {
         setSessionTitle(DEFAULT_SESSION_TITLE);
         setSessionSummary(DEFAULT_SESSION_SUMMARY);
         setMessages([]);
+        setPendingSession({
+          appId: initialAppId,
+          agentCode: initialAgentCode,
+          sessionTitle: DEFAULT_SESSION_TITLE,
+          sessionSummary: DEFAULT_SESSION_SUMMARY,
+        });
+        writeLastAgentSessionId(null);
       }
       setSidebarReloadToken(prev => prev + 1);
       setIsSidebarOpen(false);
@@ -695,28 +850,8 @@ export default function App() {
     }
     let sessionId = currentSessionId;
     if (!sessionId) {
-      const nextAppId = (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim();
-      const nextAgentCode = (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim();
-      if (!nextAppId || !nextAgentCode) {
-        appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT });
-        return;
-      }
-      try {
-        const created = await tsAgentChatApi.createSession({
-          appId: nextAppId,
-          agentCode: nextAgentCode,
-        });
-        if (!created?.id || !Number.isFinite(created.id)) {
-          throw new Error("创建会话失败");
-        }
-        sessionId = created.id;
-        setCurrentSessionId(sessionId);
-        setResolvedAppId(typeof created.appId === "string" && created.appId.trim() ? created.appId.trim() : nextAppId);
-        setResolvedAgentCode(typeof created.agentCode === "string" && created.agentCode.trim() ? created.agentCode.trim() : nextAgentCode);
-        setSessionTitle(typeof created.sessionTitle === "string" && created.sessionTitle.trim() ? created.sessionTitle.trim() : DEFAULT_SESSION_TITLE);
-        setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : DEFAULT_SESSION_SUMMARY);
-      } catch {
-        appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT });
+      sessionId = await createAndActivateSession();
+      if (!sessionId) {
         return;
       }
     }
@@ -1003,7 +1138,8 @@ export default function App() {
                 fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
                 fontSize: 30,
                 color: "white",
-              }}
+                outlineStyle: "none",
+              } as any}
             />
 
             <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15 }}>
@@ -1084,9 +1220,11 @@ export default function App() {
           onClose={() => setIsSidebarOpen(false)}
           currentSessionId={currentSessionId}
           agentCode={resolvedAgentCode || initialAgentCode}
+          onCreateSession={() => void createAndActivateSession({ clearMessages: true, clearInput: true, closeSidebar: true, useDefaultDraft: true })}
           onRenameSession={handleRenameSession}
           onDeleteSession={handleDeleteSession}
           reloadToken={sidebarReloadToken}
+          creatingSession={creatingSession}
         />
 
         <Modal
@@ -1112,7 +1250,8 @@ export default function App() {
                   fontSize: 18,
                   paddingHorizontal: 16,
                   paddingVertical: 14,
-                }}
+                  outlineStyle: "none",
+                } as any}
               />
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 18 }}>
                 <Pressable onPress={() => { setRenameModalVisible(false); setRenameTargetId(null); }} style={{ paddingHorizontal: 18, paddingVertical: 12 }}>

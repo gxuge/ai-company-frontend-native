@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, TextInput, TextInputProps, Platform } from 'react-native';
+import { brandGreenRgba } from '@/components/ui/brand';
 
 const imgSearch1 = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../assets/images/ai-search/search_icon_1.svg"));
 const imgSearch2 = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../assets/images/ai-search/search_icon_2.svg"));
@@ -60,7 +61,7 @@ export const AiSearch = React.forwardRef<TextInput, AiSearchProps>(
           ref={ref}
           placeholder="搜索角色"
           placeholderTextColor={placeholderTextColor}
-          selectionColor="rgba(var(--color-brand-green-rgb), 0.5)"
+          selectionColor={brandGreenRgba(0.5)}
           className={`flex-1 bg-transparent text-[#909090] border-0 outline-none ${textSizeClasses} ${className}`}
           style={[
             webFocusStyle, 

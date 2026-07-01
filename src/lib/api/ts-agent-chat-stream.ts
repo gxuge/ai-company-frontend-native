@@ -167,7 +167,10 @@ const getToolName = (payload: AgentChatSsePayload) =>
 
 const getPayloadObject = (payload: AgentChatSsePayload) => readRecord(payload.data);
 
-const getPayloadText = (payload: AgentChatSsePayload) => readString(payload.content) || '';
+const getPayloadText = (payload: AgentChatSsePayload) =>
+  readString(payload.content)
+  || readNestedString(payload.data, ['summary'])
+  || '';
 
 const getPayloadStatus = (payload: AgentChatSsePayload, fallback: AgentChatStepStatus = 'done') => {
   const status = readStatus(payload.status);

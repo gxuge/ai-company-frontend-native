@@ -1,5 +1,5 @@
-import React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
 
 export interface AdminChatThinkingPanelProps {
@@ -88,7 +88,7 @@ function StepCard({ step }: { step: AgentChatStep }) {
         {step.name ? <StepBadge text={step.name} color="#f97316" /> : null}
       </View>
 
-      {step.text ? (
+      {step.status !== 'error' && step.text ? (
         <Text
           selectable
           style={{
@@ -120,6 +120,8 @@ function StepCard({ step }: { step: AgentChatStep }) {
 }
 
 const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   const hasContent =
     state.agentStatus !== 'idle'
     || state.steps.length > 0
@@ -149,7 +151,11 @@ const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }
         elevation: 4,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setIsExpanded(!isExpanded)}
+        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}
+      >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 }}>
           <View
             style={{
@@ -170,75 +176,84 @@ const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }
             正在思考
           </Text>
         </View>
-        <StepBadge text={statusLabel[summaryStatus]} color={summaryColor} />
-      </View>
-
-      {state.agentName ? (
-        <Text
-          selectable
-          style={{
-            marginTop: 8,
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: 13,
-          }}
-        >
-          {`Agent: ${state.agentName}`}
-        </Text>
-      ) : null}
-
-      {(state.routeDecision || state.targetSubAgent) ? (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-          {state.routeDecision ? <StepBadge text={`Route ${state.routeDecision}`} color="#38bdf8" /> : null}
-          {state.targetSubAgent ? <StepBadge text={`Target ${state.targetSubAgent}`} color="#a78bfa" /> : null}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <StepBadge text={statusLabel[summaryStatus]} color={summaryColor} />
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>
+            {isExpanded ? '▲' : '▼'}
+          </Text>
         </View>
-      ) : null}
+      </TouchableOpacity>
 
-      <ScrollView
-        style={{ marginTop: 8, maxHeight: 280 }}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled
-      >
-        {state.steps.map((step) => (
-          <StepCard key={step.id} step={step} />
-        ))}
+      {isExpanded && (
+        <>
+          {state.agentName ? (
+            <Text
+              selectable
+              style={{
+                marginTop: 8,
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 13,
+              }}
+            >
+              {`Agent: ${state.agentName}`}
+            </Text>
+          ) : null}
 
-        {state.error ? (
-          <View
-            style={{
-              marginTop: 10,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: 'rgba(239,68,68,0.4)',
-              backgroundColor: 'rgba(239,68,68,0.12)',
-              padding: 14,
-            }}
+          {(state.routeDecision || state.targetSubAgent) ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+              {state.routeDecision ? <StepBadge text={`Route ${state.routeDecision}`} color="#38bdf8" /> : null}
+              {state.targetSubAgent ? <StepBadge text={`Target ${state.targetSubAgent}`} color="#a78bfa" /> : null}
+            </View>
+          ) : null}
+
+          <ScrollView
+            style={{ marginTop: 8, maxHeight: 280 }}
+            showsVerticalScrollIndicator={false}
+            nestedScrollEnabled
           >
-            <Text style={{ color: '#fecaca', fontSize: 13, lineHeight: 20 }}>
-              {state.error}
-            </Text>
-          </View>
-        ) : null}
+            {state.steps.map((step) => (
+              <StepCard key={step.id} step={step} />
+            ))}
 
-        {state.finalText ? (
-          <View
-            style={{
-              marginTop: 10,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: 'rgba(34,197,94,0.24)',
-              backgroundColor: 'rgba(34,197,94,0.08)',
-              padding: 14,
-            }}
-          >
-            <Text style={{ color: '#86efac', fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
-              最终结果
-            </Text>
-            <Text selectable style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 22 }}>
-              {state.finalText}
-            </Text>
-          </View>
-        ) : null}
-      </ScrollView>
+            {state.error ? (
+              <View
+                style={{
+                  marginTop: 10,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: 'rgba(239,68,68,0.4)',
+                  backgroundColor: 'rgba(239,68,68,0.12)',
+                  padding: 14,
+                }}
+              >
+                <Text style={{ color: '#fecaca', fontSize: 13, lineHeight: 20 }}>
+                  {state.error}
+                </Text>
+              </View>
+            ) : null}
+
+            {state.finalText ? (
+              <View
+                style={{
+                  marginTop: 10,
+                  borderRadius: 18,
+                  borderWidth: 1,
+                  borderColor: 'rgba(34,197,94,0.24)',
+                  backgroundColor: 'rgba(34,197,94,0.08)',
+                  padding: 14,
+                }}
+              >
+                <Text style={{ color: '#86efac', fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
+                  最终结果
+                </Text>
+                <Text selectable style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 22 }}>
+                  {state.finalText}
+                </Text>
+              </View>
+            ) : null}
+          </ScrollView>
+        </>
+      )}
     </View>
   );
 };

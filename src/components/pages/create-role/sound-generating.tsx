@@ -87,7 +87,7 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
           {/* Thin progress bar */}
           <div className="relative w-[120px] h-[2px] bg-brand-green/10 rounded-full mt-2 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 w-[40%] bg-gradient-to-r from-transparent via-[rgba(155,254,3,0.9)] to-transparent"
+              className="absolute inset-y-0 left-0 w-[40%] bg-gradient-to-r from-transparent via-[rgba(var(--color-brand-green-rgb),0.9)] to-transparent"
               style={{ animation: 'progress-flow 1.5s linear infinite' }}
             />
           </div>

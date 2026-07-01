@@ -4,6 +4,7 @@ import { Alert, Platform } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiInput } from '@/components/ai-company/ai-input';
 import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
+import { BRAND_GREEN_CSS_VAR } from '@/components/ui/brand';
 import { signIn } from '@/features/auth/use-auth-store';
 import { userApi } from '@/lib/api';
 
@@ -243,8 +244,8 @@ export default function EmailLoginPage() {
             style={{
               width: 627,
               height: 85,
-              backgroundColor: canConfirmLogin ? 'var(--color-brand-green)' : '#528700',
-              borderColor: canConfirmLogin ? 'var(--color-brand-green)' : '#4f4736',
+              backgroundColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#528700',
+              borderColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#4f4736',
               borderWidth: 1.1,
               borderRadius: 44,
               flexShrink: 0,
@@ -275,7 +276,7 @@ export default function EmailLoginPage() {
                   borderRadius: 16,
                   borderStyle: 'solid',
                   borderWidth: 2,
-                  borderColor: agreed ? 'var(--color-brand-green)' : '#646466',
+                  borderColor: agreed ? BRAND_GREEN_CSS_VAR : '#646466',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -288,7 +289,7 @@ export default function EmailLoginPage() {
                     width: 16,
                     height: 16,
                     borderRadius: 8,
-                    backgroundColor: 'var(--color-brand-green)',
+                    backgroundColor: BRAND_GREEN_CSS_VAR,
                     opacity: agreed ? 1 : 0,
                     transform: agreed ? 'scale(1)' : 'scale(0.5)',
                     transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',

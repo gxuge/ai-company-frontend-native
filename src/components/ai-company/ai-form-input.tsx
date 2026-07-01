@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { TextInput, TextInputProps, Platform, View } from 'react-native';
+import { brandGreenRgba } from '@/components/ui/brand';
 import { ShimmerLine } from './ai-form-textarea';
 
 export interface AiFormInputProps extends TextInputProps {
@@ -38,7 +39,7 @@ export const AiFormInput = React.forwardRef<TextInput, AiFormInputProps>(
             ref={ref}
             placeholderTextColor={placeholderTextColor}
             className={className}
-            selectionColor="rgba(var(--color-brand-green-rgb), 0.5)"
+            selectionColor={brandGreenRgba(0.5)}
             style={[
               webFocusStyle, 
               style, 

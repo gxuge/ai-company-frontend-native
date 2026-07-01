@@ -221,7 +221,7 @@ export default function AccountSettings() {
         <div className="relative cursor-pointer group" onClick={handleTriggerUpload}>
           <div
             className="w-[120px] h-[120px] rounded-full border-[2.5px] border-brand-green/90 overflow-hidden p-[7px] relative"
-            style={{ boxShadow: "0 0 20px rgba(155,254,3,0.3)" }}
+            style={{ boxShadow: "0 0 20px rgba(var(--color-brand-green-rgb),0.3)" }}
           >
             {isUploading && (
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 rounded-full">

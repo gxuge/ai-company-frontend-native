@@ -394,7 +394,7 @@ function AiAssistantButton() {
             ...(agentCode ? { agentCode } : {}),
           },
         })}
-        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-brand-green bg-brand-green/10 px-[24px] backdrop-blur-[10px] active:bg-brand-green/20 transition-colors cursor-pointer shadow-[0_0_15px_rgba(155,254,3,0.3)]"
+        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-brand-green bg-brand-green/10 px-[24px] backdrop-blur-[10px] active:bg-brand-green/20 transition-colors cursor-pointer shadow-[0_0_15px_rgba(var(--color-brand-green-rgb),0.3)]"
       >
         <Bot size={32} color='var(--color-brand-green)' />
         <span

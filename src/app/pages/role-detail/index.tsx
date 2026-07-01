@@ -507,7 +507,7 @@ const webStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     flexDirection: 'row',
-    border: '1.5px solid rgba(155,254,3,0.9)',
+    border: '1.5px solid rgba(var(--color-brand-green-rgb),0.9)',
     borderRadius: 20,
     padding: '8px 16px',
     background: 'transparent',

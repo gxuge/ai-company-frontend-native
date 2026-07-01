@@ -143,7 +143,7 @@ export default function App() {
         className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            'linear-gradient(#9BFE03 1px, transparent 1px), linear-gradient(90deg, #9BFE03 1px, transparent 1px)',
+          'linear-gradient(var(--color-brand-green) 1px, transparent 1px), linear-gradient(90deg, var(--color-brand-green) 1px, transparent 1px)',
           backgroundSize: '50px 50px',
         }}
       />
@@ -183,8 +183,8 @@ export default function App() {
                       onClick={() => setSelectedId(item.id)}
                       className={`group w-full rounded-2xl p-4 transition-all duration-300 hover:scale-[1.01] sm:hover:scale-[1.02] active:scale-[0.98] ${
                         selected
-                          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-2 border-brand-green shadow-[0_0_30px_rgba(155,254,3,0.35)]'
-                          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-2 border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(155,254,3,0.2)]'
+                          ? 'bg-gradient-to-br from-[#2a2a2a] to-[#1f1f1f] border-2 border-brand-green shadow-[0_0_30px_rgba(var(--color-brand-green-rgb),0.35)]'
+                          : 'bg-gradient-to-br from-[#222] to-[#1a1a1a] border-2 border-white/5 hover:border-brand-green/40 hover:shadow-[0_0_20px_rgba(var(--color-brand-green-rgb),0.2)]'
                       }`}
                     >
                       <div className="flex items-center gap-4">
@@ -244,7 +244,7 @@ export default function App() {
             type="button"
             onClick={handleDone}
             disabled={!selectedRole}
-            className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(155,254,3,0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none disabled:opacity-50 disabled:grayscale"
+            className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(var(--color-brand-green-rgb),0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none disabled:opacity-50 disabled:grayscale"
           >
             <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
           </button>
@@ -255,9 +255,9 @@ export default function App() {
       <style>
         {`
           @keyframes breathing {
-            0% { transform: scale(1); box-shadow: 2px 2px 20px 0px rgba(152,252,3,0.3); }
-            50% { transform: scale(1.05); box-shadow: 2px 2px 50px 0px rgba(152,252,3,0.6); }
-            100% { transform: scale(1); box-shadow: 2px 2px 20px 0px rgba(152,252,3,0.3); }
+            0% { transform: scale(1); box-shadow: 2px 2px 20px 0px rgba(var(--color-brand-green-rgb),0.3); }
+            50% { transform: scale(1.05); box-shadow: 2px 2px 50px 0px rgba(var(--color-brand-green-rgb),0.6); }
+            100% { transform: scale(1); box-shadow: 2px 2px 20px 0px rgba(var(--color-brand-green-rgb),0.3); }
           }
           .animate-breathing {
             animation: breathing 2.5s infinite ease-in-out;
