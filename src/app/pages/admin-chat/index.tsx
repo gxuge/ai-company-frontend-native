@@ -109,7 +109,7 @@ function writeLastAgentSessionId(sessionId: number | null) {
 }
 
 function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
-  const source = Array.isArray(records) ? [...records].reverse() : [];
+  const source = Array.isArray(records) ? [...records] : [];
   return source.map((item, index) => {
     const roleType = typeof item.roleType === "string" ? item.roleType.trim().toLowerCase() : "";
     const content = typeof item.content === "string" && item.content.trim() ? item.content.trim() : " ";
@@ -123,6 +123,8 @@ function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
 
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
 function AIBubble({ content, streamState }: { content: string; streamState?: AgentChatStreamState | null }) {
+  const shouldShowContent = !streamState || (!streamState.active && streamState.finalStatus !== 'error');
+
   return (
     <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
       <View
@@ -139,7 +141,7 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
             <AdminChatThinkingPanel state={streamState} />
           </View>
         ) : null}
-        {streamState?.finalStatus === "error" ? null : (
+        {shouldShowContent ? (
           <Text
             style={{
               fontSize: 30,
@@ -150,7 +152,7 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
           >
             {content}
           </Text>
-        )}
+        ) : null}
       </View>
     </View>
   );

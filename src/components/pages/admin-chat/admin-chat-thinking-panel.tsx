@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Text, View, TouchableOpacity } from 'react-native';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
 
@@ -44,6 +44,7 @@ function StepBadge({ text, color }: { text: string; color: string }) {
 
 function StepCard({ step }: { step: AgentChatStep }) {
   const accent = statusAccent[step.status];
+  const showText = step.kind === 'tool' || step.status === 'running';
 
   return (
     <View
@@ -88,7 +89,7 @@ function StepCard({ step }: { step: AgentChatStep }) {
         {step.name ? <StepBadge text={step.name} color="#f97316" /> : null}
       </View>
 
-      {step.status !== 'error' && step.text ? (
+      {step.status !== 'error' && showText && step.text ? (
         <Text
           selectable
           style={{
@@ -125,7 +126,6 @@ const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }
   const hasContent =
     state.agentStatus !== 'idle'
     || state.steps.length > 0
-    || Boolean(state.finalText)
     || Boolean(state.error);
 
   if (!hasContent) {
@@ -139,16 +139,6 @@ const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }
     <View
       style={{
         marginBottom: 18,
-        borderRadius: 24,
-        borderWidth: 1,
-        borderColor: `${summaryColor}40`,
-        backgroundColor: 'rgba(24, 19, 16, 0.92)',
-        padding: 16,
-        shadowColor: '#000',
-        shadowOpacity: 0.28,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 10 },
-        elevation: 4,
       }}
     >
       <TouchableOpacity
@@ -228,26 +218,6 @@ const AdminChatThinkingPanel: React.FC<AdminChatThinkingPanelProps> = ({ state }
               >
                 <Text style={{ color: '#fecaca', fontSize: 13, lineHeight: 20 }}>
                   {state.error}
-                </Text>
-              </View>
-            ) : null}
-
-            {state.finalText ? (
-              <View
-                style={{
-                  marginTop: 10,
-                  borderRadius: 18,
-                  borderWidth: 1,
-                  borderColor: 'rgba(34,197,94,0.24)',
-                  backgroundColor: 'rgba(34,197,94,0.08)',
-                  padding: 14,
-                }}
-              >
-                <Text style={{ color: '#86efac', fontSize: 12, fontWeight: '700', marginBottom: 8 }}>
-                  最终结果
-                </Text>
-                <Text selectable style={{ color: 'rgba(255,255,255,0.9)', fontSize: 14, lineHeight: 22 }}>
-                  {state.finalText}
                 </Text>
               </View>
             ) : null}
