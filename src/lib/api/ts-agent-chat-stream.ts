@@ -298,6 +298,67 @@ export const reduceAgentChatStreamState = (
   eventName: string,
   dataText: string,
 ): AgentChatStreamState => {
+  const normalizedEvent = (eventName || '').trim();
+
+  if (normalizedEvent === 'llm.delta') {
+    const delta = dataText.trim();
+    if (!delta) {
+      return previous;
+    }
+
+    const currentIndex = previous.currentStepId
+      ? previous.steps.findIndex((item) => item.id === previous.currentStepId)
+      : -1;
+    const stepIndex = currentIndex >= 0 && previous.steps[currentIndex]?.kind === 'llm'
+      ? currentIndex
+      : (() => {
+          for (let index = previous.steps.length - 1; index >= 0; index -= 1) {
+            if (previous.steps[index]?.kind === 'llm') {
+              return index;
+            }
+          }
+          return -1;
+        })();
+
+    if (stepIndex < 0) {
+      const nextStep: AgentChatStep = {
+        id: createStepId('llm', 'LLM'),
+        kind: 'llm',
+        name: 'LLM',
+        title: 'LLM',
+        status: 'running',
+        text: delta,
+      };
+      return {
+        ...previous,
+        active: true,
+        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+        finalStatus: 'running',
+        steps: [...previous.steps, nextStep],
+        currentStepId: nextStep.id,
+        finalText: nextStep.text,
+      };
+    }
+
+    const currentStep = previous.steps[stepIndex];
+    const nextStep: AgentChatStep = {
+      ...currentStep,
+      status: mergeStepStatus(currentStep.status, 'running'),
+      text: appendStepText(currentStep.text, delta),
+    };
+    const nextSteps = replaceStep(previous, stepIndex, nextStep);
+
+    return {
+      ...previous,
+      active: true,
+      agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+      finalStatus: 'running',
+      steps: nextSteps,
+      currentStepId: nextStep.id,
+      finalText: nextStep.text || previous.finalText,
+    };
+  }
+
   const payload = parsePayload(dataText);
   if (!payload) {
     return previous;
@@ -306,7 +367,7 @@ export const reduceAgentChatStreamState = (
   const agentName = getAgentName(payload);
   const data = getPayloadObject(payload);
 
-  switch ((eventName || '').trim()) {
+  switch (normalizedEvent) {
     case 'agent.start': {
       return {
         ...createInitialAgentChatStreamState(),
