@@ -718,29 +718,18 @@ export default function App() {
     }
     setGeneratingSetting(true);
     try {
-      const result = await tsStoryApi.generateStorySetting({
-        storyId: storyId || undefined,
-        title: storyTitle || undefined,
-        storyMode: activeTab,
-        storyIntro: storyIntro || undefined,
+      const contextPayload = {
         storySetting: storySettingText || undefined,
-        storyBackground: storyBackground || undefined,
-        ideaInput: storySettingText || undefined,
+        sceneSetting: sceneSettingText || undefined,
+        plotOutline: outlineText || undefined,
+        storyIntro: storyIntro || undefined,
+        storyMode: activeTab,
+      };
+      const result = await tsStoryApi.generateStorySetting({
+        ...contextPayload,
       });
-      if (result?.title) {
-        setStoryTitle(result.title);
-      }
-      if (result?.storyIntro) {
-        setStoryIntro(result.storyIntro);
-      }
       if (result?.storySetting) {
         setStorySettingText(result.storySetting);
-      }
-      if (result?.storyBackground) {
-        setStoryBackground(result.storyBackground);
-      }
-      if (result?.storyMode) {
-        setActiveTab(normalizeStoryMode(result.storyMode));
       }
       setIsAiStorySetting(result?.generated !== false);
       if (result?.generated === false) {
@@ -764,12 +753,15 @@ export default function App() {
     }
     setGeneratingScene(true);
     try {
-      const result = await tsStoryApi.generateStoryScene({
-        title: storyTitle || undefined,
-        storyMode: activeTab,
+      const contextPayload = {
         storySetting: storySettingText || undefined,
-        storyBackground: storyBackground || undefined,
         sceneSetting: sceneSettingText || undefined,
+        plotOutline: outlineText || undefined,
+        storyIntro: storyIntro || undefined,
+        storyMode: activeTab,
+      };
+      const result = await tsStoryApi.generateStoryScene({
+        ...contextPayload,
       });
       const sceneText = (result?.sceneSummary || result?.sceneNameSnapshot || '').trim();
       if (sceneText) {
@@ -795,33 +787,42 @@ export default function App() {
       return;
     }
 
-    if (!storySettingText.trim() || selectedRoles.length === 0 || !sceneSettingText.trim()) {
-      showMessage('请先完成故事设定、添加角色并填写场所设定，然后再尝试生成大纲。');
+    if (!storySettingText.trim() || !sceneSettingText.trim()) {
+      showMessage('请先完成故事设定并填写场所设定，然后再尝试生成大纲。');
       return;
     }
 
     setGeneratingOutline(true);
     try {
-      const result = await tsStoryApi.generateStoryOutline({
-        storyId: storyId || undefined,
-        title: storyTitle || undefined,
-        storyMode: activeTab,
+      const contextPayload = {
         storySetting: storySettingText || undefined,
         sceneSetting: sceneSettingText || undefined,
-        storyBackground: storyBackground || undefined,
-        chapterCount: activeTab === 'chapter' ? Math.max(chapters.length, 1) : 3,
-        roleNames: [],
-        extraRequirements: activeTab === 'normal' ? (outlineText.trim() || undefined) : undefined,
+        plotOutline: outlineText || undefined,
+        storyIntro: storyIntro || undefined,
+        storyMode: activeTab,
+      };
+      const result = await tsStoryApi.generateStoryOutline({
+        ...contextPayload,
       });
 
-      const generatedChapters = result?.chapters || [];
-      if (!generatedChapters.length) {
-        throw new Error('未生成有效剧情大纲，请稍后重试。');
-      }
       if (activeTab === 'normal') {
-        setOutlineText(buildOutlineTextFromChapters(generatedChapters));
+        const outlineTextValue = result?.plotOutline?.trim();
+        const generatedChapters = result?.chapters || [];
+        if (outlineTextValue) {
+          setOutlineText(outlineTextValue);
+        }
+        else if (generatedChapters.length) {
+          setOutlineText(buildOutlineTextFromChapters(generatedChapters));
+        }
+        else {
+          throw new Error('未生成有效剧情大纲，请稍后重试。');
+        }
       }
       else {
+        const generatedChapters = result?.chapters || [];
+        if (!generatedChapters.length) {
+          throw new Error('未生成有效剧情大纲，请稍后重试。');
+        }
         setChapters(generatedChapters.map(mapChapterFromOutline));
       }
       setIsAiOutline(true);

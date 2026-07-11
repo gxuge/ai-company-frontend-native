@@ -49,7 +49,7 @@
 | 验证码登录页 | `/pages/verification-code-login` | `src/app/pages/verification-code-login/index.tsx` | 页面内 style 对象 | 已接 `userApi.phoneLogin` |
 | 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 角色详情页 | `/pages/role-detail` | `src/app/pages/role-detail/index.tsx` | `role-detail/components/role-detail.styles.ts` | 已接 `tsRoleApi.getRoleDetail`、`tsRoleApi.getRoleAuthorPublic` |
-| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 暂未直接接业务 API |
+| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 已接 `tsStoryApi.generateStorySetting`、`tsStoryApi.generateStoryScene`、`tsStoryApi.generateStoryOutline` |
 | 创建分页页 | `/pages/create-page` | `src/app/pages/create-page/index.tsx` | 页面内样式 + `components/Icons.tsx` | 暂未直接接业务 API |
 | 声音编辑页 | `/pages/sound-edit` | `src/app/pages/sound-edit/index.tsx` | 页面内样式 + `components/edit-sound-text.tsx` | 暂未直接接业务 API |
 | 通用设置页 | `/pages/general-setting` | `src/app/pages/general-setting/index.tsx` | 页面内样式 + `components/settings-page.tsx` | 暂未直接接业务 API |
@@ -64,6 +64,9 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `src/lib/api/ts-role.ts` | `getRoleDetail(roleId)` | GET | `/sys/ts-roles/detail` | `id` | `roleName`、`coverUrl`、`introText`、`storyText` 等 | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
+| `src/lib/api/ts-story.ts` | `generateStorySetting(payload)` | POST | `/sys/ts-stories/story-setting-generate` | `storySetting`、`sceneSetting`、`plotOutline`、`storyIntro`、`storyMode` | `storySetting`、`generated`、`fallbackReason` 等 | 创建故事页 |
+| `src/lib/api/ts-story.ts` | `generateStoryScene(payload)` | POST | `/sys/ts-stories/story--scene-generate` | `storySetting`、`sceneSetting`、`plotOutline`、`storyIntro`、`storyMode` | `sceneNameSnapshot`、`sceneSummary`、`generated` 等 | 创建故事页 |
+| `src/lib/api/ts-story.ts` | `generateStoryOutline(payload)` | POST | `/sys/ts-stories/story--outline-generate` | `storySetting`、`sceneSetting`、`plotOutline`、`storyIntro`、`storyMode` | `chapters`、`plotOutline`、`generated` 等 | 创建故事页 |
 | `src/lib/api/user.ts` | `phoneLogin(payload)` | POST | `/sys/phoneLogin` | `mobile`、`captcha` | `token`、`refreshToken`、`userInfo` | 验证码登录页 |
 | `src/lib/api/user.ts` | `quickLoginByPhone(mobile)` | POST（复用 phoneLogin） | `/sys/phoneLogin` | `mobile`（固定 `captcha=000000`） | 同 `phoneLogin` | 预留（当前页面未直接调用） |
 | `src/lib/api/user.ts` | `getUserInfo()` | GET | `/sys/user/getUserInfo` | 无 | `userInfo` | 预留 |

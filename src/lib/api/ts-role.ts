@@ -261,6 +261,13 @@ export const tsRoleApi = {
     });
   },
 
+  async generateRoleSettingPreset(payload: TsRoleOneClickSettingGeneratePayload) {
+    return defHttp.post<TsRoleOneClickSettingGenerateResult>({
+      url: '/sys/ts-roles/one-click-setting-preset',
+      data: payload,
+    });
+  },
+
   async generateRoleImage(payload: TsRoleOneClickImagePayload) {
     return defHttp.post<TsRoleOneClickImageResult>({
       url: '/sys/ts-roles/one-click-image',

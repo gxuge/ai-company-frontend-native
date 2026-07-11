@@ -1,9 +1,9 @@
 import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { Alert, Platform, ScrollView } from 'react-native';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
@@ -26,6 +26,8 @@ type VoicePreviewCacheEntry = {
   expireAt: number;
   preview: TsVoiceProfilePreviewResult;
 };
+
+type SettingGenerateMode = 'single' | 'full';
 
 function showMessage(message: string) {
   if (!message) {
@@ -87,6 +89,56 @@ function setCachedVoicePreview(payload: TsVoiceProfilePreviewPayload, preview: T
     preview,
   };
   void setItem(key, cache);
+}
+
+async function selectSettingGenerateMode(): Promise<SettingGenerateMode | null> {
+  if (Platform.OS === 'web') {
+    const maybePrompt = (globalThis as { prompt?: (msg?: string, defaultValue?: string) => string | null }).prompt;
+    if (typeof maybePrompt === 'function') {
+      const input = maybePrompt('请选择生成方式：输入 1=单个生成，2=全生成，其他=取消', '');
+      if (input === '1') {
+        return 'single';
+      }
+      if (input === '2') {
+        return 'full';
+      }
+      return null;
+    }
+  }
+  return await new Promise((resolve) => {
+    Alert.alert(
+      '选择生成方式',
+      '请选择角色设定生成方式',
+      [
+        { text: '取消', style: 'cancel', onPress: () => resolve(null) },
+        { text: '单个生成', onPress: () => resolve('single') },
+        { text: '全生成', onPress: () => resolve('full') },
+      ],
+      { cancelable: true, onDismiss: () => resolve(null) },
+    );
+  });
+}
+
+async function confirmSettingOverwrite(): Promise<boolean> {
+  if (Platform.OS === 'web') {
+    const maybeConfirm = (globalThis as { confirm?: (msg?: string) => boolean }).confirm;
+    if (typeof maybeConfirm === 'function') {
+      return maybeConfirm('检测到已有角色设定内容，继续生成将覆盖当前内容，是否继续？');
+    }
+    showMessage('当前环境不支持覆盖确认弹窗，已取消生成。');
+    return false;
+  }
+  return await new Promise((resolve) => {
+    Alert.alert(
+      '确认覆盖',
+      '检测到已有角色设定内容，继续生成将覆盖当前内容，是否继续？',
+      [
+        { text: '取消', style: 'cancel', onPress: () => resolve(false) },
+        { text: '继续', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
+  });
 }
 function Header({
   activeTab,
@@ -473,16 +525,71 @@ export function CreateCharacter() {
     if (generatingSetting || saving) {
       return;
     }
+    const isInitialEmpty = !name.trim() && !job.trim() && !background.trim() && gender === 'random';
+    if (isInitialEmpty) {
+      setGeneratingSetting(true);
+      try {
+        const result = await tsRoleApi.generateRoleSettingPreset({
+          roleId: roleId || undefined,
+          roleName: name.trim() || undefined,
+          gender,
+          occupation: job.trim() || undefined,
+          backgroundStory: background.trim() || undefined,
+          keywords: selectedTags.join(','),
+        });
+        if (result?.roleName) {
+          setName(result.roleName);
+        }
+        if (result?.gender === 'male' || result?.gender === 'female') {
+          setGender(result.gender);
+        }
+        if (result?.occupation) {
+          setJob(result.occupation);
+        }
+        if (result?.backgroundStory) {
+          setBackground(result.backgroundStory);
+        }
+        setBasicAiGenerated(true);
+        showMessage('角色设定已全生成并回填。');
+      }
+      catch (error) {
+        showMessage(extractErrorMessage(error, '设定生成失败，请稍后重试。'));
+      }
+      finally {
+        setGeneratingSetting(false);
+      }
+      return;
+    }
+    const generateMode = await selectSettingGenerateMode();
+    if (!generateMode) {
+      return;
+    }
+    const hasExistingSetting = Boolean(name.trim() || job.trim() || background.trim());
+    if (hasExistingSetting) {
+      const confirmed = await confirmSettingOverwrite();
+      if (!confirmed) {
+        return;
+      }
+    }
     setGeneratingSetting(true);
     try {
-      const result = await tsRoleApi.generateRoleSetting({
-        roleId: roleId || undefined,
-        roleName: name.trim() || undefined,
-        gender,
-        occupation: job.trim() || undefined,
-        backgroundStory: background.trim() || undefined,
-        keywords: selectedTags.join(','),
-      });
+      const result = generateMode === 'full'
+        ? await tsRoleApi.generateRoleSettingPreset({
+            roleId: roleId || undefined,
+            roleName: name.trim() || undefined,
+            gender,
+            occupation: job.trim() || undefined,
+            backgroundStory: background.trim() || undefined,
+            keywords: selectedTags.join(','),
+          })
+        : await tsRoleApi.generateRoleSetting({
+            roleId: roleId || undefined,
+            roleName: name.trim() || undefined,
+            gender,
+            occupation: job.trim() || undefined,
+            backgroundStory: background.trim() || undefined,
+            keywords: selectedTags.join(','),
+          });
       if (result?.roleName) {
         setName(result.roleName);
       }
@@ -496,7 +603,7 @@ export function CreateCharacter() {
         setBackground(result.backgroundStory);
       }
       setBasicAiGenerated(true);
-      showMessage('角色设定已生成并回填。');
+      showMessage(generateMode === 'full' ? '角色设定已全生成并回填。' : '角色设定已生成并回填。');
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '设定生成失败，请稍后重试。'));

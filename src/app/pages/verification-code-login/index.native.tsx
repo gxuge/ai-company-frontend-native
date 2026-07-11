@@ -118,9 +118,9 @@ export default function VerificationCodeLoginPage() {
           width: DESIGN_W,
           height: DESIGN_H,
           transform: [
+            { translateX: -(DESIGN_W * (1 - scale)) / 2 },
+            { translateY: -(DESIGN_H * (1 - scale)) / 2 },
             { scale },
-            { translateX: -(DESIGN_W * (1 - scale)) / (2 * scale) },
-            { translateY: -(DESIGN_H * (1 - scale)) / (2 * scale) },
           ],
           position: 'relative',
           backgroundColor: '#020202',
@@ -162,7 +162,7 @@ export default function VerificationCodeLoginPage() {
               width: '100%',
             }}
           >
-            欢迎登录 探拾
+            欢迎登录 探拾11
           </Text>
 
           <View
