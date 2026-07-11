@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { tsRoleApi, tsRoleImageApi, userApi } from '@/lib/api';
+import { brandGreenRgba } from '@/components/ui/brand';
 
 const asset = m => m?.default ?? m?.uri ?? m;
 const imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1 = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
@@ -180,6 +181,7 @@ function InputCard({
                       if (value.trim() === '')
                         setFocused(false);
                     }}
+                    disabled={generating}
                   />
                 </div>
               )}
@@ -237,14 +239,58 @@ function InputCard({
             <button
               onClick={onGenerate}
               disabled={generating}
-              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-brand-green bg-transparent px-5 py-3 transition-transform active:scale-95 active:bg-brand-green/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className={`flex w-30 items-center justify-center gap-2 rounded-xl border bg-transparent px-5 py-3 transition-all duration-300 active:scale-95 active:bg-brand-green/10 disabled:cursor-not-allowed ${generating ? 'cursor-progress border-transparent' : 'border-brand-green disabled:opacity-60'}`}
+              style={{
+                animation: generating ? 'pulse-glow 2s ease-in-out infinite' : 'none'
+              }}
             >
-              <svg className="size-5 shrink-0" fill="none" viewBox="0 0 38 40">
-                <path d={svgPaths.p6e49400} fill="currentColor" className="text-brand-green" />
-              </svg>
-              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-brand-green">
+              <div className={generating ? 'animate-pulse-star' : ''} style={{ animationDuration: '2s' }}>
+                <svg className="size-5 shrink-0" fill="none" viewBox="0 0 38 40">
+                  <path d={svgPaths.p6e49400} fill="currentColor" className="text-brand-green" />
+                </svg>
+              </div>
+              <span 
+                className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-brand-green"
+                style={generating ? {
+                  backgroundImage: `linear-gradient(90deg, ${brandGreenRgba(0.9)} 0%, #fff 50%, ${brandGreenRgba(0.9)} 100%)`,
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  animation: "shimmer 2s linear infinite"
+                } : {}}
+              >
                 {generating ? '润色中...' : 'AI 润色'}
               </span>
+              <style>{`
+                @keyframes shimmer {
+                  to { background-position: 200% center; }
+                }
+                @keyframes pulse-glow {
+                  0%, 100% { 
+                    box-shadow: 0px 0px 5px 0px ${brandGreenRgba(0.2)}, 0px 0px 10px 0px ${brandGreenRgba(0.1)};
+                    border-color: ${brandGreenRgba(0.2)};
+                  }
+                  50% { 
+                    box-shadow: 0px 0px 12px 2px ${brandGreenRgba(0.4)}, 0px 0px 20px 0px ${brandGreenRgba(0.2)};
+                    border-color: ${brandGreenRgba(0.5)};
+                  }
+                }
+                .animate-pulse-star {
+                  animation: pulse-star 1.2s ease-in-out infinite;
+                }
+                @keyframes pulse-star {
+                  0%, 100% { 
+                    transform: scale(1);
+                    opacity: 0.7;
+                    filter: drop-shadow(0 0 2px ${brandGreenRgba(0.4)});
+                  }
+                  50% { 
+                    transform: scale(1.2);
+                    opacity: 1;
+                    filter: drop-shadow(0 0 8px ${brandGreenRgba(1)});
+                  }
+                }
+              `}</style>
             </button>
           </div>
         </div>

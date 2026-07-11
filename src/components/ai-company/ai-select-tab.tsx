@@ -18,6 +18,7 @@ export interface AiSelectTabProps<T extends string | number> {
   activeTextClassName?: string;
   inactiveTextClassName?: string;
   itemClassName?: string;
+  disabled?: boolean;
 }
 
 export function AiSelectTab<T extends string | number>({
@@ -29,6 +30,7 @@ export function AiSelectTab<T extends string | number>({
   activeTextClassName = "text-brand-green font-medium",
   inactiveTextClassName = "text-[#9ca3af]",
   itemClassName = "flex-1 py-1.5 items-center justify-center z-10",
+  disabled = false,
 }: AiSelectTabProps<T>) {
   const activeIndex = Math.max(0, options.findIndex(o => o.value === value));
   const optionCount = options.length;
@@ -40,7 +42,7 @@ export function AiSelectTab<T extends string | number>({
   });
 
   return (
-    <View className={containerClassName}>
+    <View className={`${containerClassName} ${disabled ? 'opacity-50' : ''}`}>
       <View className="flex-row relative flex-1">
         <Animated.View
           className={`absolute top-0 bottom-0 ${activeBgClassName}`}
@@ -51,7 +53,12 @@ export function AiSelectTab<T extends string | number>({
           return (
             <Pressable
               key={String(option.value)}
-              onPress={() => onChange(option.value)}
+              onPress={() => {
+                if (!disabled) {
+                  onChange(option.value);
+                }
+              }}
+              disabled={disabled}
               className={itemClassName}
             >
               <Text

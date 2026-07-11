@@ -680,6 +680,7 @@ function PlotOutlineSection({
       ]}
       value={activeTab}
       onChange={v => onModeChange(v as StoryMode)}
+      disabled={generateLoading}
       containerClassName="bg-black border border-[#494949] rounded-[8px] p-[4px] h-[46px] w-full mb-[4px]"
       activeBgClassName="bg-brand-green/10 border border-[rgba(var(--color-brand-green-rgb),0.9)] rounded-[6px]"
       activeTextClassName="text-[rgba(var(--color-brand-green-rgb),0.9)] font-bold text-[15px]"
