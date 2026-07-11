@@ -1,8 +1,7 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { AiHeader } from '@/components/ai-company/ai-header';
-import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
-import { tsRoleApi, tsRoleImageApi } from '@/lib/api';
+import { tsRoleApi, tsRoleImageApi, userApi } from '@/lib/api';
 
 const asset = m => m?.default ?? m?.uri ?? m;
 const imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1 = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
@@ -39,7 +38,8 @@ const STYLE_OPTIONS = [
 const PROFILE_NAME_MAX_LENGTH = 24;
 
 function showMessage(message) {
-  if (!message) return;
+  if (!message)
+    return;
   console.warn(message);
 }
 
@@ -52,7 +52,8 @@ function extractErrorMessage(error, fallback) {
 
 /** 图片预览弹层 */
 function ImagePreviewModal({ src, onClose }) {
-  if (!src) return null;
+  if (!src)
+    return null;
   return (
     <div
       style={{
@@ -116,13 +117,14 @@ function MyGalleryButton() {
   );
 }
 
-/** 主输入卡片?*/
+/** 主输入卡片? */
 function InputCard({
   value,
   onChange,
   onPickRefImage,
   referenceImageUrl,
   onPreviewRefImage,
+  onDeleteRefImage,
   onGenerate,
   generating = false,
   backgroundImage,
@@ -160,7 +162,7 @@ function InputCard({
                   <h2 className="text-center font-['Noto_Sans_SC',sans-serif] text-xl font-bold text-[#e7e7e7]">
                     输入你想要的形象
                   </h2>
-                  <p className="px-2 text-center font-['Noto_Sans_SC',sans-serif] text-sm leading-relaxed text-[rgba(231,231,231,0.6)]">
+                  <p className="px-2 text-center font-['Noto_Sans_SC',sans-serif] text-sm/relaxed text-[rgba(231,231,231,0.6)]">
                     如性别、外貌、性格、身材、衣着以及其他特征
                   </p>
                 </div>
@@ -169,13 +171,14 @@ function InputCard({
                 <div className="flex-1">
                   <textarea
                     ref={textareaRef}
-                    className="size-full min-h-[160px] resize-none border-none bg-transparent font-['Noto_Sans_SC',sans-serif] text-sm leading-relaxed text-[rgba(231,231,231,0.85)] placeholder-[rgba(231,231,231,0.3)] outline-none"
+                    className="size-full min-h-[160px] resize-none border-none bg-transparent font-['Noto_Sans_SC',sans-serif] text-sm/relaxed text-[rgba(231,231,231,0.85)] placeholder-[rgba(231,231,231,0.3)] outline-none"
                     placeholder="描述你想要的形象..."
                     value={value}
                     onChange={e => onChange(e.target.value)}
                     onFocus={() => setFocused(true)}
                     onBlur={() => {
-                      if (value.trim() === '') setFocused(false);
+                      if (value.trim() === '')
+                        setFocused(false);
                     }}
                   />
                 </div>
@@ -184,17 +187,35 @@ function InputCard({
           <div className="flex items-center justify-center gap-5 pt-1 pb-2">
             {/* 参考图按钮：已选图片则显示缩略图，可点击预览；未选则显示图标 */}
             <button
-              onClick={referenceImageUrl ? onPreviewRefImage : onPickRefImage}
-              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.45)] bg-[rgba(22,22,30,0.6)] px-5 py-3 backdrop-blur-sm transition-transform active:scale-95 overflow-hidden"
-              title={referenceImageUrl ? '点击预览参考图' : '选择参考图'}
+              onClick={onPickRefImage}
+              className="flex w-30 items-center justify-center gap-2 overflow-hidden rounded-xl border border-[rgba(255,255,255,0.45)] bg-[rgba(22,22,30,0.6)] px-5 py-3 backdrop-blur-sm transition-transform active:scale-95"
+              title={referenceImageUrl ? '更换参考图' : '选择参考图'}
             >
               {referenceImageUrl
                 ? (
-                    <img
-                      src={referenceImageUrl}
-                      alt="参考图"
-                      style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: 4 }}
-                    />
+                    <div className="relative">
+                      <img
+                        src={referenceImageUrl}
+                        alt="参考图"
+                        style={{ width: 22, height: 22, objectFit: 'cover', borderRadius: 4 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPreviewRefImage();
+                        }}
+                      />
+                      <div
+                        className="absolute -top-1.5 -right-1.5 flex size-3.5 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-black/80"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteRefImage();
+                        }}
+                      >
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </div>
+                    </div>
                   )
                 : (
                     <svg className="size-5 shrink-0" fill="none" viewBox="0 0 37 35">
@@ -216,13 +237,13 @@ function InputCard({
             <button
               onClick={onGenerate}
               disabled={generating}
-              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-brand-green-rgb), 0.9)] bg-[rgba(22,22,30,0.6)] px-5 py-3 shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb), 0.2)] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-30 items-center justify-center gap-2 rounded-xl border border-brand-green bg-transparent px-5 py-3 transition-transform active:scale-95 active:bg-brand-green/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg className="size-5 shrink-0" fill="none" viewBox="0 0 38 40">
-                <path d={svgPaths.p6e49400} fill="rgba(var(--color-brand-green-rgb), 0.9)" fillOpacity="0.9" />
+                <path d={svgPaths.p6e49400} fill="currentColor" className="text-brand-green" />
               </svg>
-              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-[rgba(var(--color-brand-green-rgb), 0.9)]">
-                {generating ? '生成中...' : 'AI 生成'}
+              <span className="font-['Inter',sans-serif] text-sm font-bold whitespace-nowrap text-brand-green">
+                {generating ? '润色中...' : 'AI 润色'}
               </span>
             </button>
           </div>
@@ -256,7 +277,7 @@ function StyleCard({ image, label, selected = false, onClick }) {
 
 function StyleSelector({ selectedStyle, onSelectStyle }) {
   return (
-    <div className="mx-4 rounded-3xl border-1 border-[#b2b2b2] bg-[#1d1d1d] p-5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
+    <div className="mx-4 rounded-3xl border border-[#b2b2b2] bg-[#1d1d1d] p-5 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="font-['Noto_Sans_SC',sans-serif] text-base font-bold text-[#b3b3b3]">
           风格
@@ -303,59 +324,59 @@ function StyleSelector({ selectedStyle, onSelectStyle }) {
   );
 }
 
-// eslint-disable-next-line max-lines-per-function
 function Container() {
   const [promptText, setPromptText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState(STYLE_OPTIONS[0]?.value || '');
   const [generatedImageUrl, setGeneratedImageUrl] = useState('');
   const [referenceImageUrl, setReferenceImageUrl] = useState('');
+  const [referenceImageFile, setReferenceImageFile] = useState(null);
+  const [referenceImageServerUrl, setReferenceImageServerUrl] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [previewSrc, setPreviewSrc] = useState('');
+  const [emptyAlertVisible, setEmptyAlertVisible] = useState(false);
+  const [confirmOptimizeVisible, setConfirmOptimizeVisible] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const fileInputRef = useRef(null);
 
-  /** 调起文件系统选单张图片?*/
+  /** 调起文件系统选单张图片? */
   const handlePickRefImage = () => {
     fileInputRef.current?.click();
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file)
+      return;
     const objectUrl = URL.createObjectURL(file);
+    setReferenceImageFile(file);
+    setReferenceImageServerUrl('');
     setReferenceImageUrl(objectUrl);
     // reset file input so same file can be selected again
     e.target.value = '';
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = () => {
     const promptTextTrimmed = promptText.trim();
-    if (!promptTextTrimmed && !referenceImageUrl) {
-      showMessage('请输入形象描述或选择参考图');
+    if (!promptTextTrimmed) {
+      setEmptyAlertVisible(true);
       return;
     }
+    setConfirmOptimizeVisible(true);
+  };
 
+  const executeGenerate = async () => {
+    const promptTextTrimmed = promptText.trim();
     setIsGenerating(true);
     try {
-      const generated = await tsRoleApi.generateTextByTemplate({
-        promptCode: 'role_ai_generate_text',
-        promptVersion: 'v1',
-        variables: {
-          idea_input: promptTextTrimmed || null,
-          style_hint: selectedStyle || null,
-          keywords: selectedStyle || null,
-          reference_image_url: referenceImageUrl || null,
-          role_name: null,
-          gender: null,
-          occupation: null,
-          background_story: null,
-        },
+      const generated = await tsRoleApi.optimizeImagePrompt({
+        promptText: promptTextTrimmed,
       });
-      const generatedText = generated?.generatedText?.trim();
-      if (!generatedText) {
-        throw new Error('AI 未返回可用的文本');
+      const optimizedPrompt = generated?.visualPrompt?.trim();
+      if (!optimizedPrompt) {
+        throw new Error('AI 未返回可用的提示词');
       }
-      setPromptText(generatedText);
+      setPromptText(optimizedPrompt);
     }
     catch (error) {
       showMessage(extractErrorMessage(error, 'AI 生成失败，请重试'));
@@ -367,38 +388,50 @@ function Container() {
 
   const handleCreate = async () => {
     const promptTextTrimmed = promptText.trim();
-    if (!referenceImageUrl && promptTextTrimmed.length < 15) {
+    if (!referenceImageUrl && !referenceImageServerUrl && promptTextTrimmed.length < 15) {
       showMessage('请上传参考图或输入至少 15 个字符');
       return;
     }
 
     setIsCreating(true);
     try {
-      const generated = await tsRoleImageApi.generateRoleImage({
-        backgroundStory: promptTextTrimmed || undefined,
+      let uploadedReferenceImageUrl = referenceImageServerUrl || undefined;
+      if (!uploadedReferenceImageUrl && referenceImageFile) {
+        const serverUrl = await userApi.uploadFile(referenceImageFile, 'reference');
+        if (!serverUrl) {
+          throw new Error('参考图上传失败');
+        }
+        setReferenceImageServerUrl(serverUrl);
+        uploadedReferenceImageUrl = serverUrl;
+      }
+
+      const generated = await tsRoleImageApi.generateImageByPrompt({
+        promptText: promptTextTrimmed,
         styleName: selectedStyle || undefined,
-        referenceImageUrl: referenceImageUrl || undefined,
+        referenceImageUrl: uploadedReferenceImageUrl,
       });
 
-      const imageUrl = generated?.imageUrl?.trim();
+      const imageUrl = generated?.imageUrl?.trim()
+        || generated?.imageUrls?.find(url => typeof url === 'string' && url.trim())?.trim()
+        || generated?.originalImageUrls?.find(url => typeof url === 'string' && url.trim())?.trim();
       if (!imageUrl) {
         throw new Error('创建失败：未返回图片地址');
       }
       setGeneratedImageUrl(imageUrl);
 
       const extJson = JSON.stringify({
-        promptCode: generated.promptCode,
-        promptVersion: generated.promptVersion,
         snapshotKey: generated.snapshotKey,
-        generateRecordId: generated.generateRecordId,
-        imagePrompt: generated.imagePrompt,
+        promptUsed: generated.promptUsed || promptTextTrimmed,
+        styleUsed: generated.styleUsed || selectedStyle || undefined,
+        referenceImageUrl: generated.referenceImageUrl || uploadedReferenceImageUrl || undefined,
+        imageUrls: generated.imageUrls || undefined,
+        originalImageUrls: generated.originalImageUrls || undefined,
       });
 
       await tsRoleImageApi.createRoleImageProfile({
         profileName: (promptTextTrimmed || 'new-profile').slice(0, PROFILE_NAME_MAX_LENGTH),
-        promptText: promptTextTrimmed || generated.imagePrompt || '',
+        promptText: promptTextTrimmed || generated.promptUsed || '',
         styleName: selectedStyle || undefined,
-        selectedImageAssetId: generated.imageAssetId,
         selectedImageUrl: imageUrl,
         sourceType: 'ai_generate',
         isPublic: 1,
@@ -425,11 +458,12 @@ function Container() {
         onPickRefImage={handlePickRefImage}
         referenceImageUrl={referenceImageUrl}
         onPreviewRefImage={() => setPreviewSrc(referenceImageUrl)}
+        onDeleteRefImage={() => setDeleteConfirmVisible(true)}
         onGenerate={handleGenerate}
         generating={isGenerating}
         backgroundImage={generatedImageUrl}
       />
-      <div className="mt-4 mb-4">
+      <div className="my-4">
         <StyleSelector
           selectedStyle={selectedStyle}
           onSelectStyle={setSelectedStyle}
@@ -438,18 +472,18 @@ function Container() {
 
       {/* 创建形象按钮 */}
       <div className="px-4 pb-8">
-        <AiLoginBtn
-          label="创建形象"
-          onPress={handleCreate}
+        <button
+          onClick={handleCreate}
           disabled={isCreating}
-          customWidth="w-full"
-          customHeight="h-14"
-          radius="rounded-2xl"
-          textClassName="text-base font-bold text-black"
-        />
+          className={`flex h-14 w-full items-center justify-center rounded-2xl border-2 border-solid border-brand-green bg-transparent font-['Noto_Sans_SC',sans-serif] text-base font-bold tracking-widest text-brand-green transition-colors active:bg-brand-green/10 ${
+            isCreating ? 'cursor-not-allowed opacity-60' : ''
+          }`}
+        >
+          {isCreating ? '创建中...' : '创建形象'}
+        </button>
       </div>
 
-      {/* 隐藏的文件选择框?*/}
+      {/* 隐藏的文件选择框? */}
       <input
         ref={fileInputRef}
         type="file"
@@ -460,6 +494,102 @@ function Container() {
 
       {/* 图片预览弹层 */}
       <ImagePreviewModal src={previewSrc} onClose={() => setPreviewSrc('')} />
+
+      {/* 空内容提示弹窗 */}
+      {emptyAlertVisible && (
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setEmptyAlertVisible(false)}
+        >
+          <div
+            className="relative flex w-full max-w-[320px] flex-col gap-[20px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">提示</h3>
+            <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+              请先填写内容，以便 AI 更好地为您润色提示词。
+            </p>
+            <button
+              onClick={() => setEmptyAlertVisible(false)}
+              className="mt-4 w-full rounded-full border border-brand-green bg-transparent py-3 text-center text-base font-bold text-brand-green active:bg-white/5"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 确认润色弹窗 */}
+      {confirmOptimizeVisible && (
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setConfirmOptimizeVisible(false)}
+        >
+          <div
+            className="relative flex w-full max-w-[320px] flex-col gap-[20px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">AI 润色</h3>
+            <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+              AI 将根据您当前的内容优化提示词，是否继续？
+            </p>
+            <div className="mt-4 flex flex-row gap-3">
+              <button
+                className="flex-1 rounded-full border border-[#494949] bg-transparent py-3 text-center text-base font-bold text-[#9ca3af] active:bg-white/5"
+                onClick={() => setConfirmOptimizeVisible(false)}
+              >
+                取消
+              </button>
+              <button
+                className="flex-1 rounded-full border-2 border-solid border-brand-green bg-transparent py-3 text-center text-base font-bold text-brand-green active:bg-brand-green/10"
+                onClick={() => {
+                  setConfirmOptimizeVisible(false);
+                  executeGenerate();
+                }}
+              >
+                继续
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 确认删除参考图弹窗 */}
+      {deleteConfirmVisible && (
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setDeleteConfirmVisible(false)}
+        >
+          <div
+            className="relative flex w-full max-w-[320px] flex-col gap-[20px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">删除参考图</h3>
+            <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+              确定要删除当前的参考图吗？
+            </p>
+            <div className="mt-4 flex flex-row gap-3">
+              <button
+                className="flex-1 rounded-full border border-[#494949] bg-transparent py-3 text-center text-base font-bold text-[#9ca3af] active:bg-white/5"
+                onClick={() => setDeleteConfirmVisible(false)}
+              >
+                取消
+              </button>
+              <button
+                className="flex-1 rounded-full border-2 border-solid border-[#ff4d4f] bg-transparent py-3 text-center text-base font-bold text-[#ff4d4f] active:bg-[#ff4d4f]/10"
+                onClick={() => {
+                  setDeleteConfirmVisible(false);
+                  setReferenceImageFile(null);
+                  setReferenceImageServerUrl('');
+                  setReferenceImageUrl('');
+                }}
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

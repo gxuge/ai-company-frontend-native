@@ -114,8 +114,8 @@ function Header({
         activeTab={activeTab}
         onTabChange={onTabChange}
         containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
-        activeBgClassName="bg-brand-green/90 shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb),0.5)] rounded-full"
-        activeTextClassName="text-[#3b3f34] font-bold"
+        activeBgClassName="bg-brand-green/10 border border-brand-green/90 rounded-full"
+        activeTextClassName="text-[rgba(var(--color-brand-green-rgb),0.9)] font-bold"
         inactiveTextClassName="text-[#9ca3af]"
       />
     </div>

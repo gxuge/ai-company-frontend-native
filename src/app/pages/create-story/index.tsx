@@ -15,6 +15,7 @@ import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
 import { AiHeader } from '../../../components/ai-company/ai-header';
 import { AiLoginBtn } from '../../../components/ai-company/ai-login-btn';
 import { AiTopTabs } from '../../../components/ai-company/ai-top-tabs';
+import { AiSelectTab } from '../../../components/ai-company/ai-select-tab';
 import { AiSwitch } from '../../../components/ai-company/ai-switch';
 import {
   tsStoryApi,
@@ -196,32 +197,6 @@ function PublicStatusSection({
   );
 }
 
-/* —— Tab Toggle —— */
-function TabToggle({
-  activeTab,
-  onChange,
-}: {
-  activeTab: StoryMode;
-  onChange: (tab: StoryMode) => void;
-}) {
-  const tabs = [
-    { id: 'normal', label: '普通剧情' },
-    { id: 'chapter', label: '章节剧情' },
-  ];
-
-  return (
-    <AiTopTabs
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={tab => onChange(normalizeStoryMode(tab))}
-      containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
-      activeBgClassName="bg-[rgba(var(--color-brand-green-rgb), 0.9)] shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb), 0.5)] rounded-full"
-      activeTextClassName="text-[#3b3f34] font-bold"
-      inactiveTextClassName="text-[#9ca3af]"
-    />
-  );
-}
-
 function SectionHeader({
   title,
   required,
@@ -232,6 +207,7 @@ function SectionHeader({
   generateDisabled = false,
   onGenerate,
   onHelpClick,
+  rightExtra,
 }: {
   title: string;
   required?: boolean;
@@ -242,6 +218,7 @@ function SectionHeader({
   generateDisabled?: boolean;
   onGenerate?: () => void;
   onHelpClick?: () => void;
+  rightExtra?: React.ReactNode;
 }) {
   return (
     <div className="flex w-full items-center justify-between pl-[4px]">
@@ -259,7 +236,7 @@ function SectionHeader({
         </span>
         {required && (
           <span
-            className="ml-[2px] text-[rgba(var(--color-brand-green-rgb), 0.9)]"
+            className="ml-[2px] text-[rgba(var(--color-brand-green-rgb),0.9)]"
             style={{
               fontFamily: '\'Noto Sans SC\', sans-serif',
               fontSize: large ? '20px' : '16px',
@@ -293,6 +270,11 @@ function SectionHeader({
           >
             <HelpCircle size={14} color="#9ca3af" />
           </button>
+        )}
+        {rightExtra && (
+          <div className="ml-3">
+            {rightExtra}
+          </div>
         )}
       </div>
       {showGenerate && (
@@ -539,7 +521,7 @@ function ChapterCard({
           </span>
         </div>
 
-        <div className="border-l-2 border-[rgba(var(--color-brand-green-rgb), 0.9)] pl-[14px]">
+        <div className="border-l-2 border-[rgba(var(--color-brand-green-rgb),0.9)] pl-[14px]">
           <p
             className="m-0 text-[#9ca3af]"
             style={{
@@ -665,6 +647,7 @@ function ChapterCard({
 /* —— Plot Outline Section —— */
 function PlotOutlineSection({
   activeTab,
+  onModeChange,
   outlineText,
   onOutlineChange,
   chapters,
@@ -677,6 +660,7 @@ function PlotOutlineSection({
   onHelpClick,
 }: {
   activeTab: StoryMode;
+  onModeChange: (mode: StoryMode) => void;
   outlineText: string;
   onOutlineChange: (value: string) => void;
   chapters: ChapterForm[];
@@ -688,6 +672,22 @@ function PlotOutlineSection({
   optimizeLoading: boolean;
   onHelpClick?: () => void;
 }) {
+  const renderModeSelect = () => (
+    <AiSelectTab
+      options={[
+        { label: '普通剧情', value: 'normal' },
+        { label: '章节剧情', value: 'chapter' },
+      ]}
+      value={activeTab}
+      onChange={v => onModeChange(v as StoryMode)}
+      containerClassName="bg-black border border-[#494949] rounded-[8px] p-[4px] h-[46px] w-full mb-[4px]"
+      activeBgClassName="bg-brand-green/10 border border-[rgba(var(--color-brand-green-rgb),0.9)] rounded-[6px]"
+      activeTextClassName="text-[rgba(var(--color-brand-green-rgb),0.9)] font-bold text-[15px]"
+      inactiveTextClassName="text-[#9ca3af] font-medium text-[15px]"
+      itemClassName="flex-1 items-center justify-center z-10"
+    />
+  );
+
   if (activeTab === 'normal') {
     return (
       <div className="flex flex-col gap-[12px]">
@@ -698,6 +698,7 @@ function PlotOutlineSection({
           generateLoading={generateLoading}
           onHelpClick={onHelpClick}
         />
+        {renderModeSelect()}
         <AiFormTextarea
           placeholder="输入剧情大纲..."
           isGenerating={generateLoading}
@@ -722,6 +723,7 @@ function PlotOutlineSection({
         generateLoading={generateLoading}
         onHelpClick={onHelpClick}
       />
+      {renderModeSelect()}
       {chapters.map((chapter, index) => (
         <ChapterCard
           key={`${chapter.id || 'new'}-${index}`}
@@ -737,7 +739,7 @@ function PlotOutlineSection({
       >
         <img src={imgAddChapterGreen} alt="" className="size-[20px] shrink-0 object-contain" />
         <span
-          className="text-[rgba(var(--color-brand-green-rgb), 0.9)]"
+          className="text-[rgba(var(--color-brand-green-rgb),0.9)]"
           style={{
             fontFamily: '\'Noto Sans SC\', sans-serif',
             fontSize: '14px',
@@ -762,15 +764,13 @@ function BottomButton({
   return (
     <div className="sticky bottom-0 z-50 shrink-0">
       <div className="bg-linear-to-t from-black via-[rgba(0,0,0,0.95)] to-transparent px-[16px] pt-[36px] pb-[20px]">
-        <AiLoginBtn
-          label={loading ? '保存中...' : '下一步'}
-          customWidth="w-full"
-          customHeight="h-[56px]"
-          radius="rounded-full"
-          textClassName="text-[18px] font-bold tracking-[1.4px] text-[#3b3f34]"
-          onPress={onNext}
+        <button
+          onClick={onNext}
           disabled={loading}
-        />
+          className={`w-full rounded-full border-2 border-solid border-brand-green bg-transparent py-[15px] text-[18px] text-brand-green font-['Noto_Sans_SC',sans-serif] font-bold tracking-[1.4px] active:bg-brand-green/10 ${loading ? 'opacity-60' : ''}`}
+        >
+          {loading ? '保存中...' : '下一步'}
+        </button>
       </div>
     </div>
   );
@@ -1300,8 +1300,8 @@ export default function App() {
             activeTab={activeTopTab}
             onTabChange={setActiveTopTab}
             containerClassName="bg-black rounded-full border-[1px] border-[#494949] p-[5px] h-[48px]"
-            activeBgClassName="bg-brand-green/90 shadow-[0px_0px_15px_0px_rgba(var(--color-brand-green-rgb),0.5)] rounded-full"
-            activeTextClassName="text-[#3b3f34] font-bold"
+            activeBgClassName="bg-brand-green/10 border border-brand-green/90 rounded-full"
+            activeTextClassName="text-[rgba(var(--color-brand-green-rgb),0.9)] font-bold"
             inactiveTextClassName="text-[#9ca3af]"
           />
         </div>
@@ -1352,9 +1352,9 @@ export default function App() {
                   optimizeLoading={optimizingScene}
                   onHelpClick={() => setTooltipType('scene')}
                 />
-                <TabToggle activeTab={activeTab} onChange={setActiveTab} />
                 <PlotOutlineSection
                   activeTab={activeTab}
+                  onModeChange={setActiveTab}
                   outlineText={outlineText}
                   onOutlineChange={setOutlineText}
                   chapters={chapters}
@@ -1399,18 +1399,18 @@ export default function App() {
             <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
               <p>您希望 AI 如何为您扩写？</p>
               <div className="flex items-start gap-1">
-                <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] mt-1">•</span>
+                <span className="text-[rgba(var(--color-brand-green-rgb),0.9)] mt-1">•</span>
                 <p><span className="text-white font-medium">仅当前：</span>只针对您刚点击的模块进行扩写。</p>
               </div>
               <div className="flex items-start gap-1">
-                <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] mt-1">•</span>
+                <span className="text-[rgba(var(--color-brand-green-rgb),0.9)] mt-1">•</span>
                 <p><span className="text-white font-medium">全生成：</span>依次为您自动补全故事、场景和大纲。</p>
               </div>
             </div>
             <div className="flex flex-row gap-3 mt-4">
               <button
                 type="button"
-                className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb), 0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb), 0.9)] active:bg-white/5"
+                className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-transparent py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-white/5"
                 onClick={() => {
                   const target = generateModalTarget;
                   setGenerateModalTarget(null);
@@ -1423,7 +1423,7 @@ export default function App() {
               </button>
               <button
                 type="button"
-                className="flex-1 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
+                className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-brand-green/10 py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-brand-green/20"
                 onClick={() => {
                   setGenerateModalTarget(null);
                   triggerGenerateAll();
@@ -1566,7 +1566,7 @@ export default function App() {
             <div className="mt-4 flex w-full">
               <button
                 type="button"
-                className="flex-1 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] py-3 text-center text-base font-bold text-black active:opacity-80"
+                className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-brand-green/10 py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-brand-green/20"
                 onClick={() => setUserRoleModalVisible(false)}
               >
                 确定
@@ -1617,7 +1617,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">故事设定提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">章节细节</span>。
+                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">章节细节</span>。
                 </p>
               </>
             )}
@@ -1625,7 +1625,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色列表提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">剧情纠葛</span>。
+                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">剧情纠葛</span>。
                 </p>
               </>
             )}
@@ -1633,7 +1633,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景图片提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  图片生成会依赖下方的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
+                  图片生成会依赖下方的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
                 </p>
               </>
             )}
@@ -1649,7 +1649,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">剧情大纲提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
+                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
                 </p>
               </>
             )}

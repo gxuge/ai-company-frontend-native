@@ -23,6 +23,22 @@ export type TsRoleOneClickImageGenerateResult = {
   snapshotKey?: string;
 };
 
+export type TsRoleGenerateImageByPromptPayload = {
+  promptText: string;
+  styleName?: string;
+  referenceImageUrl?: string;
+};
+
+export type TsRoleGenerateImageByPromptResult = {
+  promptUsed?: string;
+  styleUsed?: string;
+  referenceImageUrl?: string;
+  originalImageUrls?: string[];
+  imageUrls?: string[];
+  imageUrl?: string;
+  snapshotKey?: string;
+};
+
 export type TsUserImageAsset = {
   id: number;
   userId?: string;
@@ -132,6 +148,14 @@ export const tsRoleImageApi = {
   async generateRoleImage(payload: TsRoleOneClickImageGeneratePayload) {
     return defHttp.post<TsRoleOneClickImageGenerateResult>({
       url: '/sys/ts-roles/one-click-image',
+      data: payload,
+      timeout: 60_000,
+    });
+  },
+
+  async generateImageByPrompt(payload: TsRoleGenerateImageByPromptPayload) {
+    return defHttp.post<TsRoleGenerateImageByPromptResult>({
+      url: '/sys/ts-roles/generate-image-by-prompt',
       data: payload,
       timeout: 60_000,
     });

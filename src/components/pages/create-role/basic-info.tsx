@@ -51,11 +51,11 @@ type BasicInfoSectionProps = {
 
 function FieldLabel({ text, required }: { text: string; required?: boolean }) {
   return (
-    <div className="flex items-center border-l-2 border-[rgba(var(--color-brand-green-rgb), 0.9)] pl-2">
+    <div className="flex items-center border-l-2 border-[rgba(var(--color-brand-green-rgb),0.9)] pl-2">
       <span className="text-xs text-white">
         {text}
         {' '}
-        {required && <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)]">*</span>}
+        {required && <span className="text-[rgba(var(--color-brand-green-rgb),0.9)]">*</span>}
       </span>
     </div>
   );
@@ -135,7 +135,7 @@ export function BasicInfoSection({
               <h2 className="text-sm tracking-wide text-white">
                 角色形象
                 {' '}
-                <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)]">*</span>
+                <span className="text-[rgba(var(--color-brand-green-rgb),0.9)]">*</span>
               </h2>
               <button
                 type="button"
@@ -188,7 +188,7 @@ export function BasicInfoSection({
             <h2 className="text-sm tracking-wide text-white">
               角色设定
               {' '}
-              <span className="text-[rgba(var(--color-brand-green-rgb), 0.9)]">*</span>
+              <span className="text-[rgba(var(--color-brand-green-rgb),0.9)]">*</span>
             </h2>
             <button
               type="button"
@@ -328,7 +328,7 @@ export function BasicInfoSection({
             <div className="mt-6 flex flex-col gap-3">
               <button
                 type="button"
-                className="flex h-12 w-full items-center justify-center rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] text-sm font-bold text-black active:opacity-90"
+                className="flex h-12 w-full items-center justify-center rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-brand-green/10 text-sm font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-brand-green/20"
                 onClick={() => {
                   setIsAvatarPreviewOpen(false);
                   onSelectFromGallery?.();
@@ -401,7 +401,7 @@ export function BasicInfoSection({
               {voiceName
                 ? (
                     <>
-                      <span className="text-[14px] text-[rgba(var(--color-brand-green-rgb), 0.9)]">{voiceName}</span>
+                      <span className="text-[14px] text-[rgba(var(--color-brand-green-rgb),0.9)]">{voiceName}</span>
                       <button
                         type="button"
                         disabled={generatingVoice || voiceListenPhase !== 'idle'}
@@ -469,7 +469,7 @@ export function BasicInfoSection({
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色形象提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  上传或使用 AI 生成角色的外观形象，这将作为角色的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">头像</span>和<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">主视觉展示</span>。<br /><br />
+                  上传或使用 AI 生成角色的外观形象，这将作为角色的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">头像</span>和<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">主视觉展示</span>。<br /><br />
                   💡 生成的形象与您的<span className="text-white font-medium">角色设定（性别、职业、背景等）</span>密切相关。设定越详细，生成的形象越符合预期。
                 </p>
               </>
@@ -478,7 +478,7 @@ export function BasicInfoSection({
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色设定提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  详细的角色设定（如名字、职业、背景）可以帮助 AI 更好地理解角色，从而生成更符合预期的<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">形象</span>、<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">声音</span>和<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">故事剧情</span>。
+                  详细的角色设定（如名字、职业、背景）可以帮助 AI 更好地理解角色，从而生成更符合预期的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">形象</span>、<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">声音</span>和<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">故事剧情</span>。
                 </p>
               </>
             )}
@@ -486,7 +486,7 @@ export function BasicInfoSection({
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色声音提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  为角色选择或生成独特的声音音色。在对话和剧情中，AI 将使用该声音进行<span className="text-[rgba(var(--color-brand-green-rgb), 0.9)] font-medium">语音播报</span>。<br /><br />
+                  为角色选择或生成独特的声音音色。在对话和剧情中，AI 将使用该声音进行<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">语音播报</span>。<br /><br />
                   💡 生成的声音与您的<span className="text-white font-medium">角色设定（性别、职业、背景等）</span>密切相关。设定越详细，生成的声音越符合预期。
                 </p>
               </>
@@ -523,7 +523,7 @@ export function BasicInfoSection({
               </button>
               <button
                 type="button"
-                className="w-1/2 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.9)] py-3 text-[14px] font-bold text-black active:opacity-80"
+                className="w-1/2 rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-brand-green/10 py-3 text-[14px] font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-brand-green/20"
                 onClick={() => {
                   const type = generateConfirmType;
                   setGenerateConfirmType('none');

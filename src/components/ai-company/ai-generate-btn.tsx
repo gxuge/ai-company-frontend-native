@@ -32,7 +32,7 @@ export function AiGenerateBtn({
     <button 
       onClick={isActionable ? onClick : undefined}
       disabled={!isActionable}
-      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(var(--color-brand-green-rgb), 0.2)] shadow-[0px_0px_5px_0px_rgba(var(--color-brand-green-rgb), 0.2),0px_0px_10px_0px_rgba(var(--color-brand-green-rgb), 0.1)] bg-transparent shrink-0 transition-all duration-300 ${disabled ? 'cursor-not-allowed grayscale-[0.8] opacity-40' : (loading ? 'cursor-progress text-glow' : 'cursor-pointer active:opacity-70 text-glow')} ${className}`}
+      className={`flex items-center gap-[6px] px-[13px] py-[7px] rounded-full border-[1px] border-[rgba(var(--color-brand-green-rgb),0.2)] shadow-[0px_0px_5px_0px_rgba(var(--color-brand-green-rgb),0.2),0px_0px_10px_0px_rgba(var(--color-brand-green-rgb),0.1)] bg-transparent shrink-0 transition-all duration-300 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0 ${disabled ? 'cursor-not-allowed grayscale-[0.8] opacity-40' : (loading ? 'cursor-progress text-glow' : 'cursor-pointer active:opacity-70 text-glow')} ${className}`}
       style={{
         animation: loading ? 'pulse-glow 2s ease-in-out infinite' : 'none'
       }}

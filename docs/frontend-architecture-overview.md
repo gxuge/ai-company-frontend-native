@@ -48,7 +48,7 @@
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
 | 浏览图片页 | `/pages/browse-images-list` | `src/app/pages/browse-images-list/index.tsx` | 页面内样式 + `components/*` | 暂未直接接业务 API |
 | 创建角色页 | `/pages/create-role` | `src/app/pages/create-role/index.tsx` | 页面内样式 + `components/basic-info.tsx` 等 | 暂未直接接业务 API |
-| 创建角色人物页 | `/pages/create-character` | `src/app/pages/create-character/index.jsx` | 页面内样式 | 暂未直接接业务 API |
+| 创建角色人物页 | `/pages/create-character` | `src/app/pages/create-character/index.jsx` | 页面内样式 | 已接 `userApi.uploadFile`（在“创建形象”时再上传本地参考图）、`tsRoleImageApi.generateRoleImage`、`tsRoleImageApi.createRoleImageProfile` |
 | 验证码登录页 | `/pages/verification-code-login` | `src/app/pages/verification-code-login/index.tsx` | 页面内 style 对象 | 已接 `userApi.phoneLogin` |
 | 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 角色详情页 | `/pages/role-detail` | `src/app/pages/role-detail/index.tsx` | `role-detail/components/role-detail.styles.ts` | 已接 `tsRoleApi.getRoleDetail`、`tsRoleApi.getRoleAuthorPublic` |
@@ -67,6 +67,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `src/lib/api/ts-role.ts` | `getRoleDetail(roleId)` | GET | `/sys/ts-roles/detail` | `id` | `roleName`、`coverUrl`、`introText`、`storyText` 等 | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
+| `src/lib/api/ts-role.ts` | `optimizeImagePrompt(payload)` | POST | `/sys/ts-roles/optimize-image-prompt` | `promptText` | `visualPrompt`、`negativePrompt`、`renderedPrompt`、`snapshotKey` | 角色形象提示词优化，后端按 `role_image_prompt_optimize::v1` 模板渲染 |
 | `src/lib/api/ts-chat.ts` | `getSessionList / getSessionDetail / createSession / createAiReply / createTemplateAiReply / createReplySuggestions` | GET/POST | `/sys/ts-chat-sessions` 及子接口 | 会话、角色、故事、用户输入相关参数 | 会话列表、会话详情、AI 回复、候选建议 | 聊天页 / 我的页 |
 | `src/lib/api/ts-agent-chat.ts` | `getSessionList(params)` | GET | `/sys/ts-agent-chat-sessions` | `pageNo`、`pageSize`、`keyword`、`agentCode`、`sessionStatus` | `records`、`total`、`sessionTitle`、`sessionSummary`、`lastMessageAt` 等 | Agent 聊天页/会话列表 |
 | `src/lib/api/ts-agent-chat.ts` | `getSessionDetail(sessionId)` | GET | `/sys/ts-agent-chat-sessions/detail` | `id` | `sessionTitle`、`sessionSummary`、`agentCode`、`memoryJson` 等 | Agent 聊天页 |
@@ -91,7 +92,7 @@
 | `src/lib/api/provider.tsx` | React Query Provider | `queryClient` 统一注入 |
 | `src/lib/api/utils.tsx` | 分页/queryKey 等工具 | Query 参数与分页辅助 |
 | `src/lib/api/stream.ts` | 通用 SSE 读取封装 | `fetch` + `ReadableStream` + SSE block 解析，输出标准化事件迭代器 |
-| `src/lib/api/ts-agent-chat-stream.ts` | Agent SSE 状态机 reducer | 把 `agent.start` / `llm.delta` / `tool.error` / `agent.end` 归并为前端展示状态；默认以 `content`/`summary` 作为正文，`data` 仅保留轻量元信息 |
+| `src/lib/api/ts-agent-chat-stream.ts` | Agent SSE 状态机 reducer | 把 `agent.start` / `subagent.start` / `llm.delta` / `tool.error` / `agent.end` 归并为前端展示状态；其中 `llm` 节点优先展示 `summary`，`data` 仅保留轻量元信息 |
 | `src/lib/api/index.ts` | API 统一导出 | 页面统一从这里 import |
 
 ## 5. 页面与 API 对接矩阵（当前状态）
@@ -100,7 +101,7 @@
 | --- | --- | --- | --- |
 | `role-detail` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 角色名、封面、作者名、作者头像、认证标识、关于/故事文案 | “连接者/粉丝/对话数”仍为 `--` 占位，不接数量接口 |
 | `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口；进入页时先取最近会话，若列表为空则空白进入，首条消息发送时懒创建 session |
-| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、LLM/Tool 片段、最终结果 | `llm.error` 会归入当前节点片段，`agent.end` 作为整轮收尾 |
+| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、Agent/SubAgent/LLM/Tool 片段、最终结果 | `llm` 节点展示标题与 `summary`，`llm.error` 会归入当前节点片段，`agent.end` 作为整轮收尾，`subagent.*` 作为子流程节点展示 |
 | `system-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 简单 Agent 聊天、消息列表、用户输入、AI 回复 | 原始 admin-chat 逻辑的独立复制页 |
 | `verification-code-login` | `/sys/phoneLogin` | 手机号+验证码登录，写入 token 后跳转 `/pages/chat` | 验证码发送逻辑目前是前端倒计时模拟 |
 | 其余页面 | 暂无直接 API 调用 | 以静态界面和组件布局为主 | 后续按业务逐页补齐 |

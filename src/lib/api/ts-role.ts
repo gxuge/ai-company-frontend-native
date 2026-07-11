@@ -252,6 +252,19 @@ export type TsRoleGenerateTextByTemplateResult = {
   snapshotKey?: string;
 };
 
+export type TsRoleImagePromptOptimizePayload = {
+  promptText: string;
+};
+
+export type TsRoleImagePromptOptimizeResult = {
+  visualPrompt?: string;
+  negativePrompt?: string;
+  promptCode?: string;
+  promptVersion?: string;
+  renderedPrompt?: string;
+  snapshotKey?: string;
+};
+
 export const tsRoleApi = {
   async getRoleList(params: TsRoleQuery) {
     return defHttp.get<TsRolePage>({
@@ -348,6 +361,13 @@ export const tsRoleApi = {
   async generateTextByTemplate(payload: TsRoleGenerateTextByTemplatePayload) {
     return defHttp.post<TsRoleGenerateTextByTemplateResult>({
       url: '/sys/ts-roles/generate-text-by-template',
+      data: payload,
+    });
+  },
+
+  async optimizeImagePrompt(payload: TsRoleImagePromptOptimizePayload) {
+    return defHttp.post<TsRoleImagePromptOptimizeResult>({
+      url: '/sys/ts-roles/optimize-image-prompt',
       data: payload,
     });
   },

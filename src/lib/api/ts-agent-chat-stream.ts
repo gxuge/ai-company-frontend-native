@@ -1,5 +1,5 @@
 export type AgentChatStepStatus = 'idle' | 'running' | 'done' | 'error';
-export type AgentChatStepKind = 'llm' | 'tool';
+export type AgentChatStepKind = 'agent' | 'llm' | 'tool';
 
 export type AgentChatStep = {
   id: string;
@@ -8,6 +8,7 @@ export type AgentChatStep = {
   title: string;
   status: AgentChatStepStatus;
   text: string;
+  agentType?: string;
   error?: string;
   promptCode?: string;
   toolName?: string;
@@ -19,13 +20,12 @@ export type AgentChatStreamState = {
   agentStatus: AgentChatStepStatus;
   finalStatus: AgentChatStepStatus;
   agentName: string;
+  agentType?: string;
   sessionId?: string | number | null;
   agentSessionId?: string | number | null;
   runId?: string | null;
   finalText: string;
   finalPayload?: Record<string, unknown> | null;
-  routeDecision?: string;
-  targetSubAgent?: string;
   error?: string | null;
   steps: AgentChatStep[];
   currentStepId?: string | null;
@@ -45,6 +45,7 @@ export const createInitialAgentChatStreamState = (): AgentChatStreamState => ({
   agentStatus: 'idle',
   finalStatus: 'idle',
   agentName: '',
+  agentType: '',
   finalText: '',
   finalPayload: null,
   error: null,
@@ -150,10 +151,19 @@ const parsePayload = (dataText: string): AgentChatSsePayload | null => {
 const getAgentName = (payload: AgentChatSsePayload) =>
   readString(payload.name)
   || readNestedString(payload.data, ['agentName'])
+  || readNestedString(payload.data, ['subAgentName'])
   || 'Agent';
+
+const getAgentType = (payload: AgentChatSsePayload) =>
+  readNestedString(payload.data, ['agentType'])
+  || readNestedString(payload.data, ['mode'])
+  || readString(payload.type)
+  || undefined;
 
 const getNodeName = (payload: AgentChatSsePayload) =>
   readString(payload.name)
+  || readNestedString(payload.data, ['agentName'])
+  || readNestedString(payload.data, ['subAgentName'])
   || readNestedString(payload.data, ['nodeName'])
   || readNestedString(payload.data, ['toolName'])
   || 'Node';
@@ -170,6 +180,9 @@ const getPayloadObject = (payload: AgentChatSsePayload) => readRecord(payload.da
 const getPayloadText = (payload: AgentChatSsePayload) =>
   readString(payload.content)
   || readNestedString(payload.data, ['summary'])
+  || readNestedString(payload.data, ['handoffReason'])
+  || readNestedString(payload.data, ['error'])
+  || readNestedString(payload.data, ['result'])
   || '';
 
 const getPayloadStatus = (payload: AgentChatSsePayload, fallback: AgentChatStepStatus = 'done') => {
@@ -211,9 +224,10 @@ const createStep = (
     id: createStepId(kind, name),
     kind,
     name,
-    title: kind === 'llm' ? 'LLM' : 'Tool',
+    title: kind === 'tool' ? 'Tool' : name,
     status: 'running',
     text: getPayloadText(payload),
+    agentType: getAgentType(payload),
     promptCode: getPromptCode(payload),
     toolName: getToolName(payload),
     data: getPayloadObject(payload) || undefined,
@@ -286,8 +300,11 @@ const resolveFinalPayload = (payload: AgentChatSsePayload) => {
 
 const buildStepSummary = (kind: AgentChatStepKind, payload: AgentChatSsePayload) => {
   const name = getNodeName(payload);
+  if (kind === 'agent') {
+    return name;
+  }
   if (kind === 'llm') {
-    return payload.name ? `LLM · ${name}` : 'LLM';
+    return name;
   }
   const toolName = getToolName(payload);
   return toolName ? `Tool · ${toolName}` : 'Tool';
@@ -299,67 +316,11 @@ export const reduceAgentChatStreamState = (
   dataText: string,
 ): AgentChatStreamState => {
   const normalizedEvent = (eventName || '').trim();
-
-  if (normalizedEvent === 'llm.delta') {
-    const delta = dataText.trim();
-    if (!delta) {
-      return previous;
-    }
-
-    const currentIndex = previous.currentStepId
-      ? previous.steps.findIndex((item) => item.id === previous.currentStepId)
-      : -1;
-    const stepIndex = currentIndex >= 0 && previous.steps[currentIndex]?.kind === 'llm'
-      ? currentIndex
-      : (() => {
-          for (let index = previous.steps.length - 1; index >= 0; index -= 1) {
-            if (previous.steps[index]?.kind === 'llm') {
-              return index;
-            }
-          }
-          return -1;
-        })();
-
-    if (stepIndex < 0) {
-      const nextStep: AgentChatStep = {
-        id: createStepId('llm', 'LLM'),
-        kind: 'llm',
-        name: 'LLM',
-        title: 'LLM',
-        status: 'running',
-        text: delta,
-      };
-      return {
-        ...previous,
-        active: true,
-        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
-        finalStatus: 'running',
-        steps: [...previous.steps, nextStep],
-        currentStepId: nextStep.id,
-        finalText: nextStep.text,
-      };
-    }
-
-    const currentStep = previous.steps[stepIndex];
-    const nextStep: AgentChatStep = {
-      ...currentStep,
-      status: mergeStepStatus(currentStep.status, 'running'),
-      text: appendStepText(currentStep.text, delta),
-    };
-    const nextSteps = replaceStep(previous, stepIndex, nextStep);
-
-    return {
-      ...previous,
-      active: true,
-      agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
-      finalStatus: 'running',
-      steps: nextSteps,
-      currentStepId: nextStep.id,
-      finalText: nextStep.text || previous.finalText,
-    };
-  }
-
-  const payload = parsePayload(dataText);
+  const trimmedDataText = dataText.trim();
+  const payload = parsePayload(dataText)
+    || ((normalizedEvent === 'llm.delta' || normalizedEvent === 'llm.error') && trimmedDataText
+      ? ({ content: trimmedDataText } as AgentChatSsePayload)
+      : null);
   if (!payload) {
     return previous;
   }
@@ -367,23 +328,101 @@ export const reduceAgentChatStreamState = (
   const agentName = getAgentName(payload);
   const data = getPayloadObject(payload);
 
-  switch (normalizedEvent) {
-    case 'agent.start': {
-      return {
-        ...createInitialAgentChatStreamState(),
-        active: true,
-        agentStatus: 'running',
-        finalStatus: 'running',
-        agentName,
-        sessionId: readNestedIdentifier(data, ['sessionId']),
-        agentSessionId: readNestedIdentifier(data, ['agentSessionId']),
-        runId: readString(data?.runId),
-        finalText: '',
-        finalPayload: null,
-        error: null,
-      };
-    }
+  if (normalizedEvent === 'agent.start') {
+    const nextStep = createStep('agent', payload);
+    nextStep.title = buildStepSummary('agent', payload);
+    nextStep.status = 'running';
+    nextStep.text = getPayloadText(payload);
+    nextStep.agentType = getAgentType(payload) || 'agent';
 
+    return {
+      ...createInitialAgentChatStreamState(),
+      active: true,
+      agentStatus: 'running',
+      finalStatus: 'running',
+      agentName,
+      agentType: nextStep.agentType,
+      finalText: nextStep.text,
+      finalPayload: null,
+      error: null,
+      steps: [nextStep],
+      currentStepId: nextStep.id,
+    };
+  }
+
+  if (normalizedEvent === 'subagent.start') {
+    const agentType = getAgentType(payload) || 'subagent';
+    const nextStep = createStep('agent', payload);
+    nextStep.title = buildStepSummary('agent', payload);
+    nextStep.status = 'running';
+    nextStep.text = getPayloadText(payload);
+    nextStep.agentType = agentType;
+
+    return {
+      ...previous,
+      active: true,
+      agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+      finalStatus: 'running',
+      agentName: previous.agentName || agentName,
+      agentType: previous.agentType || agentType,
+      currentStepId: nextStep.id,
+      steps: [...previous.steps, nextStep],
+      error: null,
+    };
+  }
+
+  if (normalizedEvent === 'subagent.error') {
+    const message = getPayloadText(payload) || readNestedString(data, ['error']) || 'SubAgent step failed';
+    const next = updateStep(previous, 'agent', payload, (step) => ({
+      ...step,
+      title: step.title || buildStepSummary('agent', payload),
+      status: 'error',
+      text: step.text || message,
+      error: message,
+      agentType: step.agentType || getAgentType(payload) || 'subagent',
+      data: data || step.data,
+    }));
+
+    return {
+      ...previous,
+      active: true,
+      agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+      finalStatus: 'running',
+      agentName: previous.agentName || agentName,
+      agentType: previous.agentType || getAgentType(payload) || 'subagent',
+      currentStepId: next.currentStepId,
+      steps: next.steps,
+      error: message,
+    };
+  }
+
+  if (normalizedEvent === 'subagent.end') {
+    const nextStatus = getPayloadStatus(payload, 'done');
+    const content = getPayloadText(payload);
+    const next = updateStep(previous, 'agent', payload, (step) => ({
+      ...step,
+      title: step.title || buildStepSummary('agent', payload),
+      status: mergeStepStatus(step.status, nextStatus),
+      text: content || step.text,
+      agentType: step.agentType || getAgentType(payload) || 'subagent',
+      data: data || step.data,
+    }));
+
+    return {
+      ...previous,
+      active: true,
+      agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+      finalStatus: 'running',
+      agentName: previous.agentName || agentName,
+      agentType: previous.agentType || getAgentType(payload) || 'subagent',
+      currentStepId: next.currentStepId,
+      steps: next.steps,
+      finalText: content || previous.finalText,
+      error: previous.error,
+    };
+  }
+
+  switch (normalizedEvent) {
     case 'llm.start': {
       const nextStep = createStep('llm', payload);
       nextStep.title = buildStepSummary('llm', payload);
@@ -397,6 +436,7 @@ export const reduceAgentChatStreamState = (
         agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
         finalStatus: 'running',
         agentName: previous.agentName || agentName,
+        agentType: previous.agentType || getAgentType(payload),
         sessionId: previous.sessionId ?? readNestedIdentifier(data, ['sessionId']),
         agentSessionId: previous.agentSessionId ?? readNestedIdentifier(data, ['agentSessionId']),
         runId: previous.runId ?? readString(data?.runId),
@@ -408,29 +448,61 @@ export const reduceAgentChatStreamState = (
     }
 
     case 'llm.delta': {
-      const delta = getPayloadText(payload);
-      const next = updateStep(previous, 'llm', payload, (step) => ({
-        ...step,
-        title: step.title || buildStepSummary('llm', payload),
-        status: mergeStepStatus(step.status, 'running'),
-        text: appendStepText(step.text, delta),
-        promptCode: step.promptCode || getPromptCode(payload),
-        data: data || step.data,
-      }));
+      const delta = dataText.trim();
+      if (!delta) {
+        return previous;
+      }
 
-      const currentIndex = previous.steps.findIndex((item) => item.id === next.currentStepId);
-      const currentStep = currentIndex >= 0 ? next.steps[currentIndex] : next.steps[next.steps.length - 1];
+      const currentIndex = previous.currentStepId
+        ? previous.steps.findIndex((item) => item.id === previous.currentStepId)
+        : -1;
+      const stepIndex = currentIndex >= 0 && previous.steps[currentIndex]?.kind === 'llm'
+        ? currentIndex
+        : (() => {
+            for (let index = previous.steps.length - 1; index >= 0; index -= 1) {
+              if (previous.steps[index]?.kind === 'llm') {
+                return index;
+              }
+            }
+            return -1;
+          })();
+
+      if (stepIndex < 0) {
+        const nextStep: AgentChatStep = {
+          id: createStepId('llm', 'LLM'),
+          kind: 'llm',
+          name: 'LLM',
+          title: 'LLM',
+          status: 'running',
+          text: delta,
+        };
+        return {
+          ...previous,
+          active: true,
+          agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+          finalStatus: 'running',
+          steps: [...previous.steps, nextStep],
+          currentStepId: nextStep.id,
+          finalText: nextStep.text,
+        };
+      }
+
+      const currentStep = previous.steps[stepIndex];
+      const nextStep: AgentChatStep = {
+        ...currentStep,
+        status: mergeStepStatus(currentStep.status, 'running'),
+        text: appendStepText(currentStep.text, delta),
+      };
+      const nextSteps = replaceStep(previous, stepIndex, nextStep);
 
       return {
         ...previous,
         active: true,
         agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
         finalStatus: 'running',
-        agentName: previous.agentName || agentName,
-        currentStepId: next.currentStepId,
-        steps: next.steps,
-        finalText: currentStep?.text || previous.finalText,
-        error: previous.error,
+        steps: nextSteps,
+        currentStepId: nextStep.id,
+        finalText: nextStep.text || previous.finalText,
       };
     }
 
@@ -454,7 +526,7 @@ export const reduceAgentChatStreamState = (
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
-        error: previous.error,
+        error: message,
       };
     }
 
@@ -549,7 +621,7 @@ export const reduceAgentChatStreamState = (
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
-        error: previous.error,
+        error: message,
       };
     }
 
@@ -580,12 +652,6 @@ export const reduceAgentChatStreamState = (
     case 'agent.end': {
       const nextStatus = getPayloadStatus(payload, 'done');
       const finalPayload = resolveFinalPayload(payload);
-      const routeDecision = readNestedString(data, ['routeDecision'])
-        || readNestedString(finalPayload, ['routeDecision'])
-        || readNestedString(data, ['payload', 'routeDecision']);
-      const targetSubAgent = readNestedString(data, ['targetSubAgent'])
-        || readNestedString(finalPayload, ['targetSubAgent'])
-        || readNestedString(data, ['payload', 'targetSubAgent']);
       const content = getPayloadText(payload);
 
       return {
@@ -594,12 +660,11 @@ export const reduceAgentChatStreamState = (
         agentStatus: nextStatus,
         finalStatus: nextStatus,
         agentName: previous.agentName || agentName,
+        agentType: previous.agentType || getAgentType(payload),
         finalText: content || previous.finalText,
         finalPayload,
-        routeDecision,
-        targetSubAgent,
         currentStepId: previous.currentStepId,
-        error: previous.error,
+        error: nextStatus === 'error' ? (content || previous.error) : previous.error,
       };
     }
 
@@ -611,6 +676,7 @@ export const reduceAgentChatStreamState = (
         agentStatus: 'error',
         finalStatus: 'error',
         agentName: previous.agentName || agentName,
+        agentType: previous.agentType || getAgentType(payload),
         error: message,
       };
     }

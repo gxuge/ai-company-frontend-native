@@ -7,7 +7,7 @@
 | 角色详情 | `src/app/pages/role-detail/index.tsx` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 进行中 | - | 2026-04-09 | 数量相关接口暂不对接 |
 | 声音编辑 | `src/app/pages/sound-edit/index.tsx` | `/sys/ts-voice-profiles`、`/sys/ts-user-voice-profiles`、`/sys/ts-user-voice-config/current`、`/sys/ts-voice-profiles/preview` | 已对接（推荐+我的音色+试听+下载缓存播放） | - | 2026-04-21 | 保持原 UI 布局；试听链路改为“接口生成->下载缓存(1天TTL)->播放”，支持参数命中复用与播放结束自动回退 |
 | 用户设置 | `src/app/pages/user-setting/index.tsx` | `/sys/user/login/setting/getUserData`、`/sys/user/login/setting/userEdit` | 已对接 | - | 2026-04-09 | 完成昵称/性别/生日读取与保存链路，保持原 UI 布局 |
-| 创建人物 | `src/app/pages/create-character/index.jsx` | `/sys/ts-roles/one-click-image`、`/sys/ts-user-image-assets`、`/sys/ts-role-image-profiles` | 已对接（本轮完成） | - | 2026-04-09 | 保持原 UI 布局；接入生成、图库与保存链路 |
+| 创建人物 | `src/app/pages/create-character/index.jsx` | `/sys/ts-roles/one-click-image`、`/sys/ts-user-image-assets`、`/sys/ts-role-image-profiles`、`/sys/ts-roles/optimize-image-prompt` | 已对接（本轮完成） | - | 2026-07-10 | 保持原 UI 布局；接入生成、图库、保存链路与 AI 润色模板，润色按钮改为读取数据库模板 `role_image_prompt_optimize::v1` |
 | 我的图库 | `src/app/pages/my-gallery/index.tsx` | `/sys/ts-user-image-assets`（`GET`/`DELETE`） | 已对接（本轮完成） | - | 2026-04-17 | 保持原 UI 布局；已接通真实列表加载、管理模式删除与失败回退 |
 | 会话列表 | `src/app/pages/session-list/index.tsx` | `/sys/ts-chat-sessions`、`/sys/ts-chat-messages` | 已对接（系统头像切换完成） | - | 2026-04-14 | 保持原 UI 布局；系统会话（`isSystemSession=true`）头像改为 quick-login Logo |
 | 浏览图片页 | `src/app/pages/browse-images-list/index.tsx` | `/sys/ts-stories/public`、`/sys/ts-role-image-profiles/public`（回退：`/sys/ts-stories`、`/sys/ts-role-image-profiles`） | 已对接（本轮完成） | - | 2026-04-14 | 保持原 UI 布局；故事/角色 Tab 改为真实接口数据，支持搜索与分页加载 |

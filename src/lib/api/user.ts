@@ -114,10 +114,16 @@ export const userApi = {
     });
   },
 
-  async uploadFile(file: File | Blob) {
+  async uploadFile(file: File | Blob, bizPath?: string) {
     const formData = new FormData();
     formData.append('file', file);
-    return defHttp.post<string>(
+    if (bizPath && bizPath.trim()) {
+      formData.append('biz', bizPath.trim());
+    }
+    const response = await defHttp.post<{
+      message?: string;
+      result?: string;
+    }>(
       {
         url: '/sys/common/upload',
         data: formData,
@@ -125,7 +131,16 @@ export const userApi = {
           'Content-Type': 'multipart/form-data',
         },
       },
-      { isTransformResponse: true },
+      { isTransformResponse: false },
     );
+    const data = response as {
+      message?: string;
+      result?: string;
+    } | undefined;
+    return typeof data?.result === 'string' && data.result.trim()
+      ? data.result.trim()
+      : typeof data?.message === 'string'
+        ? data.message.trim()
+        : '';
   },
 };
