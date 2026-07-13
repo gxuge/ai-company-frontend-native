@@ -1,11 +1,12 @@
 import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView, Modal } from "react-native";
-import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming } from "react-native-reanimated";
+import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
 import { iterateSseEvents, tsAgentChatApi } from "@/lib/api";
 import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
+import AdminChatMarkdownContent from '@/components/pages/admin-chat/admin-chat-markdown-content';
 import { useAgentChatStream } from "@/hooks";
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
@@ -121,9 +122,71 @@ function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
   });
 }
 
+/* ─── Typing Indicator ──────────────────────────────────────────────────────── */
+function BouncingDot({ delay }: { delay: number }) {
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withDelay(
+      delay,
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: 380 }),
+          withTiming(0, { duration: 380 }),
+        ),
+        -1,
+      ),
+    );
+  }, [delay, progress]);
+
+  const dotStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(progress.value, [0, 1], [0, -10]) },
+      { scale: interpolate(progress.value, [0, 1], [1, 1.35]) },
+    ],
+    opacity: interpolate(progress.value, [0, 1], [0.3, 1]),
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        {
+          width: 14,
+          height: 14,
+          borderRadius: 7,
+          backgroundColor: "#f59e0b",
+          boxShadow: "0 0 10px rgba(245, 158, 11, 0.45)",
+        } as any,
+        dotStyle,
+      ]}
+    />
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+        paddingVertical: 10,
+      }}
+    >
+      <BouncingDot delay={0} />
+      <BouncingDot delay={140} />
+      <BouncingDot delay={280} />
+    </View>
+  );
+}
+
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
 function AIBubble({ content, streamState }: { content: string; streamState?: AgentChatStreamState | null }) {
-  const shouldShowContent = !streamState || (!streamState.active && streamState.finalStatus !== 'error');
+  const isStreaming = streamState?.active;
+  const isError = streamState?.finalStatus === 'error';
+  const hasContent = Boolean(content && content.trim());
+  const isWaiting = isStreaming && !hasContent;
+  const shouldShowContent = hasContent && !isError;
 
   return (
     <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
@@ -134,24 +197,21 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
           backgroundColor: "#2d2520",
           paddingHorizontal: 34,
           paddingVertical: 27,
+          minWidth: 100,
         }}
       >
         {streamState ? (
-          <View style={{ marginBottom: 18 }}>
+          <View style={{ marginBottom: (shouldShowContent || isWaiting) ? 18 : 0 }}>
             <AdminChatThinkingPanel state={streamState} />
           </View>
         ) : null}
+        
+        {isWaiting ? (
+          <TypingIndicator />
+        ) : null}
+
         {shouldShowContent ? (
-          <Text
-            style={{
-              fontSize: 30,
-              lineHeight: 45,
-              color: "rgba(255,255,255,0.9)",
-              fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
-            }}
-          >
-            {content}
-          </Text>
+          <AdminChatMarkdownContent content={content} />
         ) : null}
       </View>
     </View>

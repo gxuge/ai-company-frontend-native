@@ -109,6 +109,7 @@
     "react-native-flash-message": "^0.4.2",
     "react-native-gesture-handler": "~2.31.2",
     "react-native-keyboard-controller": "^1.21.6",
+    "react-native-markdown-display": "^7.0.2",
     "react-native-mmkv": "~4.1.1",
     "react-native-nitro-modules": "^0.33.2",
     "react-native-reanimated": "~4.3.1",

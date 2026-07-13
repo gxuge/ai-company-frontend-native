@@ -342,7 +342,7 @@ export const reduceAgentChatStreamState = (
       finalStatus: 'running',
       agentName,
       agentType: nextStep.agentType,
-      finalText: nextStep.text,
+      finalText: '',
       finalPayload: null,
       error: null,
       steps: [nextStep],
@@ -417,7 +417,7 @@ export const reduceAgentChatStreamState = (
       agentType: previous.agentType || getAgentType(payload) || 'subagent',
       currentStepId: next.currentStepId,
       steps: next.steps,
-      finalText: content || previous.finalText,
+      finalText: previous.finalText,
       error: previous.error,
     };
   }
@@ -661,7 +661,7 @@ export const reduceAgentChatStreamState = (
         finalStatus: nextStatus,
         agentName: previous.agentName || agentName,
         agentType: previous.agentType || getAgentType(payload),
-        finalText: content || previous.finalText,
+        finalText: previous.finalText,
         finalPayload,
         currentStepId: previous.currentStepId,
         error: nextStatus === 'error' ? (content || previous.error) : previous.error,
