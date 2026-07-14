@@ -15,6 +15,12 @@ export type AgentChatStep = {
   data?: Record<string, unknown>;
 };
 
+export type AgentChatOptionPrompt = {
+  toolName?: string;
+  question: string;
+  options: string[];
+};
+
 export type AgentChatStreamState = {
   active: boolean;
   agentStatus: AgentChatStepStatus;
@@ -26,6 +32,7 @@ export type AgentChatStreamState = {
   runId?: string | null;
   finalText: string;
   finalPayload?: Record<string, unknown> | null;
+  optionPrompt: AgentChatOptionPrompt | null;
   error?: string | null;
   steps: AgentChatStep[];
   currentStepId?: string | null;
@@ -37,6 +44,10 @@ export type AgentChatSsePayload = {
   name?: string;
   content?: string;
   status?: number | string | null;
+  toolName?: string;
+  contentType?: string;
+  question?: string;
+  options?: unknown;
   data?: unknown;
 };
 
@@ -48,6 +59,7 @@ export const createInitialAgentChatStreamState = (): AgentChatStreamState => ({
   agentType: '',
   finalText: '',
   finalPayload: null,
+  optionPrompt: null,
   error: null,
   steps: [],
   currentStepId: null,
@@ -63,6 +75,15 @@ const readString = (value: unknown): string | undefined => {
   const text = value.trim();
   return text ? text : undefined;
 };
+
+function readStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map(readString)
+    .filter((item): item is string => Boolean(item));
+}
 
 const readIdentifier = (value: unknown): string | number | null => {
   if (typeof value === 'string') {
@@ -172,7 +193,8 @@ const getPromptCode = (payload: AgentChatSsePayload) =>
   readNestedString(payload.data, ['promptCode']);
 
 const getToolName = (payload: AgentChatSsePayload) =>
-  readNestedString(payload.data, ['toolName'])
+  readString(payload.toolName)
+  || readNestedString(payload.data, ['toolName'])
   || readString(payload.name);
 
 const getPayloadObject = (payload: AgentChatSsePayload) => readRecord(payload.data);
@@ -184,6 +206,21 @@ const getPayloadText = (payload: AgentChatSsePayload) =>
   || readNestedString(payload.data, ['error'])
   || readNestedString(payload.data, ['result'])
   || '';
+
+function getOptionPrompt(payload: AgentChatSsePayload): AgentChatOptionPrompt | null {
+  if (readString(payload.contentType)?.toLowerCase() !== 'options') {
+    return null;
+  }
+  const options = readStringList(payload.options);
+  if (options.length === 0) {
+    return null;
+  }
+  return {
+    toolName: getToolName(payload),
+    question: readString(payload.question) || getPayloadText(payload) || '请选择下一步操作。',
+    options,
+  };
+}
 
 const getPayloadStatus = (payload: AgentChatSsePayload, fallback: AgentChatStepStatus = 'done') => {
   const status = readStatus(payload.status);
@@ -628,6 +665,7 @@ export const reduceAgentChatStreamState = (
     case 'tool.end': {
       const nextStatus = getPayloadStatus(payload, 'done');
       const content = getPayloadText(payload);
+      const optionPrompt = getOptionPrompt(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('tool', payload),
@@ -645,6 +683,7 @@ export const reduceAgentChatStreamState = (
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
+        optionPrompt: optionPrompt || previous.optionPrompt,
         error: previous.error,
       };
     }

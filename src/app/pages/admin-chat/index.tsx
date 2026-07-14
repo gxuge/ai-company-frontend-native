@@ -181,12 +181,23 @@ function TypingIndicator() {
 }
 
 /* ─── AI 气泡（左对齐）────────────────────────────────────────────────────── */
-function AIBubble({ content, streamState }: { content: string; streamState?: AgentChatStreamState | null }) {
+function AIBubble({
+  content,
+  streamState,
+  onSuggestedPress,
+  showSuggestedOptions,
+}: {
+  content: string;
+  streamState?: AgentChatStreamState | null;
+  onSuggestedPress?: (text: string) => void;
+  showSuggestedOptions?: boolean;
+}) {
   const isStreaming = streamState?.active;
   const isError = streamState?.finalStatus === 'error';
   const hasContent = Boolean(content && content.trim());
   const isWaiting = isStreaming && !hasContent;
   const shouldShowContent = hasContent && !isError;
+  const optionPrompt = showSuggestedOptions ? streamState?.optionPrompt : null;
 
   return (
     <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
@@ -200,7 +211,7 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
           minWidth: 100,
         }}
       >
-        {streamState ? (
+        {streamState?.active ? (
           <View style={{ marginBottom: (shouldShowContent || isWaiting) ? 18 : 0 }}>
             <AdminChatThinkingPanel state={streamState} />
           </View>
@@ -212,6 +223,19 @@ function AIBubble({ content, streamState }: { content: string; streamState?: Age
 
         {shouldShowContent ? (
           <AdminChatMarkdownContent content={content} />
+        ) : null}
+
+        {optionPrompt ? (
+          <View style={{ marginTop: shouldShowContent ? 20 : 0 }}>
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <Text style={{ fontSize: 22.6, color: "#7a6b5a" }}>{optionPrompt.question}</Text>
+            </View>
+            <View style={{ gap: 25, alignItems: "flex-start" }}>
+              {optionPrompt.options.map(option => (
+                <SuggestedButton key={option} text={option} onPress={() => onSuggestedPress?.(option)} />
+              ))}
+            </View>
+          </View>
         ) : null}
       </View>
     </View>
@@ -1141,21 +1165,19 @@ export default function App() {
           onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
         >
           {/* 对话气泡列表 */}
-          {messages.map(msg =>
+          {messages.map((msg, index) =>
             msg.role === "ai"
-              ? <AIBubble key={msg.id} content={msg.content} streamState={msg.streamState} />
+              ? (
+                  <AIBubble
+                    key={msg.id}
+                    content={msg.content}
+                    streamState={msg.streamState}
+                    onSuggestedPress={handleSuggestedMessage}
+                    showSuggestedOptions={index === messages.length - 1}
+                  />
+                )
               : <UserBubble key={msg.id} content={msg.content} />
           )}
-
-          {/* 聊聊新话题 + 推荐问题：紧跟在最后一条 AI 气泡下方，左对齐 */}
-          <View style={{ display: "none", alignItems: "center", marginTop: 10, marginBottom: 20 }}>
-            <Text style={{ fontSize: 22.6, color: "#7a6b5a" }}>聊聊新话题</Text>
-          </View>
-          <View style={{ display: "none", gap: 25, alignItems: "flex-start" }}>
-            <SuggestedButton text="如何快速清空当前对话记录？" onPress={() => handleSuggestedMessage("如何快速清空当前对话记录？")} />
-            <SuggestedButton text="有哪些AI创作功能？" onPress={() => handleSuggestedMessage("有哪些AI创作功能？")} />
-            <SuggestedButton text="怎么上传图片素材？" onPress={() => handleSuggestedMessage("怎么上传图片素材？")} />
-          </View>
         </ScrollView>
 
         {/* INPUT BAR */}
