@@ -161,5 +161,5 @@
 
 | 任务 | 状态 | 说明 | 证据 |
 | --- | --- | --- | --- |
-| T1 事件链修复 | 进行中 | 在按下阶段锁定发送职责，避免失焦后切换为附件按钮 | `src/app/pages/admin-chat/index.tsx` |
-| T2 代码验证 | 待开始 | 执行语法、Babel Web、状态断言、diff 与编码检查 | 命令验证 |
+| T1 事件链修复 | 已完成 | 在按下阶段锁定发送职责，避免失焦后切换为附件按钮 | `src/app/pages/admin-chat/index.tsx` |
+| T2 代码验证 | 已完成 | TypeScript 语法、Babel Web、状态断言通过；全文件 ESLint 仍为既有格式问题 | 命令验证 |
