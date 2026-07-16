@@ -291,16 +291,17 @@ const createStep = (
   payload: AgentChatSsePayload,
 ): AgentChatStep => {
   const name = getNodeName(payload);
+  const toolName = kind === 'tool' ? getToolName(payload) : undefined;
   return {
     id: createStepId(kind, name),
     kind,
     name,
-    title: kind === 'tool' ? 'Tool' : name,
+    title: toolName || name,
     status: 'running',
     text: getPayloadText(payload),
     agentType: getAgentType(payload),
     promptCode: getPromptCode(payload),
-    toolName: getToolName(payload),
+    toolName,
     data: getPayloadObject(payload) || undefined,
   };
 };
@@ -378,7 +379,7 @@ const buildStepSummary = (kind: AgentChatStepKind, payload: AgentChatSsePayload)
     return name;
   }
   const toolName = getToolName(payload);
-  return toolName ? `Tool · ${toolName}` : 'Tool';
+  return toolName || name || '工具调用';
 };
 
 export const reduceAgentChatStreamState = (
@@ -554,14 +555,9 @@ export const reduceAgentChatStreamState = (
         : -1;
       const stepIndex = currentIndex >= 0 && previous.steps[currentIndex]?.kind === 'llm'
         ? currentIndex
-        : (() => {
-            for (let index = previous.steps.length - 1; index >= 0; index -= 1) {
-              if (previous.steps[index]?.kind === 'llm') {
-                return index;
-              }
-            }
-            return -1;
-          })();
+        : previous.steps[previous.steps.length - 1]?.kind === 'llm'
+          ? previous.steps.length - 1
+          : -1;
 
       if (stepIndex < 0) {
         const nextStep: AgentChatStep = {

@@ -47,12 +47,13 @@
 | 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
 | 浏览图片页 | `/pages/browse-images-list` | `src/app/pages/browse-images-list/index.tsx` | 页面内样式 + `components/*` | 暂未直接接业务 API |
+| 我的图库页 | `/pages/my-gallery` | `src/app/pages/my-gallery/index.tsx` | 页面内样式 | 已接 `tsRoleImageApi.getUserImageAssets/deleteUserImageAsset`；通过 `from=create-role/create-story` 复用为角色图片或故事背景图片选择器 |
 | 创建角色页 | `/pages/create-role` | `src/app/pages/create-role/index.tsx` | 页面内样式 + `components/basic-info.tsx` 等 | 已接 `tsRoleApi.generateRoleSetting`，支持角色背景与开场白单字段美化 |
 | 创建角色人物页 | `/pages/create-character` | `src/app/pages/create-character/index.jsx` | 页面内样式 | 已接 `userApi.uploadFile`（在“创建形象”时再上传本地参考图）、`tsRoleImageApi.generateRoleImage`、`tsRoleImageApi.createRoleImageProfile` |
 | 验证码登录页 | `/pages/verification-code-login` | `src/app/pages/verification-code-login/index.tsx` | 页面内 style 对象 | 已接 `userApi.phoneLogin` |
 | 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 已接 `tsRoleApi.getRoleList`；支持故事角色添加和章节开场白候选角色单选模式 |
 | 角色详情页 | `/pages/role-detail` | `src/app/pages/role-detail/index.tsx` | `role-detail/components/role-detail.styles.ts` | 已接 `tsRoleApi.getRoleDetail`、`tsRoleApi.getRoleAuthorPublic` |
-| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 已接 `tsStoryApi` 故事与章节接口；章节开场白通过顶部角色列表选择并保存 `openingRoleId` |
+| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 已接 `tsStoryApi` 故事与章节接口；章节开场白通过顶部角色列表选择并保存 `openingRoleId`；场景图片复用 `/pages/my-gallery` 选择并保存 `sceneImageUrl` |
 | 创建分页页 | `/pages/create-page` | `src/app/pages/create-page/index.tsx` | 页面内样式 + `components/Icons.tsx` | 暂未直接接业务 API |
 | 声音编辑页 | `/pages/sound-edit` | `src/app/pages/sound-edit/index.tsx` | 页面内样式 + `components/edit-sound-text.tsx` | 暂未直接接业务 API |
 | 通用设置页 | `/pages/general-setting` | `src/app/pages/general-setting/index.tsx` | 页面内样式 + `components/settings-page.tsx` | 暂未直接接业务 API |

@@ -18,8 +18,8 @@ import { AiTopTabs } from '../../../components/ai-company/ai-top-tabs';
 import { AiSelectTab } from '../../../components/ai-company/ai-select-tab';
 import { AiSwitch } from '../../../components/ai-company/ai-switch';
 import {
+  pickTsImageUrl,
   tsStoryApi,
-
 } from '../../../lib/api';
 
 const imgChevronRightGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-story/chevron_right_gray.svg'));
@@ -845,7 +845,6 @@ export default function App() {
   const [userRoleName, setUserRoleName] = useState('');
   const [userRoleSetting, setUserRoleSetting] = useState('');
   const [sceneImageUrl, setSceneImageUrl] = useState('');
-  const [generatingSceneImage, setGeneratingSceneImage] = useState(false);
 
   const hasOverwritableContent = useMemo(() => {
     const commonHasValue = [
@@ -927,9 +926,19 @@ export default function App() {
         )));
       },
     );
+    const sceneImageSubscription = DeviceEventEmitter.addListener(
+      'storySceneImageSelected',
+      (payload: { imageUrl?: string }) => {
+        const imageUrl = typeof payload?.imageUrl === 'string' ? payload.imageUrl.trim() : '';
+        if (imageUrl) {
+          setSceneImageUrl(imageUrl);
+        }
+      },
+    );
     return () => {
       roleSelectedSubscription.remove();
       openingRoleSubscription.remove();
+      sceneImageSubscription.remove();
     };
   }, []);
 
@@ -984,6 +993,11 @@ export default function App() {
         setStorySettingText(story?.siteSetting || '');
         setStoryBackground(story?.storyBackground || '');
         setSceneSettingText(story?.sceneNameSnapshot || '');
+        setSceneImageUrl(
+          (typeof story?.sceneImageUrl === 'string' && story.sceneImageUrl.trim())
+            ? story.sceneImageUrl.trim()
+            : (pickTsImageUrl(story, 'story_scene') || ''),
+        );
         setActiveTab(normalizeStoryMode(story?.storyMode));
         setOutlineText(story?.plotOutline || '');
 
@@ -1321,6 +1335,7 @@ export default function App() {
         storyMode: activeTab,
         storySetting: storySettingText.trim() || undefined,
         storyBackground: storyBackground.trim() || undefined,
+        sceneImageUrl: sceneImageUrl.trim() || undefined,
         sceneNameSnapshot: sceneSettingText.trim() || undefined,
         status: 1,
         isPublic: isPublic ? 1 : 0,
@@ -1427,21 +1442,8 @@ export default function App() {
                 />
                 <SceneImageSection
                   imageUrl={sceneImageUrl}
-                  generating={generatingSceneImage}
                   onHelpClick={() => setTooltipType('sceneImage')}
-                  onAddImage={async () => {
-                    setGeneratingSceneImage(true);
-                    try {
-                      // 待对接接口：调用另外一个接口获取场景图片
-                      await new Promise(resolve => setTimeout(resolve, 1500));
-                      Alert.alert('提示', '场景图片生成接口待定，当前为模拟成功！');
-                      setSceneImageUrl('https://picsum.photos/400/600');
-                    } catch (e) {
-                      Alert.alert('提示', '生成失败，请重试');
-                    } finally {
-                      setGeneratingSceneImage(false);
-                    }
-                  }}
+                  onAddImage={() => router.push('/pages/my-gallery?from=create-story')}
                 />
                 <LocationSection
                   text={sceneSettingText}
@@ -1735,7 +1737,7 @@ export default function App() {
               <>
                 <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景图片提示</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  图片生成会依赖下方的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">场景设定</span>字段，点击添加图片将调用独立接口获取场景图片。
+                  点击场景图片框可进入故事背景图库，选择已有图片后会自动回填到当前故事。
                 </p>
               </>
             )}

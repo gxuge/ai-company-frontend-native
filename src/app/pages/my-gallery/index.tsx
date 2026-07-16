@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { DeviceEventEmitter, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
@@ -89,6 +89,31 @@ function extractErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function resolveGalleryPresentation(from?: string) {
+  if (from === 'create-role') {
+    return {
+      title: '我的图库',
+      emptyTitle: '你还没有角色图片',
+      emptyDescription: '生成或保存角色图片后，会显示在这里',
+      emptyActionText: '返回创建角色',
+    };
+  }
+  if (from === 'create-story') {
+    return {
+      title: '故事背景图库',
+      emptyTitle: '你还没有故事背景图片',
+      emptyDescription: '保存故事背景图片后，会显示在这里',
+      emptyActionText: '返回创建故事',
+    };
+  }
+  return {
+    title: '我的图库',
+    emptyTitle: '你还没有图片',
+    emptyDescription: '上传参考图或保存生成结果后，会显示在这里',
+    emptyActionText: '返回创建人物',
+  };
+}
+
 function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, onPress }: ImageCardProps) {
   return (
     <Animated.View
@@ -153,6 +178,8 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
 export default function MyGallery() {
   const params = useLocalSearchParams<{ from?: string }>();
   const isRoleGallery = params.from === 'create-role';
+  const isStoryGallery = params.from === 'create-story';
+  const galleryPresentation = resolveGalleryPresentation(params.from);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -265,10 +292,17 @@ export default function MyGallery() {
       return;
     }
 
+    if (isStoryGallery) {
+      DeviceEventEmitter.emit('storySceneImageSelected', {
+        imageUrl: selectedImageItem.url,
+      });
+      router.back();
+      return;
+    }
+
     const isFromCreateRole = params.from === 'create-role';
-    const isFromCreateStory = params.from === 'create-story';
-    const pathname = isFromCreateRole ? '/pages/create-role' : isFromCreateStory ? '/pages/create-story' : '/pages/create-character';
-    const paramKey = (isFromCreateRole || isFromCreateStory) ? 'selectedImageUrl' : 'referenceImageUrl';
+    const pathname = isFromCreateRole ? '/pages/create-role' : '/pages/create-character';
+    const paramKey = isFromCreateRole ? 'selectedImageUrl' : 'referenceImageUrl';
 
     router.replace({
       pathname: pathname as any,
@@ -326,6 +360,14 @@ export default function MyGallery() {
     setSelectedImage(null);
   };
 
+  const handleEmptyAction = () => {
+    if (isStoryGallery) {
+      router.back();
+      return;
+    }
+    router.push(isRoleGallery ? '/pages/create-role' : '/pages/create-character');
+  };
+
   const manageButton = (
     <Pressable
       onPress={handleToggleManage}
@@ -345,7 +387,7 @@ export default function MyGallery() {
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: '#000000' }}>
-        <AiHeader title="我的图库" className="px-5 py-4" />
+        <AiHeader title={galleryPresentation.title} className="px-5 py-4" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ color: '#a1a1aa', fontSize: 14 }}>加载中...</Text>
         </View>
@@ -356,12 +398,12 @@ export default function MyGallery() {
   if (images.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: '#000000' }}>
-        <AiHeader title="我的图库" className="px-5 py-4" />
-        <AiEmpty 
-          title={isRoleGallery ? '你还没有角色图片' : '你还没有图片'} 
-          description={isRoleGallery ? '生成或保存角色图片后，会显示在这里' : '上传参考图或保存生成结果后，会显示在这里'} 
-          actionText={isRoleGallery ? '返回创建角色' : '返回创建人物'}
-          onAction={() => router.push(isRoleGallery ? '/pages/create-role' : '/pages/create-character')}
+        <AiHeader title={galleryPresentation.title} className="px-5 py-4" />
+        <AiEmpty
+          title={galleryPresentation.emptyTitle}
+          description={galleryPresentation.emptyDescription}
+          actionText={galleryPresentation.emptyActionText}
+          onAction={handleEmptyAction}
           style={{ flex: 1 }}
         />
       </View>
@@ -370,7 +412,7 @@ export default function MyGallery() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000000' }}>
-      <AiHeader title="我的图库" className="px-5 py-4" rightElement={manageButton} />
+      <AiHeader title={galleryPresentation.title} className="px-5 py-4" rightElement={manageButton} />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20, paddingBottom: 128 }}>
         {loadError ? (
@@ -441,33 +483,35 @@ export default function MyGallery() {
         </Animated.View>
       )}
 
-      <Animated.View
-        entering={FadeIn.delay(300).duration(300)}
-        style={[{
-          position: 'absolute',
-          bottom: (!isManageMode && selectedImage) || (isManageMode && selectedForDelete.length > 0) ? 110 : 40,
-          right: 20,
-          zIndex: 10,
-        }, pulseStyle]}
-      >
-        <Pressable
-          onPress={() => router.push(isRoleGallery ? '/pages/create-role' : '/pages/create-character')}
-          style={({ pressed }) => ({
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: 'rgba(0,0,0,0.6)',
-            borderWidth: 1.5,
-            borderColor: brandGreenRgba(0.9),
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: pressed ? 0.7 : 1,
-            transform: [{ scale: pressed ? 0.95 : 1 }],
-          })}
+      {!isStoryGallery && (
+        <Animated.View
+          entering={FadeIn.delay(300).duration(300)}
+          style={[{
+            position: 'absolute',
+            bottom: (!isManageMode && selectedImage) || (isManageMode && selectedForDelete.length > 0) ? 110 : 40,
+            right: 20,
+            zIndex: 10,
+          }, pulseStyle]}
         >
-          <Image source={imgFabAddRole} style={{ width: 32, height: 32 }} resizeMode="contain" />
-        </Pressable>
-      </Animated.View>
+          <Pressable
+            onPress={() => router.push('/pages/create-character')}
+            style={({ pressed }) => ({
+              width: 56,
+              height: 56,
+              borderRadius: 28,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              borderWidth: 1.5,
+              borderColor: brandGreenRgba(0.9),
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+              transform: [{ scale: pressed ? 0.95 : 1 }],
+            })}
+          >
+            <Image source={imgFabAddRole} style={{ width: 32, height: 32 }} resizeMode="contain" />
+          </Pressable>
+        </Animated.View>
+      )}
     </View>
   );
 }

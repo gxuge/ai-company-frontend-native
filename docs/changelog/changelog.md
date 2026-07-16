@@ -96,3 +96,10 @@
 - 接口变更：无
 - UI 影响：未修改布局、尺寸或图标显示条件，仅修复发送按钮事件顺序
 - 验证：TypeScript 语法、Babel Web 转译、事件链代码断言和发送/附件序列模拟通过；全文件 ESLint 的 366 项均为该页面既有格式问题；按用户要求未启动浏览器或开发服务
+
+## 2026-07-16
+- 任务：create-story 场景图片图库选择
+- 变更：场景图片框跳转 `/pages/my-gallery?from=create-story`；图库使用故事背景标题，选择后通过 `storySceneImageSelected` 回传并返回，保留创建页草稿；移除原模拟图片逻辑；故事详情加载与保存接入 `sceneImageUrl`
+- 接口变更：无新增端点；图库继续调用 `/sys/ts-user-image-assets`，故事保存继续调用现有创建/更新接口并提交 `sceneImageUrl`
+- UI 影响：创建故事页布局不变；图库故事模式隐藏会误跳创建人物页的新增角色图片悬浮按钮
+- 验证：两个页面 TypeScript 语法和 Babel Web 转译通过；新增行 ESLint、跳转/回填/保存行为断言通过；按用户要求未启动浏览器或开发服务

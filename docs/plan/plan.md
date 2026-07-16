@@ -163,3 +163,19 @@
 | --- | --- | --- | --- |
 | T1 事件链修复 | 已完成 | 在按下阶段锁定发送职责，避免失焦后切换为附件按钮 | `src/app/pages/admin-chat/index.tsx` |
 | T2 代码验证 | 已完成 | TypeScript 语法、Babel Web、状态断言通过；全文件 ESLint 仍为既有格式问题 | 命令验证 |
+
+## create-story 场景图片图库选择
+
+### 背景
+- 目标：点击场景图片框进入复用的图片选择列表，选择故事背景图后回填创建故事页。
+- 边界：复用 `/pages/my-gallery` 和现有用户图片素材接口，不新增后端端点，不丢失创建页草稿。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 跳转与回填 | 已完成 | 通过 `from=create-story` 进入故事图库模式，并用事件回传图片后返回 | `src/app/pages/create-story/index.tsx`、`src/app/pages/my-gallery/index.tsx` |
+| T2 保存与加载 | 已完成 | 将 `sceneImageUrl` 纳入故事详情加载和保存请求 | `src/app/pages/create-story/index.tsx` |
+| T3 代码验证 | 已完成 | TypeScript 语法、Babel Web、新增行 ESLint和行为断言通过 | 命令验证 |
+
+### 风险与回退
+- 用户图片素材当前没有稳定的“角色/故事”业务类型字段约定，因此故事模式先复用素材全集，不按未知 `sourceType` 强制过滤。
+- 回传使用事件加 `router.back()`，避免路由替换导致创建故事页已填写内容重置。

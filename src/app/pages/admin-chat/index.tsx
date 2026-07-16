@@ -211,8 +211,10 @@ function AIBubble({
   const isStreaming = streamState?.active;
   const isError = streamState?.finalStatus === 'error';
   const hasContent = Boolean(content && content.trim());
-  const isWaiting = isStreaming && !hasContent;
-  const shouldShowContent = hasContent && !isError;
+  const hasToolTimeline = Boolean(streamState?.steps.some(step => step.kind === 'tool'));
+  const isWaiting = isStreaming && !hasContent && !hasToolTimeline;
+  const shouldShowContent = hasContent && !isError && !hasToolTimeline;
+  const hasResponseBody = hasToolTimeline || shouldShowContent || isWaiting;
   const optionPrompt = showSuggestedOptions ? streamState?.optionPrompt : null;
 
   return (
@@ -227,9 +229,9 @@ function AIBubble({
           minWidth: 100,
         }}
       >
-        {streamState?.active ? (
-          <View style={{ marginBottom: (shouldShowContent || isWaiting) ? 18 : 0 }}>
-            <AdminChatThinkingPanel state={streamState} />
+        {streamState && hasToolTimeline ? (
+          <View style={{ marginBottom: optionPrompt ? 18 : 0 }}>
+            <AdminChatThinkingPanel state={streamState} fallbackContent={content} />
           </View>
         ) : null}
         
@@ -242,7 +244,7 @@ function AIBubble({
         ) : null}
 
         {optionPrompt ? (
-          <View style={{ marginTop: shouldShowContent ? 20 : 0 }}>
+          <View style={{ marginTop: hasResponseBody ? 20 : 0 }}>
             <View style={{ alignItems: "center", marginBottom: 20 }}>
               <Text style={{ fontSize: 22.6, color: "#7a6b5a" }}>{optionPrompt.question}</Text>
             </View>
