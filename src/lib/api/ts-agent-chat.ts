@@ -91,6 +91,7 @@ export type TsAgentChatMessageQuery = {
 export type TsAgentChatReplyPayload = {
   sessionId: number;
   userInput: string;
+  optionValue?: string;
   historyCount?: number;
   stream?: boolean;
 };

@@ -707,7 +707,7 @@ export function CreateCharacter() {
   };
 
   const handleOptimizeBackground = async () => {
-    if (optimizingBackground || generatingSetting || saving) {
+    if (optimizingBackground || optimizingGreeting || generatingSetting || saving) {
       return;
     }
     setOptimizingBackground(true);
@@ -718,17 +718,18 @@ export function CreateCharacter() {
         gender,
         occupation: job.trim() || undefined,
         backgroundStory: background.trim() || undefined,
+        greeting: greeting.trim() || undefined,
         keywords: selectedTags.join(','),
         templateMode: 'background_optimize',
       });
       const backgroundStory = result?.backgroundStory ?? result?.background_story;
       if (typeof backgroundStory === 'string' && backgroundStory.trim()) {
-        setBackground(backgroundStory);
+        setBackground(backgroundStory.trim());
         setBasicAiGenerated(true);
         showMessage('背景设定已美化。');
         return;
       }
-      showMessage('美化完成，但未返回背景内容。');
+      throw new Error('未优化出有效背景设定，请稍后重试。');
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '背景美化失败，请稍后重试。'));
@@ -739,7 +740,7 @@ export function CreateCharacter() {
   };
 
   const handleOptimizeGreeting = async () => {
-    if (optimizingGreeting || generatingSetting || saving) {
+    if (optimizingBackground || optimizingGreeting || generatingSetting || saving) {
       return;
     }
     setOptimizingGreeting(true);
@@ -752,16 +753,16 @@ export function CreateCharacter() {
         backgroundStory: background.trim() || undefined,
         greeting: greeting.trim() || undefined,
         keywords: selectedTags.join(','),
-        templateMode: 'intro_optimize',
+        templateMode: 'greeting_optimize',
       });
-      const optimizedGreeting = result?.greeting ?? result?.greeting_text ?? result?.backgroundStory ?? result?.background_story;
+      const optimizedGreeting = result?.greeting ?? result?.greeting_text;
       if (typeof optimizedGreeting === 'string' && optimizedGreeting.trim()) {
-        setGreeting(optimizedGreeting);
+        setGreeting(optimizedGreeting.trim());
         setBasicAiGenerated(true);
         showMessage('开场白已美化。');
         return;
       }
-      showMessage('美化完成，但未返回开场白内容。');
+      throw new Error('未优化出有效开场白，请稍后重试。');
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '开场白美化失败，请稍后重试。'));

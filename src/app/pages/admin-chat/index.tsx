@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback, type ReactNode } from "react";
 import { useLocalSearchParams, router } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView, Modal } from "react-native";
+import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
@@ -19,6 +20,7 @@ const imgVoiceWhite = resolveAsset(require("@/assets/images/admin-chat/voice_whi
 const imgVoiceActive = resolveAsset(require("@/assets/images/admin-chat/voice_active.svg"));
 const imgSendWhite = resolveAsset(require("@/assets/images/admin-chat/send_white.svg"));
 const imgSendActive = resolveAsset(require("@/assets/images/admin-chat/send_active.svg"));
+const imgSubmitMessage = resolveAsset(require("@/assets/images/chat/chat-input/send.svg"));
 const imgFeatureCamera = resolveAsset(require("@/assets/images/admin-chat/feature_camera.svg"));
 const imgFeatureImage = resolveAsset(require("@/assets/images/admin-chat/feature_image.svg"));
 const imgFeatureFile = resolveAsset(require("@/assets/images/admin-chat/feature_file.svg"));
@@ -44,6 +46,7 @@ type ChatMessage = {
   status?: string;
   loading?: boolean;
   streamState?: AgentChatStreamState | null;
+  localOnly?: boolean;
 };
 const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
 const SESSION_CREATE_ERROR_TEXT = "Agent 会话创建失败，请稍后重试。";
@@ -55,6 +58,7 @@ const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
 const DEFAULT_AGENT_CHAT_APP_ID = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || "";
 const DEFAULT_AGENT_CHAT_AGENT_CODE = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || "admin_chat";
 const LAST_AGENT_SESSION_STORAGE_KEY = "ts_agent_chat:last_session_id";
+const LOCAL_GREETING_MESSAGE_ID = -1;
 
 type PendingSessionState = {
   appId: string;
@@ -120,6 +124,18 @@ function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
       content,
     };
   });
+}
+
+function createLocalGreetingMessage(content: string): ChatMessage {
+  return {
+    id: LOCAL_GREETING_MESSAGE_ID,
+    role: "ai",
+    content,
+    status: "success",
+    loading: false,
+    streamState: null,
+    localOnly: true,
+  };
 }
 
 /* ─── Typing Indicator ──────────────────────────────────────────────────────── */
@@ -189,7 +205,7 @@ function AIBubble({
 }: {
   content: string;
   streamState?: AgentChatStreamState | null;
-  onSuggestedPress?: (text: string) => void;
+  onSuggestedPress?: (text: string, optionValue?: string) => void;
   showSuggestedOptions?: boolean;
 }) {
   const isStreaming = streamState?.active;
@@ -232,7 +248,11 @@ function AIBubble({
             </View>
             <View style={{ gap: 25, alignItems: "flex-start" }}>
               {optionPrompt.options.map(option => (
-                <SuggestedButton key={option} text={option} onPress={() => onSuggestedPress?.(option)} />
+                <SuggestedButton
+                  key={`${option.label}-${option.optionValue}`}
+                  text={option.label}
+                  onPress={() => onSuggestedPress?.(option.label, option.optionValue)}
+                />
               ))}
             </View>
           </View>
@@ -417,6 +437,44 @@ function AIButton() {
   );
 }
 
+function WebMenuIcon() {
+  return (
+    <button
+      type="button"
+      aria-label="菜单"
+      onMouseEnter={(event) => {
+        const image = event.currentTarget.querySelector("img");
+        if (image) {
+          image.src = imgMenuActive;
+        }
+      }}
+      onMouseLeave={(event) => {
+        const image = event.currentTarget.querySelector("img");
+        if (image) {
+          image.src = imgMenuWhite;
+        }
+      }}
+      style={{
+        width: 56.3,
+        height: 56.3,
+        padding: 0,
+        border: "none",
+        background: "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+      }}
+    >
+      <img
+        src={imgMenuWhite}
+        alt=""
+        style={{ width: "80%", height: "80%", objectFit: "contain" }}
+      />
+    </button>
+  );
+}
+
 /* ─── Suggested Button ───────────────────────────────────────────────────── */
 // 左对齐推荐问题按钮，宽度与 AI 气泡对齐（Figma: w=390px in 750px grid）
 function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void }) {
@@ -595,6 +653,7 @@ function AdminSidebar({
 
 /* ─── App ────────────────────────────────────────────────────────────────── */
 export default function App() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ agentSessionId?: string | string[]; agentCode?: string | string[]; appId?: string | string[] }>();
   const initialSessionId = parseSessionId(params.agentSessionId);
   const initialAgentCode = firstParam(params.agentCode)?.trim() || DEFAULT_AGENT_CHAT_AGENT_CODE;
@@ -621,15 +680,41 @@ export default function App() {
   const [sidebarReloadToken, setSidebarReloadToken] = useState(0);
   const [creatingSession, setCreatingSession] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const isScrolledToBottomRef = useRef(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+
+  const handleScroll = (event: any) => {
+    const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+    const paddingToBottom = 50;
+    const isCloseToBottom = layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+    isScrolledToBottomRef.current = isCloseToBottom;
+    setShowScrollToBottom(!isCloseToBottom);
+  };
+
   const agentStream = useAgentChatStream();
   const streamAbortRef = useRef<AbortController | null>(null);
   const creatingSessionRef = useRef(false);
   const scale = useViewportScale();
   const plusRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
-  const [menuHovered, setMenuHovered] = useState(false);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [voiceHovered, setVoiceHovered] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const greetingText = t("adminChat.greeting");
+
+  const showExpandedLayout = isInputFocused || inputValue.trim().length > 0;
+  const showSendButton = isInputFocused && inputValue.trim().length > 0;
+
+  // 自动撑高逻辑与竖线修复
+  useEffect(() => {
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto';
+      const scrollH = textAreaRef.current.scrollHeight;
+      textAreaRef.current.style.height = `${Math.min(scrollH, 250)}px`;
+      textAreaRef.current.style.overflowY = scrollH > 250 ? 'auto' : 'hidden';
+    }
+  }, [inputValue]);
 
   const { height } = useWindowDimensions();
   const innerHeight = height / scale;
@@ -646,7 +731,7 @@ export default function App() {
       setCurrentSessionId(null);
       setSessionTitle(DEFAULT_SESSION_TITLE);
       setSessionSummary(DEFAULT_SESSION_SUMMARY);
-      setMessages([]);
+      setMessages([createLocalGreetingMessage(greetingText)]);
       setResolvedAgentCode(initialAgentCode);
       setResolvedAppId(initialAppId);
       setPendingSession({
@@ -679,13 +764,14 @@ export default function App() {
       setResolvedAppId(nextAppId || initialAppId);
       setPendingSession(null);
       writeLastAgentSessionId(sessionId);
+      const historyMessages = toAgentChatMessages(pageRecords).map((item) => ({
+        ...item,
+        loading: false,
+        status: item.role === "ai" ? "success" : "local",
+        streamState: null,
+      }));
       setMessages(
-        toAgentChatMessages(pageRecords).map((item) => ({
-          ...item,
-          loading: false,
-          status: item.role === "ai" ? "success" : "local",
-          streamState: null,
-        })),
+        [createLocalGreetingMessage(greetingText), ...historyMessages],
       );
     };
 
@@ -763,7 +849,7 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, [initialAgentCode, initialAppId, initialSessionId]);
+  }, [greetingText, initialAgentCode, initialAppId, initialSessionId]);
 
   const appendMessage = (next: ChatMessage) => {
     setMessages(prev => [...prev, next]);
@@ -819,7 +905,7 @@ export default function App() {
       setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : DEFAULT_SESSION_SUMMARY);
       setPendingSession(null);
       if (options?.clearMessages) {
-        setMessages([]);
+        setMessages([createLocalGreetingMessage(greetingText)]);
       }
       if (options?.clearInput) {
         setInputValue("");
@@ -913,7 +999,7 @@ export default function App() {
         setCurrentSessionId(null);
         setSessionTitle(DEFAULT_SESSION_TITLE);
         setSessionSummary(DEFAULT_SESSION_SUMMARY);
-        setMessages([]);
+        setMessages([createLocalGreetingMessage(greetingText)]);
         setPendingSession({
           appId: initialAppId,
           agentCode: initialAgentCode,
@@ -929,7 +1015,7 @@ export default function App() {
     }
   };
 
-  const sendMessage = async (rawText: string) => {
+  const sendMessage = async (rawText: string, optionValue?: string) => {
     const text = rawText.trim();
     if (!text || sending) {
       return;
@@ -962,6 +1048,7 @@ export default function App() {
       const streamPayload = {
         sessionId,
         userInput: text,
+        optionValue,
         historyCount: 12,
       };
 
@@ -1001,6 +1088,7 @@ export default function App() {
           const reply = await tsAgentChatApi.createAiReply({
             sessionId,
             userInput: text,
+            optionValue,
             historyCount: 12,
           });
           const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
@@ -1060,12 +1148,15 @@ export default function App() {
 
   /** 发送消息（用户） */
   const handleSend = () => {
+    textAreaRef.current?.blur();
+    setIsInputFocused(false);
+    setIsFeatureExpanded(false);
     void sendMessage(inputValue);
   };
 
   /** 点击推荐问题快速发送 */
-  const handleSuggestedMessage = (text: string) => {
-    void sendMessage(text);
+  const handleSuggestedMessage = (text: string, optionValue?: string) => {
+    void sendMessage(text, optionValue);
   };
 
   const toggleFeatureExpanded = () => {
@@ -1081,6 +1172,56 @@ export default function App() {
     height: interpolate(featureExpandProgress.value, [0, 1], [0, FEATURE_CARDS_EXPANDED_HEIGHT]),
     transform: [{ translateY: interpolate(featureExpandProgress.value, [0, 1], [12, 0]) }],
   }));
+
+  const voiceIconEl = (
+    <Pressable
+      style={{ width: 50, height: 50 }}
+      onHoverIn={() => setVoiceHovered(true)}
+      onHoverOut={() => setVoiceHovered(false)}
+    >
+      <View style={{ width: "100%", height: "100%", padding: 4 }}>
+        <Image source={voiceHovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
+      </View>
+    </Pressable>
+  );
+
+  const plusIconEl = (
+    <View style={{ flexDirection: "row", alignItems: "center", height: 50 }}>
+      <Pressable
+        style={{
+          width: 45.7,
+          height: 47.2,
+          borderRadius: 12,
+          alignItems: "center",
+          justifyContent: "center",
+          opacity: showSendButton && sending ? 0.45 : 1,
+        }}
+        disabled={showSendButton && sending}
+        onPressIn={(event) => {
+          if (showSendButton) {
+            event.preventDefault();
+          }
+        }}
+        onPress={showSendButton ? handleSend : toggleFeatureExpanded}
+      >
+        {showSendButton ? (
+          <Image
+            source={imgSubmitMessage}
+            style={{ width: 32, height: 32 }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Animated.View style={plusIconAnimatedStyle}>
+            <Image
+              source={imgSendWhite}
+              style={{ width: 42, height: 42 }}
+              resizeMode="contain"
+            />
+          </Animated.View>
+        )}
+      </Pressable>
+    </View>
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: "#1c1613", overflow: "hidden" }}>
@@ -1132,15 +1273,7 @@ export default function App() {
           {/* right side icons container */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
             {/* right menu icon (volume) */}
-            <Pressable
-              style={{ width: 56.3, height: 56.3, justifyContent: "center", alignItems: "center" }}
-              onHoverIn={() => setMenuHovered(true)}
-              onHoverOut={() => setMenuHovered(false)}
-            >
-              <View style={{ width: "80%", height: "80%" }}>
-                <Image source={menuHovered ? imgMenuActive : imgMenuWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-              </View>
-            </Pressable>
+            <WebMenuIcon />
 
             {/* sidebar toggle icon (hamburger) */}
             <Pressable
@@ -1157,13 +1290,20 @@ export default function App() {
         </View>
 
         {/* CHAT AREA ─────────────────────────────────────────────────────── */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingTop: 36, paddingHorizontal: 26.5, paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: false })}
-        >
+        <View style={{ flex: 1, position: 'relative' }}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingTop: 36, paddingHorizontal: 26.5, paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+            onContentSizeChange={() => {
+              if (isScrolledToBottomRef.current) {
+                scrollViewRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+          >
           {/* 对话气泡列表 */}
           {messages.map((msg, index) =>
             msg.role === "ai"
@@ -1178,7 +1318,30 @@ export default function App() {
                 )
               : <UserBubble key={msg.id} content={msg.content} />
           )}
-        </ScrollView>
+          </ScrollView>
+          {showScrollToBottom && (
+            <Pressable
+              onPress={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+              style={{
+                position: 'absolute',
+                right: 26.5,
+                bottom: 15,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                zIndex: 50,
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M19 12l-7 7-7-7" />
+              </svg>
+            </Pressable>
+          )}
+        </View>
 
         {/* INPUT BAR */}
         <View style={{ paddingTop: 24, paddingLeft: 26.5, paddingRight: 20.5 }}>
@@ -1186,68 +1349,89 @@ export default function App() {
             <AIButton />
             <AIButton />
           </View>
-          <View
+          <div
             style={{
-              height: 100,
-              flexDirection: "row",
+              minHeight: 100,
+              display: "grid",
+              gridTemplateColumns: "50px minmax(0, 1fr) 50px",
+              gridTemplateRows: showExpandedLayout ? "minmax(50px, auto) 50px" : "50px",
+              columnGap: showExpandedLayout ? 0 : 20,
+              rowGap: showExpandedLayout ? 15 : 0,
               alignItems: "center",
-              paddingHorizontal: 25,
+              padding: "25px",
               backgroundColor: "rgba(45, 37, 32, 0.8)",
               borderRadius: 30,
-              borderWidth: 2,
-              borderColor: "rgba(251, 191, 36, 0.2)",
+              border: "2px solid rgba(251, 191, 36, 0.2)",
+              boxSizing: "border-box",
+              transition: "grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1), row-gap 220ms cubic-bezier(0.22, 1, 0.36, 1)",
             }}
           >
-            {/* voice icon */}
-            <Pressable
-              style={{ width: 50, height: 50, marginRight: 20 }}
-              onHoverIn={() => setVoiceHovered(true)}
-              onHoverOut={() => setVoiceHovered(false)}
-            >
-              <View style={{ width: "100%", height: "100%", padding: 4 }}>
-                <Image source={voiceHovered ? imgVoiceActive : imgVoiceWhite} style={{ width: "100%", height: "100%" }} resizeMode="contain" />
-              </View>
-            </Pressable>
-
-            {/* text input */}
-            <TextInput
-              value={inputValue}
-              onChangeText={setInputValue}
-              onSubmitEditing={handleSend}
-              placeholder="发消息或按住说话..."
-              placeholderTextColor="#5a4a3a"
-              returnKeyType="send"
+            <div
               style={{
-                flex: 1,
+                gridColumn: 1,
+                gridRow: showExpandedLayout ? 2 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+              }}
+            >
+              {voiceIconEl}
+            </div>
+
+            <textarea
+              ref={textAreaRef}
+              value={inputValue}
+              onChange={(event) => setInputValue(event.target.value)}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => {
+                setIsInputFocused(false);
+                if (!inputValue.trim()) {
+                  setInputValue("");
+                }
+              }}
+              placeholder="发消息或按住说话..."
+              maxLength={300}
+              rows={1}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSend();
+                }
+              }}
+              style={{
+                gridColumn: showExpandedLayout ? "1 / -1" : 2,
+                gridRow: 1,
+                alignSelf: "stretch",
+                width: "100%",
+                boxSizing: "border-box",
                 fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
                 fontSize: 30,
+                lineHeight: "50px",
                 color: "white",
-                outlineStyle: "none",
-              } as any}
+                outline: "none",
+                border: "none",
+                padding: 0,
+                margin: 0,
+                backgroundColor: "transparent",
+                resize: "none",
+                minHeight: 50,
+                maxHeight: 250,
+                overflowY: "hidden",
+              }}
             />
 
-            <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15 }}>
-              {/* Feature Expand Button (Plus rotates to X) */}
-              <Pressable
-                style={{
-                  width: 45.7,
-                  height: 47.2,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-                onPress={toggleFeatureExpanded}
-              >
-                <Animated.View style={plusIconAnimatedStyle}>
-                  <Image 
-                    source={imgSendWhite} 
-                    style={{ width: 42, height: 42 }} // Larger size as requested
-                    resizeMode="contain" 
-                  />
-                </Animated.View>
-              </Pressable>
-            </View>
-          </View>
+            <div
+              style={{
+                gridColumn: 3,
+                gridRow: showExpandedLayout ? 2 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+              }}
+            >
+              {plusIconEl}
+            </div>
+          </div>
         </View>
 
         {/* FEATURE CARDS */}

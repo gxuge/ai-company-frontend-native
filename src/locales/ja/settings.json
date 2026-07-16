@@ -1,0 +1,27 @@
+{
+  "about": "このアプリについて",
+  "app_name": "アプリ名",
+  "arabic": "アラビア語",
+  "english": "英語",
+  "generale": "一般",
+  "github": "GitHub",
+  "language": "言語",
+  "links": "リンク",
+  "logout": "ログアウト",
+  "more": "その他",
+  "privacy": "プライバシーポリシー",
+  "rate": "アプリを評価",
+  "share": "共有",
+  "support": "サポート",
+  "support_us": "応援する",
+  "terms": "利用規約",
+  "theme": {
+    "dark": "ダーク",
+    "light": "ライト",
+    "system": "システム",
+    "title": "テーマ"
+  },
+  "title": "設定",
+  "version": "バージョン",
+  "website": "ウェブサイト"
+}

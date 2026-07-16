@@ -1,13 +1,32 @@
-import ar from '@/translations/ar.json';
-import en from '@/translations/en.json';
+import ar from '@/locales/ar';
+import enUS from '@/locales/en-US';
+import ja from '@/locales/ja';
+import zhCN from '@/locales/zh-CN';
+import zhTW from '@/locales/zh-TW';
 
 export const resources = {
-  en: {
-    translation: en,
+  'zh-CN': {
+    translation: zhCN,
   },
-  ar: {
+  'en-US': {
+    translation: enUS,
+  },
+  'zh-TW': {
+    translation: zhTW,
+  },
+  'ja': {
+    translation: ja,
+  },
+  'ar': {
     translation: ar,
   },
-};
+} as const;
 
 export type Language = keyof typeof resources;
+
+export const DEFAULT_LANGUAGE: Language = 'zh-CN';
+export const SUPPORTED_LANGUAGES = Object.keys(resources) as Language[];
+
+export function isLanguage(value: string | undefined): value is Language {
+  return Boolean(value && SUPPORTED_LANGUAGES.includes(value as Language));
+}

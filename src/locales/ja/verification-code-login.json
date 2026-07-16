@@ -1,0 +1,33 @@
+{
+  "agreement": {
+    "connector": "と",
+    "error": "ログインする前に、利用規約とプライバシーポリシーに同意してください。個人情報は適切に保護されます。",
+    "prefix": "以下を読み、同意します",
+    "privacyPolicy": "プライバシーポリシー",
+    "userAgreement": "利用規約"
+  },
+  "alerts": {
+    "bypassPhone": "この電話番号ではクイックログインを利用できます。そのままログインできます。",
+    "codeInvalid": "認証コードは6桁の数字で入力してください。",
+    "loginFailed": "ログインに失敗しました。しばらくしてからもう一度お試しください。",
+    "loginSuccess": "ログインしました。",
+    "ok": "確認",
+    "title": "お知らせ"
+  },
+  "autoRegister": "未登録の電話番号は、認証後に自動登録されます。",
+  "codePlaceholder": "認証コードを入力",
+  "confirmLogin": "ログイン",
+  "countdown": "{{count}}秒",
+  "getCode": "コードを取得",
+  "language": {
+    "en-US": "English",
+    "ja": "日本語",
+    "title": "言語を切り替える",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文"
+  },
+  "loggingIn": "ログイン中...",
+  "phoneInvalid": "正しい11桁の電話番号を入力してください。",
+  "phonePlaceholder": "電話番号を入力",
+  "title": "探拾へようこそ"
+}

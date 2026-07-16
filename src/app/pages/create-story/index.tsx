@@ -6,7 +6,7 @@ import type {
 } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Platform, ScrollView, Modal } from 'react-native';
+import { Alert, DeviceEventEmitter, Modal, Platform, ScrollView } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { HelpCircle } from 'lucide-react';
 import { AiFormInput } from '../../../components/ai-company/ai-form-input';
@@ -33,6 +33,12 @@ const imgAddChapterGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('../.
 type StoryMode = 'normal' | 'chapter';
 type GenerateConfirmTarget = 'all' | 'setting' | 'scene' | 'outline';
 
+type StoryRoleItem = {
+  id: number;
+  name: string;
+  avatar?: any;
+};
+
 type ChapterForm = {
   id?: number;
   chapterNo: number;
@@ -45,8 +51,8 @@ type ChapterForm = {
 };
 
 function showMessage(message: string) {
-  if (Platform.OS === 'web') {
-    Alert.alert('提示', message);
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    window.alert(message);
     return;
   }
   Alert.alert('提示', message);
@@ -496,11 +502,15 @@ function ChapterCard({
   chapter,
   index,
   isGenerating,
+  openingRoleName,
+  onSelectOpeningRole,
   onChange,
 }: {
   chapter: ChapterForm;
   index: number;
   isGenerating?: boolean;
+  openingRoleName?: string;
+  onSelectOpeningRole: () => void;
   onChange: (next: ChapterForm) => void;
 }) {
   return (
@@ -554,7 +564,15 @@ function ChapterCard({
                 开场白
               </span>
             </div>
-            <button className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onSelectOpeningRole();
+              }}
+              className="flex cursor-pointer items-center gap-[5px] border-0 bg-transparent p-0"
+            >
               <span
                 className="text-white underline decoration-[rgba(var(--color-brand-green-rgb), 0.3)]"
                 style={{
@@ -564,7 +582,7 @@ function ChapterCard({
                   textDecorationSkipInk: 'none',
                 }}
               >
-                选择角色
+                {openingRoleName || '选择角色'}
               </span>
               <ChevronRight color="white" />
             </button>
@@ -651,7 +669,9 @@ function PlotOutlineSection({
   outlineText,
   onOutlineChange,
   chapters,
+  roles,
   onChapterChange,
+  onSelectOpeningRole,
   onAddChapter,
   onGenerate,
   onOptimize,
@@ -664,7 +684,9 @@ function PlotOutlineSection({
   outlineText: string;
   onOutlineChange: (value: string) => void;
   chapters: ChapterForm[];
+  roles: StoryRoleItem[];
   onChapterChange: (index: number, chapter: ChapterForm) => void;
+  onSelectOpeningRole: (index: number) => void;
   onAddChapter: () => void;
   onGenerate: () => void;
   onOptimize: () => void;
@@ -731,6 +753,8 @@ function PlotOutlineSection({
           chapter={chapter}
           index={index}
           isGenerating={generateLoading}
+          openingRoleName={roles.find(role => role.id === chapter.openingRoleId)?.name}
+          onSelectOpeningRole={() => onSelectOpeningRole(index)}
           onChange={next => onChapterChange(index, next)}
         />
       ))}
@@ -813,7 +837,7 @@ export default function App() {
   const [optimizingSetting, setOptimizingSetting] = useState(false);
   const [optimizingScene, setOptimizingScene] = useState(false);
   const [optimizingOutline, setOptimizingOutline] = useState(false);
-  const [selectedRoles, setSelectedRoles] = useState<any[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<StoryRoleItem[]>([]);
   const [tooltipType, setTooltipType] = useState<'none' | 'story' | 'role' | 'sceneImage' | 'scene' | 'outline'>('none');
   const [generateModalTarget, setGenerateModalTarget] = useState<'setting' | 'scene' | 'outline' | null>(null);
   const [confirmGenerateTarget, setConfirmGenerateTarget] = useState<GenerateConfirmTarget | null>(null);
@@ -863,6 +887,81 @@ export default function App() {
       });
     }
   }, [params.selectedRoleId, params.selectedRoleName, params.selectedRoleAvatar]);
+
+  useEffect(() => {
+    const roleSelectedSubscription = DeviceEventEmitter.addListener('roleSelected', (role: StoryRoleItem) => {
+      const roleId = Number(role?.id);
+      if (!Number.isFinite(roleId) || roleId <= 0) {
+        return;
+      }
+      setSelectedRoles((prev) => {
+        if (prev.some(item => item.id === roleId)) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: roleId,
+            name: typeof role.name === 'string' && role.name.trim() ? role.name.trim() : `角色${roleId}`,
+            avatar: role.avatar,
+          },
+        ];
+      });
+    });
+    const openingRoleSubscription = DeviceEventEmitter.addListener(
+      'storyChapterOpeningRoleSelected',
+      (payload: StoryRoleItem & { chapterIndex?: number | null }) => {
+        const roleId = Number(payload?.id);
+        const chapterIndex = payload?.chapterIndex;
+        if (
+          !Number.isFinite(roleId)
+          || roleId <= 0
+          || typeof chapterIndex !== 'number'
+          || !Number.isInteger(chapterIndex)
+          || chapterIndex < 0
+        ) {
+          return;
+        }
+        setChapters(prev => prev.map((chapter, index) => (
+          index === chapterIndex ? { ...chapter, openingRoleId: roleId } : chapter
+        )));
+      },
+    );
+    return () => {
+      roleSelectedSubscription.remove();
+      openingRoleSubscription.remove();
+    };
+  }, []);
+
+  const handleSelectOpeningRole = (chapterIndex: number) => {
+    if (!selectedRoles.length) {
+      showMessage('请先在角色列表中添加角色。');
+      return;
+    }
+    const chapter = chapters[chapterIndex];
+    if (!chapter) {
+      return;
+    }
+    router.push({
+      pathname: '/pages/select-role',
+      params: {
+        from: 'create-story',
+        mode: 'chapter-opening',
+        chapterIndex: String(chapterIndex),
+        candidateRoleIds: selectedRoles.map(role => role.id).join(','),
+        selectedRoleId: chapter.openingRoleId ? String(chapter.openingRoleId) : '',
+      },
+    });
+  };
+
+  const handleRemoveSelectedRole = (role: StoryRoleItem) => {
+    setSelectedRoles(prev => prev.filter(item => item.id !== role.id));
+    setChapters(prev => prev.map(chapter => (
+      chapter.openingRoleId === role.id
+        ? { ...chapter, openingRoleId: undefined }
+        : chapter
+    )));
+  };
 
   useEffect(() => {
     if (!routeStoryId) {
@@ -1322,7 +1421,7 @@ export default function App() {
                 <CharacterListSection
                   roles={selectedRoles}
                   onAddRole={() => router.push('/pages/select-role?from=create-story')}
-                  onRemoveRole={(role) => setSelectedRoles(prev => prev.filter(r => r.id !== role.id))}
+                  onRemoveRole={handleRemoveSelectedRole}
                   onHelpClick={() => setTooltipType('role')}
                   onUserClick={() => setUserRoleModalVisible(true)}
                 />
@@ -1359,9 +1458,11 @@ export default function App() {
                   outlineText={outlineText}
                   onOutlineChange={setOutlineText}
                   chapters={chapters}
+                  roles={selectedRoles}
                   onChapterChange={(index, chapter) => {
                     setChapters(prev => prev.map((item, current) => (current === index ? chapter : item)));
                   }}
+                  onSelectOpeningRole={handleSelectOpeningRole}
                   onAddChapter={() => {
                     setChapters(prev => [...prev, createDefaultChapter(prev.length + 1)]);
                   }}

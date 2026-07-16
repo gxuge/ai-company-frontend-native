@@ -1,0 +1,17 @@
+{
+  "confirm": {
+    "accept": "滿意，繼續生成",
+    "regenerate": "不滿意，重新生成",
+    "roleQuestion": "你對這版角色滿意嗎？"
+  },
+  "errors": {
+    "createSession": "建立對話失敗，請稍後再試。",
+    "deleteSession": "刪除失敗，請稍後再試。",
+    "loadSession": "載入對話失敗，請稍後再試。",
+    "renameSession": "重新命名失敗，請稍後再試。"
+  },
+  "greeting": "嗨～靈感工坊開張啦！✨ 你想先創造一個讓人心動的角色，還是搭建一段超有戲的故事？把腦海裡的小火花告訴我，我們一起讓它活起來吧！",
+  "inputPlaceholder": "輸入訊息...",
+  "newConversation": "新增對話",
+  "send": "傳送"
+}

@@ -32,7 +32,7 @@
 | `src/lib/auth/` | token 存取与认证工具 | access/refresh token 工具函数 |
 | `src/lib/i18n/` | 国际化配置 | i18n 初始化、类型定义 |
 | `src/assets/images/` | 页面资源图目录（按页面分文件夹） | `role-detail/`、`chat/`、`verification-code-login/` |
-| `src/translations/` | 文案翻译资源 | `en.json`、`ar.json` |
+| `src/locales/` | 模块化文案翻译资源 | `zh-CN/`、`en-US/`、`ar/` |
 | `src/global.css` | 全局样式入口 | 通用样式变量/规则 |
 
 ## 3. 页面目录对应具体界面（`src/app/pages`）
@@ -40,19 +40,19 @@
 | 界面 | 路由 | 入口文件 | 样式文件/样式位置 | 当前 API 对接 |
 | --- | --- | --- | --- | --- |
 | 页面导航 Hub | `/pages` | `src/app/pages/index.tsx` | `StyleSheet.create`（页面内） | 无（用于跳转所有页面） |
-| 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi.getSessionList`、`getSessionDetail`、`createSession`、`createTemplateAiReply`、`createReplySuggestions`、`createAiReply` |
-| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 `tsAgentChatApi.getSessionDetail`、`tsAgentChatApi.getMessageList`、`tsAgentChatApi.createAiReply`；新增 SSE 流式接收与 `admin-chat-thinking-panel`，并通过 `useAgentChatStream` 复用状态机，无 `agentSessionId` 时优先加载最近会话，列表为空则空白进入 |
+| 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi.getSessionList`、`getSessionDetail`、`createSession`、`createTemplateAiReply`、`createReplySuggestions`、`createAiReply`；底部 `ChatInput` 支持两态布局，并在聚焦且有文字时将附件加号切换为发送按钮 |
+| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 `tsAgentChatApi.getSessionDetail`、`tsAgentChatApi.getMessageList`、`tsAgentChatApi.createAiReply`；新增 SSE 流式接收与 `admin-chat-thinking-panel`，并通过 `useAgentChatStream` 复用状态机；底部输入栏支持两态布局，并在聚焦且有文字时将附件加号切换为发送按钮 |
 | System 聊天页 | `/pages/system-chat` | `src/app/pages/system-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 复制自原始 `admin-chat` 的简单聊天逻辑，需要显式 `agentSessionId` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 暂未直接接业务 API |
 | 浏览图片页 | `/pages/browse-images-list` | `src/app/pages/browse-images-list/index.tsx` | 页面内样式 + `components/*` | 暂未直接接业务 API |
-| 创建角色页 | `/pages/create-role` | `src/app/pages/create-role/index.tsx` | 页面内样式 + `components/basic-info.tsx` 等 | 暂未直接接业务 API |
+| 创建角色页 | `/pages/create-role` | `src/app/pages/create-role/index.tsx` | 页面内样式 + `components/basic-info.tsx` 等 | 已接 `tsRoleApi.generateRoleSetting`，支持角色背景与开场白单字段美化 |
 | 创建角色人物页 | `/pages/create-character` | `src/app/pages/create-character/index.jsx` | 页面内样式 | 已接 `userApi.uploadFile`（在“创建形象”时再上传本地参考图）、`tsRoleImageApi.generateRoleImage`、`tsRoleImageApi.createRoleImageProfile` |
 | 验证码登录页 | `/pages/verification-code-login` | `src/app/pages/verification-code-login/index.tsx` | 页面内 style 对象 | 已接 `userApi.phoneLogin` |
-| 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 暂未直接接业务 API |
+| 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 已接 `tsRoleApi.getRoleList`；支持故事角色添加和章节开场白候选角色单选模式 |
 | 角色详情页 | `/pages/role-detail` | `src/app/pages/role-detail/index.tsx` | `role-detail/components/role-detail.styles.ts` | 已接 `tsRoleApi.getRoleDetail`、`tsRoleApi.getRoleAuthorPublic` |
-| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 暂未直接接业务 API |
+| 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 已接 `tsStoryApi` 故事与章节接口；章节开场白通过顶部角色列表选择并保存 `openingRoleId` |
 | 创建分页页 | `/pages/create-page` | `src/app/pages/create-page/index.tsx` | 页面内样式 + `components/Icons.tsx` | 暂未直接接业务 API |
 | 声音编辑页 | `/pages/sound-edit` | `src/app/pages/sound-edit/index.tsx` | 页面内样式 + `components/edit-sound-text.tsx` | 暂未直接接业务 API |
 | 通用设置页 | `/pages/general-setting` | `src/app/pages/general-setting/index.tsx` | 页面内样式 + `components/settings-page.tsx` | 暂未直接接业务 API |
@@ -67,6 +67,7 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | `src/lib/api/ts-role.ts` | `getRoleDetail(roleId)` | GET | `/sys/ts-roles/detail` | `id` | `roleName`、`coverUrl`、`introText`、`storyText` 等 | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
+| `src/lib/api/ts-role.ts` | `generateRoleSetting(payload)` | POST | `/sys/ts-roles/one-click-setting` | 角色设定字段、`templateMode` | `backgroundStory`、`greeting` 等 | 创建角色页，`background_optimize` 美化背景，`greeting_optimize` 美化开场白 |
 | `src/lib/api/ts-role.ts` | `optimizeImagePrompt(payload)` | POST | `/sys/ts-roles/optimize-image-prompt` | `promptText` | `visualPrompt`、`negativePrompt`、`renderedPrompt`、`snapshotKey` | 角色形象提示词优化，后端按 `role_image_prompt_optimize::v1` 模板渲染 |
 | `src/lib/api/ts-chat.ts` | `getSessionList / getSessionDetail / createSession / createAiReply / createTemplateAiReply / createReplySuggestions` | GET/POST | `/sys/ts-chat-sessions` 及子接口 | 会话、角色、故事、用户输入相关参数 | 会话列表、会话详情、AI 回复、候选建议 | 聊天页 / 我的页 |
 | `src/lib/api/ts-agent-chat.ts` | `getSessionList(params)` | GET | `/sys/ts-agent-chat-sessions` | `pageNo`、`pageSize`、`keyword`、`agentCode`、`sessionStatus` | `records`、`total`、`sessionTitle`、`sessionSummary`、`lastMessageAt` 等 | Agent 聊天页/会话列表 |
@@ -100,8 +101,9 @@
 | 页面 | 已接接口 | 数据映射重点 | 未接/占位说明 |
 | --- | --- | --- | --- |
 | `role-detail` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 角色名、封面、作者名、作者头像、认证标识、关于/故事文案 | “连接者/粉丝/对话数”仍为 `--` 占位，不接数量接口 |
+| `create-role` | `/sys/ts-roles/one-click-setting` | `background_optimize` 仅回填角色背景，`greeting_optimize` 仅回填开场白 | 两个美化请求互斥执行，保留现有 UI 布局 |
 | `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口；进入页时先取最近会话，若列表为空则空白进入，首条消息发送时懒创建 session |
-| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、Agent/SubAgent/LLM/Tool 片段、最终结果、Tool 交互选项 | `contentType=options` 时显示 `question` 和实际数量的快捷按钮，点击选项后按普通用户消息继续会话 |
+| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、Agent/SubAgent/LLM/Tool 片段、最终结果、Tool 交互选项 | `contentType=options` 时显示 `question` 和实际数量的快捷按钮，点击选项后按普通用户消息继续会话；所有会话均在消息列表顶部显示一条不入库的前端本地问候 |
 | `system-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 简单 Agent 聊天、消息列表、用户输入、AI 回复 | 原始 admin-chat 逻辑的独立复制页 |
 | `verification-code-login` | `/sys/phoneLogin` | 手机号+验证码登录，写入 token 后跳转 `/pages/chat` | 验证码发送逻辑目前是前端倒计时模拟 |
 | 其余页面 | 暂无直接 API 调用 | 以静态界面和组件布局为主 | 后续按业务逐页补齐 |

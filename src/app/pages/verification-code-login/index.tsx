@@ -1,5 +1,8 @@
+import type { Language } from '@/lib/i18n/resources';
 import { router } from 'expo-router';
+import { Check, Languages } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiInput } from '@/components/ai-company/ai-input';
@@ -7,6 +10,7 @@ import { AiLoginBtn } from '@/components/ai-company/ai-login-btn';
 import { BRAND_GREEN_CSS_VAR } from '@/components/ui/brand';
 import { signIn } from '@/features/auth/use-auth-store';
 import { userApi } from '@/lib/api';
+import { useSelectedLanguage } from '@/lib/i18n';
 
 const imgBackground = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/verification-code-login/5002ae40133251c579d54d15ebcf7a815a0bc048.png'));
 const imgClose = require('../../../assets/images/quick-login/svg/p62a9900.svg');
@@ -16,8 +20,24 @@ const CODE_REGEX = /^\d{6}$/;
 const QUICK_LOGIN_BYPASS_PHONE = '13609742270';
 const DESIGN_W = 750;
 const DESIGN_H = 1624;
+const LOGIN_LANGUAGE_OPTIONS: Array<{
+  value: Language;
+  labelKey:
+    | 'verificationCodeLogin.language.zh-CN'
+    | 'verificationCodeLogin.language.zh-TW'
+    | 'verificationCodeLogin.language.en-US'
+    | 'verificationCodeLogin.language.ja';
+}> = [
+  { value: 'zh-CN', labelKey: 'verificationCodeLogin.language.zh-CN' },
+  { value: 'zh-TW', labelKey: 'verificationCodeLogin.language.zh-TW' },
+  { value: 'en-US', labelKey: 'verificationCodeLogin.language.en-US' },
+  { value: 'ja', labelKey: 'verificationCodeLogin.language.ja' },
+];
 
+// eslint-disable-next-line max-lines-per-function
 export default function VerificationCodeLoginPage() {
+  const { t } = useTranslation();
+  const { language, setLanguage } = useSelectedLanguage();
   const [scale, setScale] = useState(1);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -26,6 +46,7 @@ export default function VerificationCodeLoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [phoneError, setPhoneError] = useState('');
   const [agreementError, setAgreementError] = useState('');
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
 
   const isPhoneValid = PHONE_REGEX.test(phone);
   const isCodeValid = CODE_REGEX.test(code);
@@ -33,14 +54,21 @@ export default function VerificationCodeLoginPage() {
 
   const showNativeAlert = (message: string, onConfirm?: () => void) => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line no-alert
       window.alert(message);
       onConfirm?.();
-    } else {
-      Alert.alert('提示', message, [{ text: '确定', onPress: () => onConfirm?.() }]);
+    }
+    else {
+      Alert.alert(
+        t('verificationCodeLogin.alerts.title'),
+        message,
+        [{ text: t('verificationCodeLogin.alerts.ok'), onPress: () => onConfirm?.() }],
+      );
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect
     const update = () => setScale(window.innerWidth / DESIGN_W);
     update();
     window.addEventListener('resize', update);
@@ -57,11 +85,11 @@ export default function VerificationCodeLoginPage() {
 
   const handleSendCode = () => {
     if (!PHONE_REGEX.test(phone)) {
-      setPhoneError('请输入正确的11位手机号码');
+      setPhoneError(t('verificationCodeLogin.phoneInvalid'));
       return;
     }
     if (phone === QUICK_LOGIN_BYPASS_PHONE) {
-      showNativeAlert('该手机号已开通快捷登录，可直接点击确认登录');
+      showNativeAlert(t('verificationCodeLogin.alerts.bypassPhone'));
       return;
     }
     setPhoneError('');
@@ -75,18 +103,18 @@ export default function VerificationCodeLoginPage() {
       return;
     }
     if (!agreed) {
-      setAgreementError('登录前请先勾选同意《用户协议》与《隐私政策》，我们会保护您的个人信息安全 🔒');
+      setAgreementError(t('verificationCodeLogin.agreement.error'));
       return;
     }
     setAgreementError('');
     if (!PHONE_REGEX.test(phone)) {
-      setPhoneError('请输入正确的11位手机号码');
+      setPhoneError(t('verificationCodeLogin.phoneInvalid'));
       return;
     }
     setPhoneError('');
     const isBypassPhone = phone === QUICK_LOGIN_BYPASS_PHONE;
     if (!isBypassPhone && !CODE_REGEX.test(code)) {
-      showNativeAlert('验证码必须为6位数字');
+      showNativeAlert(t('verificationCodeLogin.alerts.codeInvalid'));
       return;
     }
 
@@ -97,12 +125,14 @@ export default function VerificationCodeLoginPage() {
         captcha: isBypassPhone ? (code || '000000') : code,
       });
       signIn({ token: loginResult.token, refreshToken: loginResult.refreshToken });
-      showNativeAlert('登录成功', () => {
+      showNativeAlert(t('verificationCodeLogin.alerts.loginSuccess'), () => {
         router.replace('/pages/chat');
       });
     }
     catch (error) {
-      const message = error instanceof Error ? error.message : '登录失败，请稍后重试';
+      const message = error instanceof Error
+        ? error.message
+        : t('verificationCodeLogin.alerts.loginFailed');
       showNativeAlert(message);
     }
     finally {
@@ -142,6 +172,93 @@ export default function VerificationCodeLoginPage() {
           />
         </div>
 
+        {languageMenuOpen
+          ? (
+              <div
+                role="presentation"
+                onClick={() => setLanguageMenuOpen(false)}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 20,
+                }}
+              />
+            )
+          : null}
+
+        <div style={{ position: 'absolute', top: 114, right: 52, zIndex: 30 }}>
+          <button
+            type="button"
+            aria-label={t('verificationCodeLogin.language.title')}
+            title={t('verificationCodeLogin.language.title')}
+            onClick={() => setLanguageMenuOpen(value => !value)}
+            style={{
+              width: 87,
+              height: 87,
+              borderRadius: 44,
+              border: '1px solid rgba(255,255,255,0.14)',
+              background: 'rgba(30,31,33,0.92)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            <Languages size={38} strokeWidth={2} />
+          </button>
+
+          {languageMenuOpen
+            ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 99,
+                    right: 0,
+                    width: 230,
+                    padding: 8,
+                    borderRadius: 8,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: '#1e1f21',
+                    boxShadow: '0 18px 40px rgba(0,0,0,0.42)',
+                  }}
+                >
+                  {LOGIN_LANGUAGE_OPTIONS.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setLanguageMenuOpen(false);
+                        setLanguage(option.value);
+                      }}
+                      style={{
+                        width: '100%',
+                        height: 56,
+                        border: 'none',
+                        borderRadius: 6,
+                        background: language === option.value ? 'rgba(151,255,0,0.12)' : 'transparent',
+                        color: language === option.value ? BRAND_GREEN_CSS_VAR : '#e7e7e7',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '0 16px',
+                        fontSize: 20,
+                        fontFamily: 'sans-serif',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <span>{t(option.labelKey)}</span>
+                      {language === option.value
+                        ? <Check size={22} strokeWidth={2.4} />
+                        : <span style={{ width: 22 }} />}
+                    </button>
+                  ))}
+                </div>
+              )
+            : null}
+        </div>
+
         <div
           style={{
             position: 'absolute',
@@ -165,7 +282,7 @@ export default function VerificationCodeLoginPage() {
               width: '100%',
             }}
           >
-            欢迎登录 探拾
+            {t('verificationCodeLogin.title')}
           </div>
 
           <div
@@ -178,7 +295,7 @@ export default function VerificationCodeLoginPage() {
             }}
           >
             <span style={{ color: '#666668', textAlign: 'center', width: '100%' }}>
-              未注册的手机号验证通过后将自动注册
+              {t('verificationCodeLogin.autoRegister')}
             </span>
           </div>
 
@@ -198,9 +315,10 @@ export default function VerificationCodeLoginPage() {
               value={phone}
               onChangeText={(text: string) => {
                 setPhone(text.replace(/\D/g, '').slice(0, 11));
-                if (phoneError) setPhoneError('');
+                if (phoneError)
+                  setPhoneError('');
               }}
-              placeholder="输入手机号码"
+              placeholder={t('verificationCodeLogin.phonePlaceholder')}
               placeholderTextColor="#666668"
               inputStyle={{
                 flex: 1,
@@ -220,7 +338,7 @@ export default function VerificationCodeLoginPage() {
                 paddingRight: 36,
                 flexShrink: 0,
               }}
-              leftNode={
+              leftNode={(
                 <>
                   <span
                     style={{
@@ -239,7 +357,7 @@ export default function VerificationCodeLoginPage() {
                     style={{ width: 1.1, height: 24, objectFit: 'cover', marginRight: 20, opacity: 0.6 }}
                   />
                 </>
-              }
+              )}
             />
             {phoneError
               ? (
@@ -253,7 +371,7 @@ export default function VerificationCodeLoginPage() {
           <AiInput
             value={code}
             onChangeText={(text: string) => setCode(text.replace(/\D/g, '').slice(0, 6))}
-            placeholder="输入验证码"
+            placeholder={t('verificationCodeLogin.codePlaceholder')}
             placeholderTextColor="#666668"
             inputStyle={{
               flex: 1,
@@ -275,7 +393,7 @@ export default function VerificationCodeLoginPage() {
               flexShrink: 0,
               gap: 16,
             }}
-            rightNode={
+            rightNode={(
               <button
                 type="button"
                 onClick={handleSendCode}
@@ -289,9 +407,11 @@ export default function VerificationCodeLoginPage() {
                   cursor: countdown > 0 ? 'default' : 'pointer',
                 }}
               >
-                {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                {countdown > 0
+                  ? t('verificationCodeLogin.countdown', { count: countdown })
+                  : t('verificationCodeLogin.getCode')}
               </button>
-            }
+            )}
           />
 
           <div style={{ height: 60 }} />
@@ -299,19 +419,21 @@ export default function VerificationCodeLoginPage() {
           <AiLoginBtn
             onPress={handleLogin}
             disabled={!canConfirmLogin}
-            label={submitting ? '登录中...' : '确认登录'}
+            label={submitting
+              ? t('verificationCodeLogin.loggingIn')
+              : t('verificationCodeLogin.confirmLogin')}
             customWidth=""
             customHeight=""
             radius=""
             className={canConfirmLogin ? '' : 'opacity-65'}
-              style={{
-                width: 627,
-                height: 85,
-                backgroundColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#528700',
-                borderColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#4f4736',
-                borderWidth: 1.1,
-                borderRadius: 44,
-                flexShrink: 0,
+            style={{
+              width: 627,
+              height: 85,
+              backgroundColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#528700',
+              borderColor: canConfirmLogin ? BRAND_GREEN_CSS_VAR : '#4f4736',
+              borderWidth: 1.1,
+              borderRadius: 44,
+              flexShrink: 0,
             }}
             textClassName="text-[30px] font-bold font-sans text-[#141414]"
           />
@@ -329,7 +451,10 @@ export default function VerificationCodeLoginPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 17 }}>
             <button
               type="button"
-              onClick={() => { setAgreed(value => !value); setAgreementError(''); }}
+              onClick={() => {
+                setAgreed(value => !value);
+                setAgreementError('');
+              }}
               style={{ border: 'none', background: 'transparent', padding: 0, margin: 0, cursor: 'pointer' }}
             >
               <div
@@ -360,15 +485,26 @@ export default function VerificationCodeLoginPage() {
                 />
               </div>
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                maxWidth: 570,
+                rowGap: 4,
+              }}
+            >
               <span style={{ color: '#646466', fontSize: 22, fontFamily: 'Microsoft YaHei, sans-serif' }}>
-                已阅读并同意
+                {t('verificationCodeLogin.agreement.prefix')}
               </span>
               <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
-                《用户协议》
+                {t('verificationCodeLogin.agreement.userAgreement')}
+              </span>
+              <span style={{ color: '#646466', fontSize: 22, fontFamily: 'Microsoft YaHei, sans-serif' }}>
+                {t('verificationCodeLogin.agreement.connector')}
               </span>
               <span style={{ color: '#ffffff', fontSize: 22, fontFamily: 'sans-serif' }}>
-                《隐私政策》
+                {t('verificationCodeLogin.agreement.privacyPolicy')}
               </span>
             </div>
           </div>

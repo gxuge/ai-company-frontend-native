@@ -1,0 +1,33 @@
+{
+  "agreement": {
+    "connector": "與",
+    "error": "登入前請先勾選同意《使用者協議》與《隱私權政策》，我們會保護您的個人資料安全",
+    "prefix": "已閱讀並同意",
+    "privacyPolicy": "《隱私權政策》",
+    "userAgreement": "《使用者協議》"
+  },
+  "alerts": {
+    "bypassPhone": "此手機號碼已開通快速登入，可直接點擊確認登入",
+    "codeInvalid": "驗證碼必須為6位數字",
+    "loginFailed": "登入失敗，請稍後再試",
+    "loginSuccess": "登入成功",
+    "ok": "確定",
+    "title": "提示"
+  },
+  "autoRegister": "尚未註冊的手機號碼驗證通過後將自動註冊",
+  "codePlaceholder": "輸入驗證碼",
+  "confirmLogin": "確認登入",
+  "countdown": "{{count}}s",
+  "getCode": "取得驗證碼",
+  "language": {
+    "en-US": "English",
+    "ja": "日本語",
+    "title": "切換語言",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文"
+  },
+  "loggingIn": "登入中...",
+  "phoneInvalid": "請輸入正確的11位手機號碼",
+  "phonePlaceholder": "輸入手機號碼",
+  "title": "歡迎登入 探拾"
+}

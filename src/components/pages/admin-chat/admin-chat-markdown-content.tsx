@@ -29,6 +29,13 @@ const markdownStyles: StyleSheet.NamedStyles<any> = {
   em: {
     fontStyle: 'italic',
   },
+  blockquote: {
+    backgroundColor: 'transparent',
+    borderColor: 'rgba(245,158,11,0.6)',
+    borderLeftWidth: 4,
+    marginLeft: 0,
+    paddingHorizontal: 12,
+  },
   bullet_list: {
     marginTop: 0,
     marginBottom: 18,

@@ -16,6 +16,29 @@ type SelectRoleItem = {
   avatarParam: string;
 };
 
+function readSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function parseRoleId(value?: string) {
+  const roleId = Number(value);
+  return Number.isFinite(roleId) && roleId > 0 ? roleId : null;
+}
+
+function parseRoleIdList(value?: string) {
+  if (!value) {
+    return [];
+  }
+  return Array.from(
+    new Set(
+      value
+        .split(',')
+        .map(item => parseRoleId(item.trim()))
+        .filter((roleId): roleId is number => roleId != null),
+    ),
+  );
+}
+
 function normalizeRoleImageUrl(url?: string | null) {
   if (typeof url !== 'string') {
     return '';
@@ -47,15 +70,36 @@ function mapRoleToItem(role: TsRoleDetail): SelectRoleItem {
 
 // eslint-disable-next-line max-lines-per-function
 export default function App() {
-  const { from, storyId } = useLocalSearchParams<{ from?: string; storyId?: string }>();
+  const {
+    from,
+    mode,
+    candidateRoleIds,
+    selectedRoleId,
+    chapterIndex,
+  } = useLocalSearchParams<{
+    from?: string | string[];
+    mode?: string | string[];
+    candidateRoleIds?: string | string[];
+    selectedRoleId?: string | string[];
+    chapterIndex?: string | string[];
+  }>();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [items, setItems] = useState<SelectRoleItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadError, setLoadError] = useState('');
 
-  const fromPage = Array.isArray(from) ? from[0] : from;
-  const currentStoryId = Array.isArray(storyId) ? storyId[0] : storyId;
+  const fromPage = readSearchParam(from);
+  const selectionMode = readSearchParam(mode);
+  const candidateRoleIdText = readSearchParam(candidateRoleIds);
+  const currentSelectedRoleId = parseRoleId(readSearchParam(selectedRoleId));
+  const currentChapterIndex = Number(readSearchParam(chapterIndex));
+  const isChapterOpeningMode = selectionMode === 'chapter-opening';
+  const candidateRoleIdsKey = candidateRoleIdText || '';
+  const candidateRoleIdSet = useMemo(
+    () => new Set(parseRoleIdList(candidateRoleIdsKey)),
+    [candidateRoleIdsKey],
+  );
 
   useEffect(() => {
     let alive = true;
@@ -75,12 +119,21 @@ export default function App() {
         const mapped = (pageData.records || [])
           .filter((role): role is TsRoleDetail => Boolean(role?.id))
           .map(mapRoleToItem);
-        setItems(mapped);
+        const availableRoles = isChapterOpeningMode
+          ? mapped.filter(role => candidateRoleIdSet.has(role.id))
+          : mapped;
+        setItems(availableRoles);
         setSelectedId((prev) => {
-          if (prev && mapped.some(role => role.id === prev)) {
+          if (isChapterOpeningMode) {
+            return currentSelectedRoleId
+              && availableRoles.some(role => role.id === currentSelectedRoleId)
+              ? currentSelectedRoleId
+              : null;
+          }
+          if (prev && availableRoles.some(role => role.id === prev)) {
             return prev;
           }
-          return mapped[0]?.id ?? null;
+          return availableRoles[0]?.id ?? null;
         });
       }
       catch (error) {
@@ -103,7 +156,7 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [candidateRoleIdSet, currentSelectedRoleId, isChapterOpeningMode]);
 
   const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -120,6 +173,18 @@ export default function App() {
 
   const handleDone = () => {
     if (!selectedRole) {
+      return;
+    }
+    if (isChapterOpeningMode) {
+      DeviceEventEmitter.emit('storyChapterOpeningRoleSelected', {
+        chapterIndex: Number.isInteger(currentChapterIndex) && currentChapterIndex >= 0
+          ? currentChapterIndex
+          : null,
+        id: selectedRole.id,
+        name: selectedRole.name,
+        avatar: selectedRole.avatarParam,
+      });
+      router.back();
       return;
     }
     if (fromPage === '\u521B\u5EFA\u6545\u4E8B' || fromPage === 'create-story') {
@@ -230,7 +295,7 @@ export default function App() {
                 <div className="flex flex-col items-center justify-center text-[#707070] py-[60px] gap-4">
                   <Inbox className="w-16 h-16 opacity-50" strokeWidth={1} />
                   <div className="text-[20px] sm:text-[24px]">
-                    {isLoading ? '加载中...' : (loadError || '暂无数据')}
+                    {isLoading ? '加载中...' : (loadError || (isChapterOpeningMode ? '暂无可选角色' : '暂无数据'))}
                   </div>
                 </div>
               )}
@@ -264,7 +329,7 @@ export default function App() {
           }
         `}
       </style>
-      {fromPage === 'create-story' && (
+      {fromPage === 'create-story' && !isChapterOpeningMode && (
         <button
           type="button"
           className="animate-breathing fixed bottom-[120px] right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-[60]"
@@ -275,7 +340,7 @@ export default function App() {
           <img src={imgFabAddRole} alt="" className="w-[36px] h-[36px] object-contain" />
         </button>
       )}
-      {fromPage !== 'create-story' && (
+      {fromPage !== 'create-story' && !isChapterOpeningMode && (
         <button
           type="button"
           className="animate-breathing fixed bottom-[100px] right-6 bg-black border border-black rounded-full w-16 h-16 flex items-center justify-center z-[60]"

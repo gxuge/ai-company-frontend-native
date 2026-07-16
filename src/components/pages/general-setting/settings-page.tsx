@@ -2,6 +2,9 @@ import { AiHeader } from '@/components/ai-company/ai-header';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { signOut } from '@/features/auth/use-auth-store';
+import { useSelectedLanguage } from '@/lib/i18n';
+
+const imgLanguageCyan = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/language_cyan.svg"));
 const imgFeedbackBlue = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/feedback_blue.svg"));
 const imgAboutPurple = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/about_purple.svg"));
 const imgAccountGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/general-setting/account_green.svg"));
@@ -79,9 +82,18 @@ function Divider() {
   return <div className="h-px bg-white/10 mx-4" />;
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  'zh-CN': '简体中文',
+  'en-US': 'English',
+  'zh-TW': '繁體中文',
+  'ja': '日本語',
+  'ar': 'العربية',
+};
+
 export function SettingsPage() {
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { language } = useSelectedLanguage();
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
@@ -141,8 +153,20 @@ export function SettingsPage() {
 
         {/* Sections */}
         <div className="px-5 pt-3 pb-6 flex flex-col gap-5">
-          {/* Section 1: Feedback & About */}
+          {/* Section 1: Language, Feedback & About */}
           <SectionCard>
+            <MenuItem
+              icon={
+                <GlowIcon
+                  iconSource={imgLanguageCyan}
+                  bgColor="rgba(6,182,212,0.1)"
+                />
+              }
+              label="语言设置"
+              rightText={LANGUAGE_NAMES[language] || '简体中文'}
+              onClick={() => router.push('/pages/language-setting')}
+            />
+            <Divider />
             <MenuItem
               icon={
                 <GlowIcon

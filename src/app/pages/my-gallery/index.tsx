@@ -451,7 +451,7 @@ export default function MyGallery() {
         }, pulseStyle]}
       >
         <Pressable
-          onPress={() => router.push('/pages/create-character')}
+          onPress={() => router.push(isRoleGallery ? '/pages/create-role' : '/pages/create-character')}
           style={({ pressed }) => ({
             width: 56,
             height: 56,

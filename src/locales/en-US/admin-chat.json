@@ -1,0 +1,17 @@
+{
+  "confirm": {
+    "accept": "Looks good, continue",
+    "regenerate": "Regenerate",
+    "roleQuestion": "Are you satisfied with this role?"
+  },
+  "errors": {
+    "createSession": "Failed to create the conversation. Please try again.",
+    "deleteSession": "Failed to delete the conversation. Please try again.",
+    "loadSession": "Failed to load the conversation. Please try again.",
+    "renameSession": "Failed to rename the conversation. Please try again."
+  },
+  "greeting": "Hi! The imagination workshop is open! ✨ Would you like to create a lovable character or build a story full of surprises? Share that little spark in your mind, and let's bring it to life together!",
+  "inputPlaceholder": "Type a message...",
+  "newConversation": "New conversation",
+  "send": "Send"
+}

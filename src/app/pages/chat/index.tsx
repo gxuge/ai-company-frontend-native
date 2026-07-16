@@ -1090,6 +1090,7 @@ export default function Chat() {
   ]);
 
   const handleSubmit = React.useCallback(() => {
+    setIsFeatureExpanded(false);
     void sendMessage(inputValue);
   }, [inputValue, sendMessage]);
 

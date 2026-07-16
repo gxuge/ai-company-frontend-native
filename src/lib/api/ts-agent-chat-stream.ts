@@ -15,10 +15,15 @@ export type AgentChatStep = {
   data?: Record<string, unknown>;
 };
 
+export type AgentChatOption = {
+  label: string;
+  optionValue: string;
+};
+
 export type AgentChatOptionPrompt = {
   toolName?: string;
   question: string;
-  options: string[];
+  options: AgentChatOption[];
 };
 
 export type AgentChatStreamState = {
@@ -76,13 +81,39 @@ const readString = (value: unknown): string | undefined => {
   return text ? text : undefined;
 };
 
-function readStringList(value: unknown): string[] {
+function readOptionList(value: unknown): AgentChatOption[] {
   if (!Array.isArray(value)) {
     return [];
   }
   return value
-    .map(readString)
-    .filter((item): item is string => Boolean(item));
+    .map((item) => {
+      const text = readString(item);
+      if (text) {
+        return {
+          label: text,
+          optionValue: text,
+        };
+      }
+      const record = readRecord(item);
+      if (!record) {
+        return null;
+      }
+      const label = readString(record.label)
+        || readString(record.text)
+        || readString(record.name);
+      const optionValue = readString(record.optionValue)
+        || readString(record.value)
+        || readString(record.action)
+        || label;
+      if (!label || !optionValue) {
+        return null;
+      }
+      return {
+        label,
+        optionValue,
+      };
+    })
+    .filter((item): item is AgentChatOption => item !== null);
 }
 
 const readIdentifier = (value: unknown): string | number | null => {
@@ -207,11 +238,14 @@ const getPayloadText = (payload: AgentChatSsePayload) =>
   || readNestedString(payload.data, ['result'])
   || '';
 
-function getOptionPrompt(payload: AgentChatSsePayload): AgentChatOptionPrompt | null {
-  if (readString(payload.contentType)?.toLowerCase() !== 'options') {
+function getOptionPrompt(
+  payload: AgentChatSsePayload,
+  requireOptionsContentType = true,
+): AgentChatOptionPrompt | null {
+  if (requireOptionsContentType && readString(payload.contentType)?.toLowerCase() !== 'options') {
     return null;
   }
-  const options = readStringList(payload.options);
+  const options = readOptionList(payload.options);
   if (options.length === 0) {
     return null;
   }
@@ -460,6 +494,31 @@ export const reduceAgentChatStreamState = (
   }
 
   switch (normalizedEvent) {
+    case 'options.end':
+    case 'confirm.end':
+      return {
+        ...previous,
+        optionPrompt: null,
+        error: null,
+      };
+
+    case 'options.start':
+    case 'confirm.start': {
+      const optionPrompt = getOptionPrompt(payload, false);
+      if (!optionPrompt) {
+        return previous;
+      }
+      return {
+        ...previous,
+        active: true,
+        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+        finalStatus: 'running',
+        agentName: previous.agentName || agentName,
+        optionPrompt,
+        error: null,
+      };
+    }
+
     case 'llm.start': {
       const nextStep = createStep('llm', payload);
       nextStep.title = buildStepSummary('llm', payload);

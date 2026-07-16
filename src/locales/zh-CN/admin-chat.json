@@ -1,0 +1,17 @@
+{
+  "confirm": {
+    "accept": "满意，继续生成",
+    "regenerate": "不满意，重新生成",
+    "roleQuestion": "你对这版角色满意吗？"
+  },
+  "errors": {
+    "createSession": "创建会话失败，请稍后重试。",
+    "deleteSession": "删除失败，请稍后重试。",
+    "loadSession": "加载会话失败，请稍后重试。",
+    "renameSession": "重命名失败，请稍后重试。"
+  },
+  "greeting": "嗨～灵感工坊开张啦！✨ 你想先创造一个让人心动的角色，还是搭建一段超有戏的故事？把脑海里的小火花告诉我，我们一起让它活起来吧！",
+  "inputPlaceholder": "输入消息...",
+  "newConversation": "新建会话",
+  "send": "发送"
+}

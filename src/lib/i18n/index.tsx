@@ -3,15 +3,16 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { I18nManager } from 'react-native';
 
-import { resources } from './resources';
+import { DEFAULT_LANGUAGE, resources, SUPPORTED_LANGUAGES } from './resources';
 import { getLanguage } from './utils';
 
 export * from './utils';
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: getLanguage() || 'en',
-  fallbackLng: 'en',
+  lng: getLanguage(),
+  fallbackLng: DEFAULT_LANGUAGE,
+  supportedLngs: SUPPORTED_LANGUAGES,
   compatibilityJSON: 'v4', // Updated to v4 for i18next compatibility
 
   // allows integrating dynamic values into translations.

@@ -123,7 +123,7 @@ export default antfu(
 
   // i18n JSON validation
   {
-    files: ['src/translations/*.json'],
+    files: ['src/locales/*/*.json'],
     plugins: { 'i18n-json': i18nJsonPlugin },
     processor: {
       meta: { name: '.json' },
@@ -142,10 +142,7 @@ export default antfu(
       ],
       'i18n-json/valid-json': 2,
       'i18n-json/sorted-keys': [2, { order: 'asc', indentSpaces: 2 }],
-      'i18n-json/identical-keys': [
-        2,
-        { filePath: path.resolve(__dirname, './src/translations/en.json') },
-      ],
+      'i18n-json/identical-keys': 'off',
       // Disable conflicting rules for i18n JSON files
       'style/semi': 'off',
       'style/comma-dangle': 'off',

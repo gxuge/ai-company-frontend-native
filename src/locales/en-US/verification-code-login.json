@@ -1,0 +1,33 @@
+{
+  "agreement": {
+    "connector": " and ",
+    "error": "Please agree to the User Agreement and Privacy Policy before signing in. We will protect your personal information.",
+    "prefix": "I have read and agree to",
+    "privacyPolicy": "Privacy Policy",
+    "userAgreement": "User Agreement"
+  },
+  "alerts": {
+    "bypassPhone": "Quick sign-in is enabled for this phone number. You can sign in directly.",
+    "codeInvalid": "The verification code must contain 6 digits.",
+    "loginFailed": "Sign-in failed. Please try again later.",
+    "loginSuccess": "Signed in successfully.",
+    "ok": "OK",
+    "title": "Notice"
+  },
+  "autoRegister": "Unregistered phone numbers will be registered automatically after verification.",
+  "codePlaceholder": "Enter verification code",
+  "confirmLogin": "Sign in",
+  "countdown": "{{count}}s",
+  "getCode": "Get code",
+  "language": {
+    "en-US": "English",
+    "ja": "日本語",
+    "title": "Change language",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文"
+  },
+  "loggingIn": "Signing in...",
+  "phoneInvalid": "Enter a valid 11-digit phone number.",
+  "phonePlaceholder": "Enter phone number",
+  "title": "Welcome to Tanshi"
+}

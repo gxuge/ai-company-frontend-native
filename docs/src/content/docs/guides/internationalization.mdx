@@ -12,7 +12,7 @@ The starter comes with a basic internationalization setup. It uses [expo-localiz
 
 ## Adding a new language
 
-Mainly the demo app supports two languages: English and Arabic (RTL). You can add more languages by adding the translation files in the `src/translations` folder and adding the language code to the `src/lib/i18n/resources.ts` file.
+The app uses modular locale folders under `src/locales`, with one folder per language and one JSON file per feature. Add the language resources there, then register the language code in `src/lib/i18n/resources.ts`.
 
 <CodeBlock file="src/lib/i18n/resources.ts" />
 

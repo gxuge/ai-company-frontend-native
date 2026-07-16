@@ -117,7 +117,7 @@ export type TsRoleOneClickSettingGeneratePayload = {
   backgroundStory?: string;
   styleHint?: string;
   keywords?: string;
-  templateMode?: 'core' | 'background_optimize' | 'intro_optimize';
+  templateMode?: 'core' | 'background_optimize' | 'greeting_optimize';
   greeting?: string;
 };
 

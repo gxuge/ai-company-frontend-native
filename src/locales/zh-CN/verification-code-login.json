@@ -1,0 +1,33 @@
+{
+  "agreement": {
+    "connector": "与",
+    "error": "登录前请先勾选同意《用户协议》与《隐私政策》，我们会保护您的个人信息安全",
+    "prefix": "已阅读并同意",
+    "privacyPolicy": "《隐私政策》",
+    "userAgreement": "《用户协议》"
+  },
+  "alerts": {
+    "bypassPhone": "该手机号已开通快捷登录，可直接点击确认登录",
+    "codeInvalid": "验证码必须为6位数字",
+    "loginFailed": "登录失败，请稍后重试",
+    "loginSuccess": "登录成功",
+    "ok": "确定",
+    "title": "提示"
+  },
+  "autoRegister": "未注册的手机号验证通过后将自动注册",
+  "codePlaceholder": "输入验证码",
+  "confirmLogin": "确认登录",
+  "countdown": "{{count}}s",
+  "getCode": "获取验证码",
+  "language": {
+    "en-US": "English",
+    "ja": "日本語",
+    "title": "切换语言",
+    "zh-CN": "简体中文",
+    "zh-TW": "繁體中文"
+  },
+  "loggingIn": "登录中...",
+  "phoneInvalid": "请输入正确的11位手机号码",
+  "phonePlaceholder": "输入手机号码",
+  "title": "欢迎登录 探拾"
+}
