@@ -701,6 +701,7 @@ export default function App() {
   const [voiceHovered, setVoiceHovered] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const submitPressStartedRef = useRef(false);
   const greetingText = t("adminChat.greeting");
 
   const showExpandedLayout = isInputFocused || inputValue.trim().length > 0;
@@ -1197,12 +1198,19 @@ export default function App() {
           opacity: showSendButton && sending ? 0.45 : 1,
         }}
         disabled={showSendButton && sending}
-        onPressIn={(event) => {
+        onPressIn={() => {
+          submitPressStartedRef.current = showSendButton;
           if (showSendButton) {
-            event.preventDefault();
+            handleSend();
           }
         }}
-        onPress={showSendButton ? handleSend : toggleFeatureExpanded}
+        onPress={() => {
+          if (submitPressStartedRef.current) {
+            submitPressStartedRef.current = false;
+            return;
+          }
+          toggleFeatureExpanded();
+        }}
       >
         {showSendButton ? (
           <Image
