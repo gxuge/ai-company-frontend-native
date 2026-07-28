@@ -61,6 +61,7 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
   const [inputType, setInputType] = React.useState<'keyboard' | 'voice'>('keyboard');
   const [isFocused, setIsFocused] = React.useState(false);
   const [nativeInputHeight, setNativeInputHeight] = React.useState(40);
+  const [webInputHeight, setWebInputHeight] = React.useState(40);
   const inputRef = React.useRef<any>(null);
   const hasInputContent = Boolean(value?.trim());
   const showExpandedLayout = inputType === 'keyboard' && (isFocused || hasInputContent);
@@ -124,6 +125,22 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
     element.style.overflowY = element.scrollHeight > 160 ? 'auto' : 'hidden';
   }, [inputType, value]);
 
+  React.useEffect(() => {
+    if (Platform.OS !== 'web' || inputType !== 'keyboard' || !inputRef.current || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const element = inputRef.current as HTMLTextAreaElement;
+    const observer = new ResizeObserver(() => {
+      const nextHeight = Math.min(Math.max(element.offsetHeight, 40), 160);
+      setWebInputHeight(previousHeight => previousHeight === nextHeight ? previousHeight : nextHeight);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [inputType]);
+
+  const webToolbarTranslateY = showExpandedLayout ? webInputHeight + 10 : 0;
+  const webContainerHeight = showExpandedLayout ? webInputHeight + 66 : 56;
+
   if (Platform.OS === 'web') {
     if (inputType === 'voice') {
       return (
@@ -180,20 +197,21 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
       <div
         style={{
           ...webStyles.container,
-          display: 'grid',
-          gridTemplateColumns: '36px minmax(0, 1fr) auto',
-          gridTemplateRows: showExpandedLayout ? 'minmax(40px, auto) 36px' : '40px',
-          columnGap: showExpandedLayout ? 0 : 12,
-          rowGap: showExpandedLayout ? 10 : 0,
-          padding: showExpandedLayout ? '10px 14px' : '8px 20px',
-          transition: 'grid-template-rows 220ms cubic-bezier(0.22, 1, 0.36, 1), row-gap 220ms cubic-bezier(0.22, 1, 0.36, 1), padding 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+          display: 'block',
+          height: webContainerHeight,
+          padding: 0,
+          overflow: 'hidden',
+          transition: 'height 220ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         <div
           style={{
             ...webStyles.leftSection,
-            gridColumn: 1,
-            gridRow: showExpandedLayout ? 2 : 1,
+            position: 'absolute',
+            left: 20,
+            top: 10,
+            transform: `translateY(${webToolbarTranslateY}px)`,
+            transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           <button type="button" style={webStyles.micButton} onClick={handleLeftIconPress}>
@@ -221,22 +239,27 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
           rows={1}
           style={{
             ...webStyles.holdInput,
-            gridColumn: showExpandedLayout ? '1 / -1' : 2,
-            gridRow: 1,
-            width: '100%',
+            position: 'absolute',
+            left: showExpandedLayout ? 20 : 68,
+            right: showExpandedLayout ? 20 : 152,
+            top: showExpandedLayout ? 10 : 8,
+            width: 'auto',
+            height: webInputHeight,
             minHeight: 40,
             maxHeight: 160,
-            alignSelf: 'stretch',
             boxSizing: 'border-box',
+            transition: 'left 220ms cubic-bezier(0.22, 1, 0.36, 1), right 220ms cubic-bezier(0.22, 1, 0.36, 1), top 220ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         />
 
         <div
           style={{
             ...webStyles.rightSection,
-            gridColumn: showExpandedLayout ? '2 / 4' : 3,
-            gridRow: showExpandedLayout ? 2 : 1,
-            justifySelf: 'end',
+            position: 'absolute',
+            right: 20,
+            top: 12,
+            transform: `translateY(${webToolbarTranslateY}px)`,
+            transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
           }}
         >
           <button
@@ -257,17 +280,18 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
           >
             ()
           </button>
-          <button type="button" style={webStyles.iconButton} onClick={onLightbulbPress}>
+          <button
+            type="button"
+            onMouseDown={event => event.preventDefault()}
+            style={webStyles.iconButton}
+            onClick={onLightbulbPress}
+          >
             <img src={toAssetUri(imgLightbulbIcon)} style={{ width: 21.2, height: 25.5 }} />
           </button>
           <button
             type="button"
             disabled={showSendButton && submitting}
-            onMouseDown={(event) => {
-              if (showSendButton) {
-                event.preventDefault();
-              }
-            }}
+            onMouseDown={event => event.preventDefault()}
             onClick={showSendButton ? handleSubmit : onPlusPress}
             style={{
               ...webStyles.iconButton,

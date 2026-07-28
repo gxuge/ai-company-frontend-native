@@ -631,7 +631,7 @@ function ChapterCard({
           />
         </div>
 
-        <div className="relative flex items-center justify-between pr-[3px] pl-[12px]">
+        {/* <div className="relative flex items-center justify-between pr-[3px] pl-[12px]">
           <div className="absolute top-1/2 left-0 h-[16px] w-[2px] -translate-y-1/2 rounded-full bg-[rgba(var(--color-brand-green-rgb), 0.3)]" />
           <span
             className="text-[#6b7280]"
@@ -656,7 +656,7 @@ function ChapterCard({
             </span>
             <ChevronRight color="#6B7280" />
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
@@ -1036,8 +1036,14 @@ export default function App() {
     (result?.siteSetting || '').trim();
   const extractPlotOutlineValue = (result?: TsStoryFullGenerateResult) =>
     (result?.plotOutline || '').trim();
-  const extractOutlineChapters = (result?: TsStoryFullGenerateResult) =>
-    [];
+  const extractOutlineChapters = (
+    result?: TsStoryFullGenerateResult | { chapters?: TsStoryOneClickOutlineChapter[] },
+  ) => {
+    if (!result || !('chapters' in result)) {
+      return [];
+    }
+    return Array.isArray(result.chapters) ? result.chapters : [];
+  };
 
   const buildOnlyCurrentExtraRequirements = (target: 'setting' | 'scene' | 'outline') => {
     const targetLabelMap = {
@@ -1123,9 +1129,14 @@ export default function App() {
     }
     setGeneratingOutline(true);
     try {
-      const result = await tsStoryApi.generateStoryFull({
+      const result = await tsStoryApi.generateStoryOutline({
         storyId: storyId || undefined,
+        title: storyTitle.trim() || undefined,
         storyMode: activeTab,
+        storySetting: storySettingText.trim() || undefined,
+        sceneSetting: sceneSettingText.trim() || undefined,
+        storyIntro: storyIntro.trim() || undefined,
+        plotOutline: outlineText.trim() || undefined,
         extraRequirements: buildOnlyCurrentExtraRequirements('outline'),
       });
       const outlineChapters = extractOutlineChapters(result);

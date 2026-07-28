@@ -1,6 +1,7 @@
 import type { FC } from 'react';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
 import { Text, View } from 'react-native';
+import { isAgentChatConfirmationToolStep } from '@/lib/api';
 import AdminChatMarkdownContent from './admin-chat-markdown-content';
 
 export type AdminChatThinkingPanelProps = {
@@ -94,30 +95,21 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
             </Text>
           )
         : null}
-
-      {step.error
-        ? (
-            <Text
-              selectable
-              style={{
-                marginTop: 12,
-                color: '#fecaca',
-                fontSize: 13,
-                lineHeight: 20,
-              }}
-            >
-              {step.error}
-            </Text>
-          )
-        : null}
     </View>
   );
 }
 
 const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallbackContent }) => {
-  const timelineSteps = state.steps.filter(step => step.kind === 'llm' || step.kind === 'tool');
+  const timelineSteps = state.steps.filter(
+    step => step.kind === 'llm'
+      || (step.kind === 'tool' && !isAgentChatConfirmationToolStep(step, state)),
+  );
   const hasToolStep = timelineSteps.some(step => step.kind === 'tool');
   const hasLlmText = timelineSteps.some(step => step.kind === 'llm' && Boolean(step.text.trim()));
+  const isToolError = Boolean(
+    state.error
+    && timelineSteps.some(step => step.kind === 'tool' && step.error === state.error),
+  );
 
   if (!hasToolStep && !state.error) {
     return null;
@@ -147,7 +139,7 @@ const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallba
           )
         : null}
 
-      {state.error
+      {state.error && !isToolError
         ? (
             <View
               style={{

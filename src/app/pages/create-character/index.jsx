@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { AiHeader } from '@/components/ai-company/ai-header';
-import { tsRoleApi, tsRoleImageApi, userApi } from '@/lib/api';
 import { brandGreenRgba } from '@/components/ui/brand';
+import { useCharacterGenerationStore } from '@/features/character-generation/use-character-generation-store';
+import { tsRoleApi, userApi } from '@/lib/api';
 
 const asset = m => m?.default ?? m?.uri ?? m;
 const imgGeminiGeneratedImageQ33L2Sq33L2Sq33L1 = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
@@ -35,8 +36,6 @@ const STYLE_OPTIONS = [
   { image: imgImage, label: '蒸汽朋克', value: '蒸汽朋克', suitableRoles: '机械师、侦探、复古幻想角色', description: '齿轮、铜管、皮革、护目镜、维多利亚幻想感。' },
   { image: imgImage, label: '梦幻超现实', value: '梦幻超现实', suitableRoles: '梦境、精灵、神秘陪伴角色', description: '偏幻想、象征、梦境画面；超现实主义也是常见 AI 艺术提示风格之一。' },
 ];
-
-const PROFILE_NAME_MAX_LENGTH = 24;
 
 function showMessage(message) {
   if (!message)
@@ -371,16 +370,22 @@ function StyleSelector({ selectedStyle, onSelectStyle }) {
 }
 
 function Container() {
-  const [promptText, setPromptText] = useState('');
-  const [selectedStyle, setSelectedStyle] = useState(STYLE_OPTIONS[0]?.value || '');
-  const [generatedImageUrl, setGeneratedImageUrl] = useState('');
-  const [referenceImageUrl, setReferenceImageUrl] = useState('');
+  const draft = useCharacterGenerationStore.use.draft();
+  const setDraft = useCharacterGenerationStore.use.setDraft();
+  const [promptText, setPromptText] = useState(() => draft?.promptText || '');
+  const [selectedStyle, setSelectedStyle] = useState(
+    () => draft?.styleName || STYLE_OPTIONS[0]?.value || '',
+  );
+  const [referenceImageUrl, setReferenceImageUrl] = useState(() => draft?.referenceImageUrl || '');
   const [referenceImageFile, setReferenceImageFile] = useState(null);
-  const [referenceImageServerUrl, setReferenceImageServerUrl] = useState('');
+  const [referenceImageServerUrl, setReferenceImageServerUrl] = useState(
+    () => draft?.referenceImageUrl || '',
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [previewSrc, setPreviewSrc] = useState('');
   const [emptyAlertVisible, setEmptyAlertVisible] = useState(false);
+  const [createValidationAlertVisible, setCreateValidationAlertVisible] = useState(false);
   const [confirmOptimizeVisible, setConfirmOptimizeVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const fileInputRef = useRef(null);
@@ -435,7 +440,7 @@ function Container() {
   const handleCreate = async () => {
     const promptTextTrimmed = promptText.trim();
     if (!referenceImageUrl && !referenceImageServerUrl && promptTextTrimmed.length < 15) {
-      showMessage('请上传参考图或输入至少 15 个字符');
+      setCreateValidationAlertVisible(true);
       return;
     }
 
@@ -451,40 +456,12 @@ function Container() {
         uploadedReferenceImageUrl = serverUrl;
       }
 
-      const generated = await tsRoleImageApi.generateImageByPrompt({
+      setDraft({
         promptText: promptTextTrimmed,
-        styleName: selectedStyle || undefined,
-        referenceImageUrl: uploadedReferenceImageUrl,
+        styleName: selectedStyle || '',
+        referenceImageUrl: uploadedReferenceImageUrl || undefined,
       });
-
-      const imageUrl = generated?.imageUrl?.trim()
-        || generated?.imageUrls?.find(url => typeof url === 'string' && url.trim())?.trim()
-        || generated?.originalImageUrls?.find(url => typeof url === 'string' && url.trim())?.trim();
-      if (!imageUrl) {
-        throw new Error('创建失败：未返回图片地址');
-      }
-      setGeneratedImageUrl(imageUrl);
-
-      const extJson = JSON.stringify({
-        snapshotKey: generated.snapshotKey,
-        promptUsed: generated.promptUsed || promptTextTrimmed,
-        styleUsed: generated.styleUsed || selectedStyle || undefined,
-        referenceImageUrl: generated.referenceImageUrl || uploadedReferenceImageUrl || undefined,
-        imageUrls: generated.imageUrls || undefined,
-        originalImageUrls: generated.originalImageUrls || undefined,
-      });
-
-      await tsRoleImageApi.createRoleImageProfile({
-        profileName: (promptTextTrimmed || 'new-profile').slice(0, PROFILE_NAME_MAX_LENGTH),
-        promptText: promptTextTrimmed || generated.promptUsed || '',
-        styleName: selectedStyle || undefined,
-        selectedImageUrl: imageUrl,
-        sourceType: 'ai_generate',
-        isPublic: 1,
-        status: 1,
-        extJson,
-      });
-      showMessage('创建形象成功');
+      router.push('/pages/generating-select');
     }
     catch (error) {
       showMessage(extractErrorMessage(error, '创建形象失败，请重试'));
@@ -507,7 +484,6 @@ function Container() {
         onDeleteRefImage={() => setDeleteConfirmVisible(true)}
         onGenerate={handleGenerate}
         generating={isGenerating}
-        backgroundImage={generatedImageUrl}
       />
       <div className="my-4">
         <StyleSelector
@@ -540,6 +516,30 @@ function Container() {
 
       {/* 图片预览弹层 */}
       <ImagePreviewModal src={previewSrc} onClose={() => setPreviewSrc('')} />
+
+      {/* 创建形象输入校验弹窗 */}
+      {createValidationAlertVisible && (
+        <div
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
+          onClick={() => setCreateValidationAlertVisible(false)}
+        >
+          <div
+            className="relative flex w-full max-w-[320px] flex-col gap-[20px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)]"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">提示</h3>
+            <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
+              请上传参考图或输入至少 15 个字符。
+            </p>
+            <button
+              onClick={() => setCreateValidationAlertVisible(false)}
+              className="mt-4 w-full rounded-full border border-brand-green bg-transparent py-3 text-center text-base font-bold text-brand-green active:bg-white/5"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 空内容提示弹窗 */}
       {emptyAlertVisible && (

@@ -179,3 +179,100 @@
 ### 风险与回退
 - 用户图片素材当前没有稳定的“角色/故事”业务类型字段约定，因此故事模式先复用素材全集，不按未知 `sourceType` 强制过滤。
 - 回传使用事件加 `router.back()`，避免路由替换导致创建故事页已填写内容重置。
+
+## admin-chat 工具确认协议对齐
+
+### 背景
+- 目标：将确认交互由旧 `confirm.start/confirm.end` 事件切换为 `tool.end` 中的确认字段，并在用户选择后回传 `interactionId`。
+- 边界：前端不声明、不解析、不保存后端运行控制字段；不修改现有消息气泡和选项按钮布局。
+
+### 字段映射
+| 后端 `tool.end` 字段 | 前端用途 |
+| --- | --- |
+| `contentType=options` | 标识选项类型工具结果 |
+| `interactionId` | 随 `optionValue` 回传后端 |
+| `question` | 选项上方确认问题 |
+| `options[].label/value` | 按钮文案与提交值 |
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 协议解析 | 已完成 | 从 `contentType=options` 且包含有效交互标识和选项的 `tool.end` 构建选项状态 | `src/lib/api/ts-agent-chat-stream.ts` |
+| T2 请求回传 | 已完成 | 同步提交 `interactionId` 与 `optionValue`，点击后立即消费当前选项 | `src/lib/api/ts-agent-chat.ts`、`src/app/pages/admin-chat/index.tsx` |
+| T3 旧事件清理 | 已完成 | 删除页面对 `confirm.*`、`options.*` 事件的依赖 | `src/lib/api/ts-agent-chat-stream.ts` |
+| T4 Confirm 展示 | 已完成 | Confirm Tool 不展示工具卡片，只显示一次正文、确认问题和候选按钮；普通 Tool 卡片保持不变 | `src/app/pages/admin-chat/index.tsx`、`src/components/pages/admin-chat/admin-chat-thinking-panel.tsx` |
+| T5 验证 | 已完成 | 10 个状态机测试通过，Babel、diff 和编码检查通过；全仓 TypeScript 检查仍受既有错误阻塞 | `src/lib/api/__tests__/ts-agent-chat-stream.test.ts`、命令验证 |
+
+### 风险与回退
+- 普通 `tool.end` 不会生成确认按钮；确认字段缺失时仅保留原工具执行轨迹。
+- 点击选项后立即隐藏当前选项，避免重复提交；请求失败仍由现有错误消息链路反馈。
+
+### 验收标准
+- 仅符合确认协议的 `tool.end` 显示选项。
+- 请求同时携带 `interactionId` 和 `optionValue`。
+- 旧 `confirm.*`、`options.*` 事件不再改变确认状态。
+- 前端确认状态不声明或渲染 `summary`。
+- 前端确认状态不包含 `interactionType`、`interactionStatus`、`suspendRun`、`contextRef` 或 `transferData`。
+- 不修改现有 UI 布局、尺寸、间距和颜色。
+
+## admin-chat 主 Agent 过渡文案闪现修复
+
+### 背景
+- 目标：主 Agent 转交子 Agent 时，不短暂显示主 Agent 的转交流程文案。
+- 边界：不增加“子 Agent 正在处理”提示，不修改现有聊天布局。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 事件协议核对 | 已完成 | 确认后端 `agent.end` 构造了 HANDOFF 数据但精简 SSE 未写入 `data` | `AgentEventPublisher.sendOnlyCompact` |
+| T2 前后端修复 | 已完成 | 后端补发状态数据；前端在 HANDOFF 或 `subagent.start` 时丢弃主 Agent 过渡正文，并允许空正文覆盖旧消息帧 | 前后端目标文件 |
+| T3 代码验证 | 已完成 | 状态机 11/11、Babel、后端主代码编译、diff 与编码检查通过 | 命令验证 |
+
+### 风险与回退
+- 后端旧版本可能仍不携带 `data.status`，前端需兼容当前固定的交还事件文案。
+- 普通主 Agent 回复必须继续在 SSE 正常结束后显示，不能被子 Agent 清理逻辑误伤。
+
+### 验收标准
+- `llm.end → agent.end(HANDOFF) → subagent.start` 过程中不显示主 Agent 过渡正文。
+- 收到 `subagent.start` 后，消息内容不保留此前主 Agent 的任何过渡正文。
+- 普通不转交的主 Agent 回复仍正常显示。
+
+## create-character 生成选择流程
+
+### 背景
+- 目标：创建形象页点击“创建形象”后进入 `/pages/generating-select`，自动生成并保存一张不绑定角色的用户图片。
+- 边界：使用 `one-click-image` 且不传 `roleId`；不再创建 `ts_role_image_profile`；保留现有生成选择页视觉主体。
+
+### 字段映射
+| 创建页字段 | Zustand 草稿字段 | `one-click-image` 字段 |
+| --- | --- | --- |
+| 形象提示词 | `promptText` | `backgroundStory` |
+| 风格 | `styleName` | `styleName` |
+| 已上传参考图 | `referenceImageUrl` | `referenceImageUrl` |
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 创建页跳转 | 已完成 | 上传参考图后将提示词、风格与服务端图片 URL 写入 Zustand，再进入生成选择页 | `src/app/pages/create-character/index.jsx` |
+| T2 自动生成与保存 | 已完成 | 页面从 Zustand 读取草稿并调用不带 `roleId` 的 `one-click-image` | `src/app/pages/generating-select/index.tsx` |
+| T3 结果交互 | 已完成 | 候选图切换、三行描述、编辑返回上一页、图片下载及底部操作抽屉 | `src/app/pages/generating-select/components/figma-character-screen.tsx` |
+| T4 代码验证 | 已完成 | 定向 ESLint、Babel、diff 与编码检查通过；全仓 TypeScript 仍受既有错误阻塞 | 命令验证 |
+| T5 多候选生成 | 已完成 | 首次并发生成 4 张候选图；风格名居中显示；候选缩略图使用 13:18 竖向比例并支持切换主图 | 生成选择页目标文件 |
+
+### 风险与回退
+- 临时 Zustand Store 不持久化，生成页刷新或直接访问时会返回创建页重新填写。
+- `one-click-image` 成功即已写入用户素材表，重新生成会新增一条用户图片素材。
+
+### 验收标准
+- 创建页不再直接调用生图和形象档案保存接口。
+- 页面跳转 URL 不携带提示词、风格和参考图参数。
+- 生成选择页首次进入只自动生成一张图片。
+- 图片描述最多显示三行，点击编辑按钮返回上一页编辑界面。
+- 重新生成继续使用当前编辑后的描述，且不传 `roleId`。
+- 默认只显示位于页面底端的操作口和“上滑查看更多操作”提示。
+- 点击或上滑操作口展开完整操作卡片，向下滑动可收起；展开后提示消失。
+- 上滑提示独立显示在操作口上方；页面顶部复用 `AiHeader`，标题为“形象生成”。
+- 首次进入使用相同描述并发调用 4 次生图接口，单次失败不影响其他成功结果。
+- 卡片不显示候选数量；风格名使用居中白色粗体，候选图框采用 13:18 竖向比例。
+- 候选图片列表从卡片左侧开始排列，右侧恢复原始加号入口，用于生成新的候选图。
+- 加号每次并发生成最多 4 张新候选，上一批结束后才能再次触发；总数达到 12 张后隐藏。
+- 底部原“重新生成”按钮改为“下载图片”，下载当前选中的候选图；跨域下载失败时打开原图地址。
+- 候选列表保持横向滑动但隐藏滚动进度条；每个候选槽独立显示加载、成功或失败状态。
+- 主图加载层只由当前选中候选控制；追加生成其他图片时，已选中的成功图片继续正常展示。

@@ -22,6 +22,7 @@ export type AgentChatOption = {
 
 export type AgentChatOptionPrompt = {
   toolName?: string;
+  interactionId: string;
   question: string;
   options: AgentChatOption[];
 };
@@ -32,16 +33,41 @@ export type AgentChatStreamState = {
   finalStatus: AgentChatStepStatus;
   agentName: string;
   agentType?: string;
+  currentAgentScope: 'main' | 'subagent';
   sessionId?: string | number | null;
   agentSessionId?: string | number | null;
   runId?: string | null;
   finalText: string;
+  pendingMainText: string;
   finalPayload?: Record<string, unknown> | null;
   optionPrompt: AgentChatOptionPrompt | null;
   error?: string | null;
   steps: AgentChatStep[];
   currentStepId?: string | null;
 };
+
+const CONFIRMATION_TOOL_SUFFIX = '_request_confirmation';
+
+export function isAgentChatConfirmationToolStep(
+  step: AgentChatStep,
+  state?: AgentChatStreamState | null,
+) {
+  if (step.kind !== 'tool') {
+    return false;
+  }
+  const toolName = (step.toolName || step.name || '').trim().toLowerCase();
+  if (!toolName) {
+    return false;
+  }
+  const promptToolName = state?.optionPrompt?.toolName?.trim().toLowerCase();
+  return toolName === promptToolName || toolName.endsWith(CONFIRMATION_TOOL_SUFFIX);
+}
+
+export function hasVisibleAgentChatToolStep(state?: AgentChatStreamState | null) {
+  return Boolean(state?.steps.some(
+    step => step.kind === 'tool' && !isAgentChatConfirmationToolStep(step, state),
+  ));
+}
 
 export type AgentChatSsePayload = {
   event?: string;
@@ -51,6 +77,7 @@ export type AgentChatSsePayload = {
   status?: number | string | null;
   toolName?: string;
   contentType?: string;
+  interactionId?: string;
   question?: string;
   options?: unknown;
   data?: unknown;
@@ -62,7 +89,9 @@ export const createInitialAgentChatStreamState = (): AgentChatStreamState => ({
   finalStatus: 'idle',
   agentName: '',
   agentType: '',
+  currentAgentScope: 'main',
   finalText: '',
+  pendingMainText: '',
   finalPayload: null,
   optionPrompt: null,
   error: null,
@@ -228,7 +257,16 @@ const getToolName = (payload: AgentChatSsePayload) =>
   || readNestedString(payload.data, ['toolName'])
   || readString(payload.name);
 
-const getPayloadObject = (payload: AgentChatSsePayload) => readRecord(payload.data);
+function getPayloadObject(payload: AgentChatSsePayload) {
+  const data = readRecord(payload.data);
+  if (!data) {
+    return data;
+  }
+  const sanitized = { ...data };
+  delete sanitized.transferData;
+  delete sanitized.summary;
+  return sanitized;
+}
 
 const getPayloadText = (payload: AgentChatSsePayload) =>
   readString(payload.content)
@@ -238,19 +276,18 @@ const getPayloadText = (payload: AgentChatSsePayload) =>
   || readNestedString(payload.data, ['result'])
   || '';
 
-function getOptionPrompt(
-  payload: AgentChatSsePayload,
-  requireOptionsContentType = true,
-): AgentChatOptionPrompt | null {
-  if (requireOptionsContentType && readString(payload.contentType)?.toLowerCase() !== 'options') {
+function getOptionPrompt(payload: AgentChatSsePayload): AgentChatOptionPrompt | null {
+  if (readString(payload.contentType)?.toLowerCase() !== 'options') {
     return null;
   }
+  const interactionId = readString(payload.interactionId);
   const options = readOptionList(payload.options);
-  if (options.length === 0) {
+  if (!interactionId || options.length === 0) {
     return null;
   }
   return {
     toolName: getToolName(payload),
+    interactionId,
     question: readString(payload.question) || getPayloadText(payload) || '请选择下一步操作。',
     options,
   };
@@ -260,6 +297,16 @@ const getPayloadStatus = (payload: AgentChatSsePayload, fallback: AgentChatStepS
   const status = readStatus(payload.status);
   return status || fallback;
 };
+
+function isHandoffPayload(payload: AgentChatSsePayload) {
+  const status = readString(payload.status)?.toUpperCase()
+    || readNestedString(payload.data, ['status'])?.toUpperCase();
+  const action = readNestedString(payload.data, ['action'])?.toUpperCase();
+  const content = getPayloadText(payload);
+  return status === 'HANDOFF'
+    || action === 'HANDOFF_TO_AGENT'
+    || content === '已交还主Agent重新派活';
+}
 
 const resolveStepIndex = (
   state: AgentChatStreamState,
@@ -414,7 +461,9 @@ export const reduceAgentChatStreamState = (
       finalStatus: 'running',
       agentName,
       agentType: nextStep.agentType,
+      currentAgentScope: 'main',
       finalText: '',
+      pendingMainText: '',
       finalPayload: null,
       error: null,
       steps: [nextStep],
@@ -429,6 +478,11 @@ export const reduceAgentChatStreamState = (
     nextStep.status = 'running';
     nextStep.text = getPayloadText(payload);
     nextStep.agentType = agentType;
+    const steps = previous.currentAgentScope === 'main'
+      ? previous.steps.map(step => step.kind === 'llm'
+          ? { ...step, text: '' }
+          : step)
+      : previous.steps;
 
     return {
       ...previous,
@@ -437,8 +491,11 @@ export const reduceAgentChatStreamState = (
       finalStatus: 'running',
       agentName: previous.agentName || agentName,
       agentType: previous.agentType || agentType,
+      currentAgentScope: 'subagent',
+      finalText: '',
+      pendingMainText: '',
       currentStepId: nextStep.id,
-      steps: [...previous.steps, nextStep],
+      steps: [...steps, nextStep],
       error: null,
     };
   }
@@ -495,31 +552,6 @@ export const reduceAgentChatStreamState = (
   }
 
   switch (normalizedEvent) {
-    case 'options.end':
-    case 'confirm.end':
-      return {
-        ...previous,
-        optionPrompt: null,
-        error: null,
-      };
-
-    case 'options.start':
-    case 'confirm.start': {
-      const optionPrompt = getOptionPrompt(payload, false);
-      if (!optionPrompt) {
-        return previous;
-      }
-      return {
-        ...previous,
-        active: true,
-        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
-        finalStatus: 'running',
-        agentName: previous.agentName || agentName,
-        optionPrompt,
-        error: null,
-      };
-    }
-
     case 'llm.start': {
       const nextStep = createStep('llm', payload);
       nextStep.title = buildStepSummary('llm', payload);
@@ -575,7 +607,12 @@ export const reduceAgentChatStreamState = (
           finalStatus: 'running',
           steps: [...previous.steps, nextStep],
           currentStepId: nextStep.id,
-          finalText: nextStep.text,
+          finalText: previous.currentAgentScope === 'subagent'
+            ? nextStep.text
+            : previous.finalText,
+          pendingMainText: previous.currentAgentScope === 'main'
+            ? nextStep.text
+            : previous.pendingMainText,
         };
       }
 
@@ -594,7 +631,12 @@ export const reduceAgentChatStreamState = (
         finalStatus: 'running',
         steps: nextSteps,
         currentStepId: nextStep.id,
-        finalText: nextStep.text || previous.finalText,
+        finalText: previous.currentAgentScope === 'subagent'
+          ? nextStep.text || previous.finalText
+          : previous.finalText,
+        pendingMainText: previous.currentAgentScope === 'main'
+          ? nextStep.text || previous.pendingMainText
+          : previous.pendingMainText,
       };
     }
 
@@ -645,7 +687,12 @@ export const reduceAgentChatStreamState = (
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
-        finalText: currentStep?.text || previous.finalText,
+        finalText: previous.currentAgentScope === 'subagent'
+          ? currentStep?.text || previous.finalText
+          : previous.finalText,
+        pendingMainText: previous.currentAgentScope === 'main'
+          ? currentStep?.text || previous.pendingMainText
+          : previous.pendingMainText,
         error: previous.error,
       };
     }
@@ -719,13 +766,13 @@ export const reduceAgentChatStreamState = (
 
     case 'tool.end': {
       const nextStatus = getPayloadStatus(payload, 'done');
-      const content = getPayloadText(payload);
       const optionPrompt = getOptionPrompt(payload);
+      const content = optionPrompt ? '' : getPayloadText(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('tool', payload),
         status: mergeStepStatus(step.status, nextStatus),
-        text: content || step.text,
+        text: optionPrompt ? '' : content || step.text,
         toolName: step.toolName || getToolName(payload),
         data: data || step.data,
       }));
@@ -747,6 +794,14 @@ export const reduceAgentChatStreamState = (
       const nextStatus = getPayloadStatus(payload, 'done');
       const finalPayload = resolveFinalPayload(payload);
       const content = getPayloadText(payload);
+      const handoff = isHandoffPayload(payload);
+      const steps = handoff
+        ? previous.steps.map(step => (
+            step.kind === 'llm' && step.id === previous.currentStepId
+              ? { ...step, text: '' }
+              : step
+          ))
+        : previous.steps;
 
       return {
         ...previous,
@@ -755,9 +810,13 @@ export const reduceAgentChatStreamState = (
         finalStatus: nextStatus,
         agentName: previous.agentName || agentName,
         agentType: previous.agentType || getAgentType(payload),
-        finalText: previous.finalText,
+        finalText: handoff
+          ? previous.finalText
+          : previous.pendingMainText || previous.finalText,
+        pendingMainText: '',
         finalPayload,
         currentStepId: previous.currentStepId,
+        steps,
         error: nextStatus === 'error' ? (content || previous.error) : previous.error,
       };
     }

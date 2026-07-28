@@ -26,9 +26,9 @@ export const styles = StyleSheet.create({
   },
 
   leftSectionExpanded: {
-    left: 14,
+    left: 20,
     top: undefined,
-    bottom: 9,
+    bottom: 10,
   },
 
   micButton: {
@@ -80,9 +80,9 @@ export const styles = StyleSheet.create({
   },
 
   rightSectionExpanded: {
-    right: 14,
+    right: 20,
     top: undefined,
-    bottom: 11,
+    bottom: 12,
   },
 
   iconButton: {

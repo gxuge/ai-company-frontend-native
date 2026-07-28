@@ -103,3 +103,93 @@
 - 接口变更：无新增端点；图库继续调用 `/sys/ts-user-image-assets`，故事保存继续调用现有创建/更新接口并提交 `sceneImageUrl`
 - UI 影响：创建故事页布局不变；图库故事模式隐藏会误跳创建人物页的新增角色图片悬浮按钮
 - 验证：两个页面 TypeScript 语法和 Babel Web 转译通过；新增行 ESLint、跳转/回填/保存行为断言通过；按用户要求未启动浏览器或开发服务
+
+## 2026-07-17
+- 任务：admin-chat 工具确认协议对齐
+- 变更：确认交互改为从 `tool.end` 的 `contentType=options`、有效 `interactionId` 和非空 `options` 解析；新增 `interactionId` 回传和重复提交保护；删除旧 `confirm.*`、`options.*` 状态处理；前端状态不保存后端运行控制字段
+- 接口变更：`/sys/ts-agent-chat-sessions/ai-reply` 请求新增可选 `interactionId`，与 `optionValue` 一起提交
+- UI 影响：未修改布局、尺寸、间距和颜色，继续复用现有工具结果与选项按钮区域
+- 验证：状态机测试 8/8 通过；Babel Web 转译、`git diff --check`、UTF-8 无 BOM 与原换行格式检查通过；全仓 TypeScript 检查仍受既有配置和历史类型错误阻塞
+
+## 2026-07-17
+- 任务：admin-chat 确认摘要字段移除
+- 变更：确认工具的 `tool.end` 不再解析、保存或渲染 `summary`，确认区域仅使用 `question` 和 `options`
+- 接口变更：前端确认状态移除 `summary`
+- UI 影响：未修改布局和样式，仅停止展示确认摘要
+- 验证：状态机测试 6/6 通过，相关 TypeScript 定向诊断为零，Babel Web 转译、diff 与编码检查通过
+
+## 2026-07-17
+- 任务：admin-chat Confirm Tool 卡片隐藏
+- 变更：确认工具仍参与交互状态解析，但不再触发工具时间线或展示工具卡片；普通工具展示逻辑保持不变
+- UI 影响：确认场景只展示一次回复正文、确认问题和候选按钮
+- 验证：状态机测试 10/10 通过，三个目标文件 Babel Web 转译通过
+
+## 2026-07-17
+- 任务：admin-chat 主 Agent 转子 Agent 过渡文案闪现修复
+- 变更：后端 `agent.end` 精简 SSE 补发 `data.status=HANDOFF`；前端兼容旧事件文案，并在 HANDOFF 或 `subagent.start` 时清空主 Agent 过渡正文和对应 LLM 步骤；消息同步允许子 Agent 切换状态用空正文覆盖上一帧
+- 接口变更：未新增端点；补全现有 `agent.end` SSE 的 `data.status`
+- UI 影响：未修改布局、尺寸、间距和颜色，仅停止显示主 Agent 的转交流程文案
+- 验证：前端状态机测试 11/11、测试文件 ESLint、Babel Web 转译、后端 Airag 主代码 Reactor 编译打包通过；后端测试源码仍受既有 `AiragPromptTemplateServiceTest.java:77` 类型错误阻塞
+
+## 2026-07-17
+- 任务：create-character 进入形象生成选择页
+- 变更：创建页改为上传参考图后携带提示词和风格跳转 `/pages/generating-select`；生成选择页进入即调用不带 `roleId` 的 `one-click-image`，默认生成并保存一张用户图片；新增三行描述截断、编辑、重新生成、加载效果和上滑抬升交互
+- 接口变更：移除创建页对 `/sys/ts-roles/generate-image-by-prompt` 和 `/sys/ts-role-image-profiles` 的调用；生成选择页改用 `/sys/ts-roles/one-click-image`
+- UI 影响：沿用生成选择页既有深色 Figma 结构，结果数量调整为 `1/1`，将“创建角色”改为“完成”
+- 验证：两个生成选择文件定向 ESLint 通过，三个目标文件 Babel Web 转译通过，`git diff --check` 和编码检查通过；全仓 TypeScript 仍受既有配置、测试类型和缺失资源错误阻塞
+
+## 2026-07-28
+- 任务：generating-select 编辑按钮返回上一页
+- 变更：删除生成选择页的原地编辑状态、文本框和完成编辑图标；点击图片描述右侧编辑按钮直接 `router.back()`，恢复上一页已有的提示词、风格和参考图状态
+- 接口变更：无
+- UI 影响：保留三行描述和铅笔图标，不再在当前页切换为输入框
+- 验证：Babel Web 转译、行为代码断言、`git diff --check` 与编码检查通过
+
+## 2026-07-28
+- 任务：创建形象跨页草稿迁移到 Zustand
+- 变更：新增 `character-generation` 临时 Store；创建页写入提示词、风格和上传后的参考图 URL，生成选择页从 Store 读取；移除 URL 中的 `promptText/styleName/referenceImageUrl/requestKey`；完成后清空草稿
+- 接口变更：无，继续调用 `/sys/ts-roles/one-click-image`
+- UI 影响：无
+- 验证：目标文件 Babel Web 转译、定向 ESLint、路由参数残留检查、`git diff --check` 与编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 底部操作抽屉
+- 变更：预览图保持全屏稳定展示；操作卡默认收缩到底部，仅保留操作口与上滑提示；点击或上滑展开完整内容，向下滑动收起
+- 接口变更：无
+- UI 影响：图片描述、缩略图、重新生成和完成按钮只在展开状态显示
+- 验证：Babel Web 转译、定向 ESLint、交互结构断言、`git diff --check` 与编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 顶部 Header 与抽屉收缩位置修正
+- 变更：页面顶部复用 `AiHeader` 并显示“形象生成”；上滑提示移到收缩卡片上方；卡片收缩时沉到底部并只露出操作口
+- 接口变更：无
+- UI 影响：删除预览图内部的自定义返回按钮，生成和结果操作逻辑不变
+- 验证：Babel Web 转译、定向 ESLint、Header 与抽屉结构断言、`git diff --check` 和编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 四图并发生成与候选展示
+- 变更：首次进入并发调用 4 次生图接口并使用 `Promise.allSettled` 收集成功结果；默认选中第一张，点击候选缩略图切换主图；重新生成维持单次请求并最多保留 4 张候选
+- 接口变更：无新增端点；同一 `/sys/ts-roles/one-click-image` 首次并发调用 4 次
+- UI 影响：风格名改为卡片居中的白色粗体；移除图片数量；候选缩略图改为 13:18 竖向长方形
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、并发/布局结构断言、`git diff --check` 与编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 候选列表加号恢复与左对齐
+- 变更：恢复原始 Figma 导出的白色加号素材并接入单次候选生成；候选图片列表改为从卡片左侧排列
+- 接口变更：无，加号继续调用现有单次生图逻辑
+- UI 影响：加号显示在候选图片右侧，生成期间禁用
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、加号资源/动作与左对齐结构断言、`git diff --check` 和编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 分批追加生成与图片下载
+- 变更：加号改为每次并发生成最多 4 张候选，使用运行锁阻止批次重入，总数限制为 12 张并在达到上限后隐藏；底部“重新生成”改为下载当前选中图片
+- 接口变更：无新增端点；加号继续并发调用 `/sys/ts-roles/one-click-image`
+- UI 影响：候选列表支持横向滚动；下载失败或受跨域限制时回退为打开原图地址
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、批次上限/下载/加号显隐结构断言通过
+
+## 2026-07-28
+- 任务：generating-select 独立图片加载状态
+- 变更：候选状态升级为加载中、成功、失败三态；四路并发请求分别更新对应缩略图；当前选中候选的状态独立控制主图加载层
+- 接口变更：无
+- UI 影响：横向候选列表隐藏滚动条；加载中的小图显示旋转加载图标；追加生成时当前已生成主图不再被全局加载层遮挡
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、候选状态/主图加载/滚动条结构断言通过

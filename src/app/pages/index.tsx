@@ -27,6 +27,7 @@ const pageItems: PageItem[] = [
   { label: 'User Setting', href: '/pages/user-setting' },
   { label: 'Mine', href: '/pages/mine' },
   { label: 'Generating Page', href: '/pages/generating-page' },
+  { label: 'Generating Select', href: '/pages/generating-select' as Extract<Href, string> },
   { label: 'My Gallery', href: '/pages/my-gallery' },
   { label: 'Admin Chat', href: '/pages/admin-chat' },
   { label: 'System Chat', href: '/pages/system-chat' },

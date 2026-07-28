@@ -249,9 +249,14 @@ export type TsStoryOneClickOutlineChapter = {
 };
 
 export type TsStoryOneClickOutlineGeneratePayload = {
+  storyId?: number;
+  title?: string;
+  storyMode?: string;
   storySetting?: string;
   sceneSetting?: string;
+  storyIntro?: string;
   plotOutline?: string;
+  extraRequirements?: string;
   templateMode?: 'core' | 'plot_outline_optimize';
 };
 

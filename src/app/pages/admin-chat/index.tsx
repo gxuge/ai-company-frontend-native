@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
-import { iterateSseEvents, tsAgentChatApi } from "@/lib/api";
+import { hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from "@/lib/api";
 import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
 import AdminChatMarkdownContent from '@/components/pages/admin-chat/admin-chat-markdown-content';
 import { useAgentChatStream } from "@/hooks";
@@ -205,13 +205,13 @@ function AIBubble({
 }: {
   content: string;
   streamState?: AgentChatStreamState | null;
-  onSuggestedPress?: (text: string, optionValue?: string) => void;
+  onSuggestedPress?: (text: string, optionValue?: string, interactionId?: string) => void;
   showSuggestedOptions?: boolean;
 }) {
   const isStreaming = streamState?.active;
   const isError = streamState?.finalStatus === 'error';
   const hasContent = Boolean(content && content.trim());
-  const hasToolTimeline = Boolean(streamState?.steps.some(step => step.kind === 'tool'));
+  const hasToolTimeline = hasVisibleAgentChatToolStep(streamState);
   const isWaiting = isStreaming && !hasContent && !hasToolTimeline;
   const shouldShowContent = hasContent && !isError && !hasToolTimeline;
   const hasResponseBody = hasToolTimeline || shouldShowContent || isWaiting;
@@ -253,7 +253,11 @@ function AIBubble({
                 <SuggestedButton
                   key={`${option.label}-${option.optionValue}`}
                   text={option.label}
-                  onPress={() => onSuggestedPress?.(option.label, option.optionValue)}
+                  onPress={() => onSuggestedPress?.(
+                    option.label,
+                    option.optionValue,
+                    optionPrompt.interactionId,
+                  )}
                 />
               ))}
             </View>
@@ -696,6 +700,7 @@ export default function App() {
   const agentStream = useAgentChatStream();
   const streamAbortRef = useRef<AbortController | null>(null);
   const creatingSessionRef = useRef(false);
+  const submittingInteractionIdRef = useRef<string | null>(null);
   const scale = useViewportScale();
   const plusRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
@@ -942,7 +947,8 @@ export default function App() {
 
     updateMessageById(messageId, (item) => ({
       ...item,
-      content: nextState.finalText || item.content,
+      content: nextState.finalText
+        || (nextState.currentAgentScope === 'subagent' ? '' : item.content),
       streamState: nextState,
       status: nextState.active
         ? "running"
@@ -1018,7 +1024,7 @@ export default function App() {
     }
   };
 
-  const sendMessage = async (rawText: string, optionValue?: string) => {
+  const sendMessage = async (rawText: string, optionValue?: string, interactionId?: string) => {
     const text = rawText.trim();
     if (!text || sending) {
       return;
@@ -1051,6 +1057,7 @@ export default function App() {
       const streamPayload = {
         sessionId,
         userInput: text,
+        interactionId,
         optionValue,
         historyCount: 12,
       };
@@ -1091,6 +1098,7 @@ export default function App() {
           const reply = await tsAgentChatApi.createAiReply({
             sessionId,
             userInput: text,
+            interactionId,
             optionValue,
             historyCount: 12,
           });
@@ -1158,8 +1166,30 @@ export default function App() {
   };
 
   /** 点击推荐问题快速发送 */
-  const handleSuggestedMessage = (text: string, optionValue?: string) => {
-    void sendMessage(text, optionValue);
+  const handleSuggestedMessage = (text: string, optionValue?: string, interactionId?: string) => {
+    if (interactionId) {
+      if (submittingInteractionIdRef.current === interactionId) {
+        return;
+      }
+      submittingInteractionIdRef.current = interactionId;
+      setMessages(prev => prev.map((message) => {
+        if (message.streamState?.optionPrompt?.interactionId !== interactionId) {
+          return message;
+        }
+        return {
+          ...message,
+          streamState: {
+            ...message.streamState,
+            optionPrompt: null,
+          },
+        };
+      }));
+    }
+    void sendMessage(text, optionValue, interactionId).finally(() => {
+      if (submittingInteractionIdRef.current === interactionId) {
+        submittingInteractionIdRef.current = null;
+      }
+    });
   };
 
   const toggleFeatureExpanded = () => {
@@ -1301,6 +1331,12 @@ export default function App() {
 
         {/* CHAT AREA ─────────────────────────────────────────────────────── */}
         <View style={{ flex: 1, position: 'relative' }}>
+          {isFeatureExpanded && (
+            <Pressable
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100 }}
+              onPress={() => setIsFeatureExpanded(false)}
+            />
+          )}
           <ScrollView
             ref={scrollViewRef}
             style={{ flex: 1 }}
@@ -1355,10 +1391,10 @@ export default function App() {
 
         {/* INPUT BAR */}
         <View style={{ paddingTop: 24, paddingLeft: 26.5, paddingRight: 20.5 }}>
-          <View style={{ flexDirection: "row", gap: 15, marginBottom: 15 }}>
+          {/* <View style={{ flexDirection: "row", gap: 15, marginBottom: 15 }}>
             <AIButton />
             <AIButton />
-          </View>
+          </View> */}
           <div
             style={{
               minHeight: 100,
