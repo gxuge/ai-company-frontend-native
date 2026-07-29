@@ -1,14 +1,16 @@
 import {
   ChevronUp,
   Download,
+  ImageOff,
   LoaderCircle,
   Pencil,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 const resolveAsset = (module: any) => module?.default ?? module?.uri ?? module;
-const fallbackImage = resolveAsset(require('@/assets/images/generating-select/b20cf81ced9f6ca4c57ee03532ac0c4f2f6408ef.png'));
 const addImageIcon = resolveAsset(require('@/assets/images/generating-select/d7c543af9a5ae14dd578336d153ad1d83603de12.png'));
+const descriptionIcon = resolveAsset(require('@/assets/images/generating-select/425d484a5f9e8555a2f67999fee814b5da0e74ee.png'));
+const styleIcon = resolveAsset(require('@/assets/images/generating-select/f6dbbe26c795069d80e7fac222cdf6dabc610ee3.png'));
 
 const MAX_IMAGE_COUNT = 12;
 
@@ -40,7 +42,9 @@ type FigmaCharacterScreenProps = {
   candidates: GeneratedImageCandidate[];
   selectedCandidateId: string;
   isSelectedImageLoading: boolean;
+  isSelectedImageFailed: boolean;
   isGenerating: boolean;
+  isEditorOpen: boolean;
   errorMessage?: string;
   onEdit: () => void;
   onSelectCandidate: (candidateId: string) => void;
@@ -51,26 +55,28 @@ type FigmaCharacterScreenProps = {
 
 type PreviewSectionProps = Pick<
   FigmaCharacterScreenProps,
-  'imageUrl' | 'isSelectedImageLoading'
+  'imageUrl' | 'isSelectedImageFailed' | 'isSelectedImageLoading'
 >;
 
 function PreviewSection({
   imageUrl,
+  isSelectedImageFailed,
   isSelectedImageLoading,
 }: PreviewSectionProps) {
   return (
-    <section className="absolute inset-0 overflow-hidden">
-      <img
-        key={imageUrl || 'fallback'}
-        src={imageUrl || fallbackImage}
-        alt="生成的角色形象"
-        className="size-full object-cover"
-        style={{
-          animation: imageUrl ? 'generating-select-image-in 520ms ease-out both' : undefined,
-          filter: imageUrl ? 'none' : 'brightness(0.38) saturate(0.65)',
-        }}
-      />
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/30 via-transparent to-[#0f0f10]" />
+    <section className="absolute inset-0 overflow-hidden bg-[#0f0f10]">
+      {imageUrl && (
+        <>
+          <img
+            key={imageUrl}
+            src={imageUrl}
+            alt="生成的角色形象"
+            className="size-full object-cover"
+            style={{ animation: 'generating-select-image-in 520ms ease-out both' }}
+          />
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/30 via-transparent to-[#0f0f10]" />
+        </>
+      )}
       {isSelectedImageLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/48 backdrop-blur-[2px]">
           <LoaderCircle className="animate-spin text-[#c4a664]" size={58} strokeWidth={1.8} />
@@ -79,6 +85,17 @@ function PreviewSection({
             className="absolute inset-y-0 w-[32%] rotate-12 bg-linear-to-r from-transparent via-white/10 to-transparent"
             style={{ animation: 'generating-select-shimmer 1.8s linear infinite' }}
           />
+        </div>
+      )}
+      {isSelectedImageFailed && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[18px] bg-[#0f0f10]">
+          <span className="flex size-[88px] items-center justify-center rounded-full border border-white/20 bg-white/5">
+            <ImageOff size={45} strokeWidth={1.5} className="text-white/75" />
+          </span>
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[25px] font-medium text-white/85">图片生成失败</span>
+            <span className="text-[18px] text-white/45">请选择其他图片</span>
+          </div>
         </div>
       )}
     </section>
@@ -98,7 +115,14 @@ function DescriptionEditor({
   return (
     <div className="absolute top-[282px] right-[54px] left-[54px]">
       <div className="mb-[18px] flex items-center justify-between">
-        <h2 className="text-[23px] font-normal text-[#9c8d7d]">图片描述</h2>
+        <h2 className="flex items-center gap-[13px] text-[23px] font-normal text-[#9c8d7d]">
+          <img
+            src={descriptionIcon}
+            alt=""
+            className="h-[24px] w-[26px] object-contain"
+          />
+          图片描述
+        </h2>
         <button
           type="button"
           aria-label="返回编辑图片描述"
@@ -136,6 +160,20 @@ type CandidateImagesProps = Pick<
   onAddImages: () => void;
 };
 
+function getCandidateBorderClass(
+  candidate: GeneratedImageCandidate,
+  selectedCandidateId: string,
+) {
+  if (candidate.status === 'failed') {
+    return candidate.id === selectedCandidateId
+      ? 'border-dashed border-white/70'
+      : 'border-dashed border-white/30';
+  }
+  return candidate.id === selectedCandidateId
+    ? 'border-[#b28d4b]'
+    : 'border-white/15';
+}
+
 function CandidateImages({
   candidates,
   selectedCandidateId,
@@ -154,9 +192,7 @@ function CandidateImages({
           type="button"
           aria-label={`选择第${index + 1}张形象`}
           onClick={() => onSelectCandidate(candidate.id)}
-          className={`h-[144px] w-[104px] shrink-0 overflow-hidden rounded-[18px] border-2 bg-[#242220] transition-transform active:scale-95 ${
-            candidate.id === selectedCandidateId ? 'border-[#b28d4b]' : 'border-white/15'
-          }`}
+          className={`h-[144px] w-[104px] shrink-0 overflow-hidden rounded-[18px] border-2 bg-[#242220] transition-transform active:scale-95 ${getCandidateBorderClass(candidate, selectedCandidateId)}`}
         >
           {candidate.status === 'success' && candidate.imageUrl && (
             <img
@@ -171,8 +207,13 @@ function CandidateImages({
             </span>
           )}
           {candidate.status === 'failed' && (
-            <span className="flex size-full items-center justify-center px-2 text-[16px] text-[#d88181]">
-              生成失败
+            <span className="flex size-full flex-col items-center justify-center gap-[10px] bg-[#1b1b1d] px-2">
+              <span className="flex size-[46px] items-center justify-center rounded-full border border-white/20 bg-white/5">
+                <ImageOff size={25} strokeWidth={1.8} className="text-white/75" />
+              </span>
+              <span className="text-[15px] font-medium text-white/75">
+                生成失败
+              </span>
             </span>
           )}
         </button>
@@ -183,12 +224,12 @@ function CandidateImages({
           aria-label="生成四张新的候选形象"
           onClick={onAddImages}
           disabled={isGenerating}
-          className="flex h-[144px] w-[104px] shrink-0 items-center justify-center transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-[144px] w-[104px] shrink-0 items-center justify-center rounded-[18px] border-2 border-dashed border-[#77736e] bg-[#111113] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <img
             src={addImageIcon}
             alt=""
-            className="size-[72px] object-contain"
+            className="size-[25px] object-contain"
           />
         </button>
       )}
@@ -287,8 +328,13 @@ function ControlPanel({
       />
       {isExpanded && (
         <div className="absolute inset-0">
-          <div className="absolute inset-x-0 top-[62px] text-center text-[25px] font-bold text-white">
-            {styleName}
+          <div className="absolute inset-x-0 top-[62px] flex items-center justify-center gap-[13px] text-[25px] font-bold text-white">
+            <img
+              src={styleIcon}
+              alt=""
+              className="size-[16px] object-contain"
+            />
+            <span>{styleName}</span>
           </div>
           <CandidateImages
             candidates={candidates}
@@ -354,7 +400,7 @@ function ExpandPrompt({
 }
 
 export default function FigmaCharacterScreen(props: FigmaCharacterScreenProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   return (
     <div className="relative size-full overflow-hidden bg-[#0f0f10] text-white">
       <style>
@@ -362,17 +408,22 @@ export default function FigmaCharacterScreen(props: FigmaCharacterScreenProps) {
       </style>
       <PreviewSection
         imageUrl={props.imageUrl}
+        isSelectedImageFailed={props.isSelectedImageFailed}
         isSelectedImageLoading={props.isSelectedImageLoading}
       />
-      <ExpandPrompt
-        isExpanded={isExpanded}
-        onExpandedChange={setIsExpanded}
-      />
-      <ControlPanel
-        {...props}
-        isExpanded={isExpanded}
-        onExpandedChange={setIsExpanded}
-      />
+      {!props.isEditorOpen && (
+        <>
+          <ExpandPrompt
+            isExpanded={isExpanded}
+            onExpandedChange={setIsExpanded}
+          />
+          <ControlPanel
+            {...props}
+            isExpanded={isExpanded}
+            onExpandedChange={setIsExpanded}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -1,5 +1,19 @@
 # 修改日志
 
+## 2026-07-29
+- 任务：admin-chat 图片 Tool 扁平协议
+- 变更：角色形象与故事场景背景图片统一消费 `contentType/resourceType/imageUrl/promptCode/promptVersion` 顶层字段；实时 SSE 与历史消息都可恢复并展示图片，移除对 `data.result`、`result.data` 的依赖
+- 接口变更：未新增端点；图片 Tool 的 SSE 顶层和消息事件 `data.output` 使用相同五字段结构，角色与故事仅以 `resourceType` 区分
+- UI 影响：在现有 Tool 卡片内展示生成图片，普通 Tool、Confirm 和异步 Tool 展示规则保持不变
+- 验证：状态机测试 21/21 通过，其中包含原始 SSE 跨 chunk 解析、`tool.start/tool.end` 合并及扁平图片字段断言；目标文件 Babel 转译与 `git diff --check` 通过；后端主代码编译通过
+
+- 任务：admin-chat 通用异步 Tool 标记
+- 变更：任意 `async === true` 的 Tool 通过 `eventId` 合并实时状态；消息历史从 `events[]` 恢复同一标记；Tool 卡片增加“异步”标识，只显示工具名和执行状态，不保留或渲染输入输出结果
+- 接口变更：未新增端点；补充消费 `/sys/ts-agent-chat-messages` 的 `events[]` 和 `/sys/ts-agent-chat-sessions/ai-reply` SSE 顶层 `async/eventId/taskId`
+- UI 影响：未调整聊天页面布局、尺寸、间距或颜色，仅在现有 Tool 卡片标题区增加“异步”状态标记
+- SSE 规则：前端不因 `agent.end` 或异步 Tool 主动关闭连接，发送锁仍在旧 SSE 真正结束后释放
+- 验证：状态机测试 17/17 通过；目标文件 Babel Web 转译通过；`git diff --check` 通过；全仓 TypeScript 仍受既有配置、资源和测试类型问题阻塞
+
 ## 2026-06-30
 - 任务：admin-chat SSE 迁移
 - 变更：新增通用 SSE 读取封装、agent 事件 reducer、`useAgentChatStream` 复用 hook、thinking 面板组件，并把 `/pages/admin-chat` 切到流式状态机；流式请求改为同一 `ai-reply` 接口通过 `stream=true` 分流；进入页时若没有可用会话则先空白进入，首条消息再懒创建后端 session
@@ -193,3 +207,73 @@
 - 接口变更：无
 - UI 影响：横向候选列表隐藏滚动条；加载中的小图显示旋转加载图标；追加生成时当前已生成主图不再被全局加载层遮挡
 - 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、候选状态/主图加载/滚动条结构断言通过
+
+## 2026-07-28
+- 任务：generating-select 加号按钮视觉还原
+- 变更：加号入口继续使用 13:18 长方形尺寸，恢复 Figma 旧版的深色圆角底、浅灰虚线边框和 25×25 居中白色加号
+- 接口变更：无
+- UI 影响：仅调整加号按钮视觉，分批生成和 12 张上限逻辑不变
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、长方形尺寸/旧版视觉结构断言、`git diff --check` 与编码检查通过
+
+## 2026-07-28
+- 任务：generating-select 当前页上拉编辑
+- 变更：抽取 `CharacterGenerationEditor` 供创建形象页与生成选择页复用；编辑按钮改为打开底部抽屉，回显当前提示词、参考图和风格，应用后更新 Zustand 并重新生成首批 4 张
+- 接口变更：无新增端点；继续复用提示词润色、参考图上传与 `/sys/ts-roles/one-click-image`
+- UI 影响：编辑时隐藏生成页原操作抽屉，关闭或应用后恢复；创建页保留原“我的图库”按钮视觉
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、定向 ESLint、结构断言、`git diff --check` 与编码检查
+
+## 2026-07-28
+- 任务：generating-select 移除默认预览图
+- 变更：主预览区仅在存在真实生成结果时渲染图片；删除原默认人物图片资源
+- 接口变更：无
+- UI 影响：等待生成或没有选中结果时显示纯色背景和既有加载状态
+- 验证：定向 ESLint、Babel Web 转译、资源引用检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：generating-select 描述与风格图标还原
+- 变更：图片描述标题左侧恢复 Figma 原稿图片图标；风格区域增加闪光图标，并与动态风格名称组成居中内容
+- 接口变更：无
+- UI 影响：仅调整操作卡片标题展示，不增加风格下拉箭头，不影响生成与编辑逻辑
+- 验证：定向 ESLint、Babel Web 转译、图标资源与布局结构检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：generating-select 操作卡片默认展开
+- 变更：页面首次进入时将底部操作卡片初始状态设为展开
+- 接口变更：无
+- UI 影响：用户仍可通过操作口向下收起，后续展开与收起交互保持不变
+- 验证：定向 ESLint、Babel Web 转译、初始状态结构检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：generating-select 加号图片框虚线加强
+- 变更：候选列表末尾加号入口的外层边框调整为 2px 浅灰色虚线
+- 接口变更：无
+- UI 影响：保留原有 13:18 尺寸、圆角、深色背景和居中加号
+- 验证：定向 ESLint、Babel Web 转译、虚线样式结构检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：chat 建议加载时聊天内容立即上移
+- 变更：灯泡建议区域展开时立即预留 130px 高度，并在布局完成后滚动到底部；骨架屏与建议内容仅保留透明度和位移动画
+- 接口变更：无
+- UI 影响：点击灯泡后聊天内容立即位于建议区上方，接口完成时三个建议原位替换骨架屏，不再二次跳动
+- 验证：Babel Web 转译、目标文件 TypeScript 诊断、布局结构检查、`git diff --check` 与编码检查通过；整文件 ESLint 仍受既有导入排序、超长函数等 23 个历史错误阻塞
+
+## 2026-07-29
+- 任务：generating-select 候选图片失败状态优化
+- 变更：失败候选改为暗色完整占位卡，增加 `ImageOff` 图标、状态文案和独立失败边框
+- 接口变更：无
+- UI 影响：仅优化单张候选生成失败时的视觉反馈，其他候选的生成、选择和下载逻辑不变
+- 验证：定向 ESLint、Babel Web 转译、失败态结构检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：generating-select 失败状态中性化与主预览联动
+- 变更：失败候选改为黑灰底、白色图标和白色文字；新增选中失败状态并传入主预览区
+- 接口变更：无
+- UI 影响：点击失败候选后主预览显示“图片生成失败，请选择其他图片”，选中失败项使用白色虚线边框
+- 验证：定向 ESLint、Babel Web 转译、目标文件 TypeScript 诊断、失败状态透传检查、`git diff --check` 与编码检查
+
+## 2026-07-29
+- 任务：AI 生图与角色保存解耦
+- 变更：候选生图只保留供应商临时原图；生成选择页点击“完成”时转存，创建角色页最终保存时转存；完整角色 Tool 显式保存资产后关联角色
+- 接口变更：生图改为 `POST /sys/ai-images/generate`；新增 `POST /sys/ts-user-image-assets/import`；移除旧 `/sys/ts-roles/one-click-image`
+- UI 影响：未修改布局、尺寸、间距或颜色，仅调整保存时机与请求状态
+- 验证：后端 Maven 编译通过；前端定向 ESLint 通过；全仓 TypeScript 仍受既有问题阻塞；`git diff --check` 通过

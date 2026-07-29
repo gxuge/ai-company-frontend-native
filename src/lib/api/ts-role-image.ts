@@ -2,7 +2,6 @@ import type { TsImageResource } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsRoleOneClickImageGeneratePayload = {
-  roleId?: number;
   roleName?: string;
   gender?: 'male' | 'female' | 'unknown' | 'random';
   occupation?: string;
@@ -14,13 +13,14 @@ export type TsRoleOneClickImageGeneratePayload = {
 
 export type TsRoleOneClickImageGenerateResult = {
   imageUrl?: string;
-  imageAssetId?: number;
-  generateRecordId?: number;
-  imagePrompt?: string;
   promptCode?: string;
   promptVersion?: string;
-  renderedPrompt?: string;
-  snapshotKey?: string;
+};
+
+export type TsUserImageAssetImportPayload = {
+  sourceImageUrl: string;
+  fileName?: string;
+  sourceType?: string;
 };
 
 export type TsRoleGenerateImageByPromptPayload = {
@@ -147,7 +147,15 @@ export type TsRoleImageProfileSavePayload = {
 export const tsRoleImageApi = {
   async generateRoleImage(payload: TsRoleOneClickImageGeneratePayload) {
     return defHttp.post<TsRoleOneClickImageGenerateResult>({
-      url: '/sys/ts-roles/one-click-image',
+      url: '/sys/ai-images/generate',
+      data: payload,
+      timeout: 60_000,
+    });
+  },
+
+  async importGeneratedImage(payload: TsUserImageAssetImportPayload) {
+    return defHttp.post<TsUserImageAsset>({
+      url: '/sys/ts-user-image-assets/import',
       data: payload,
       timeout: 60_000,
     });

@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
-import { Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { isAgentChatConfirmationToolStep } from '@/lib/api';
 import AdminChatMarkdownContent from './admin-chat-markdown-content';
 
@@ -43,6 +43,9 @@ function StepBadge({ text, color }: { text: string; color: string }) {
 function ToolStepCard({ step }: { step: AgentChatStep }) {
   const accent = statusAccent[step.status];
   const title = step.toolName || step.name || '工具调用';
+  const statusText = step.asynchronous && step.status === 'running'
+    ? '执行中'
+    : statusLabel[step.status];
 
   return (
     <View
@@ -76,9 +79,26 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
           >
             {title}
           </Text>
+          {step.asynchronous ? <StepBadge text="异步" color="#38bdf8" /> : null}
         </View>
-        <StepBadge text={statusLabel[step.status]} color={accent} />
+        <StepBadge text={statusText} color={accent} />
       </View>
+
+      {step.status === 'done' && step.contentType === 'image' && step.imageUrl
+        ? (
+            <Image
+              source={{ uri: step.imageUrl }}
+              resizeMode="cover"
+              style={{
+                width: '100%',
+                aspectRatio: 3 / 4,
+                marginTop: 12,
+                borderRadius: 8,
+                backgroundColor: 'rgba(255,255,255,0.06)',
+              }}
+            />
+          )
+        : null}
 
       {step.status !== 'error' && step.text
         ? (

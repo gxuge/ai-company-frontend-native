@@ -2,14 +2,14 @@ import type { Gender } from './basic-info';
 import type { TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Modal, ScrollView, TextInput } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
-import { tsRoleApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
+import { tsRoleApi, tsRoleImageApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
 import { getItem, removeItem, setItem } from '@/lib/storage';
 import { BasicInfoSection } from './basic-info';
 
@@ -465,6 +465,7 @@ export function CreateCharacter() {
   const [providerVoiceId, setProviderVoiceId] = useState('');
   const [voicePreviewText, setVoicePreviewText] = useState(DEFAULT_VOICE_PREVIEW_TEXT);
   const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarNeedsImport, setAvatarNeedsImport] = useState(false);
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
   const [voicePitch, setVoicePitch] = useState(0);
@@ -473,6 +474,7 @@ export function CreateCharacter() {
   useEffect(() => {
     if (params.selectedImageUrl) {
       setAvatarUrl(params.selectedImageUrl);
+      setAvatarNeedsImport(false);
     }
   }, [params.selectedImageUrl]);
 
@@ -543,22 +545,6 @@ export function CreateCharacter() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
   const [voiceListenPhase, setVoiceListenPhase] = useState<'idle' | 'loading' | 'playing'>('idle');
-  const imagePollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const imagePollingInFlightRef = useRef(false);
-  const imagePollingRecordIdRef = useRef<number | null>(null);
-
-  const stopImagePolling = () => {
-    if (imagePollingTimerRef.current) {
-      clearInterval(imagePollingTimerRef.current);
-      imagePollingTimerRef.current = null;
-    }
-    imagePollingInFlightRef.current = false;
-    imagePollingRecordIdRef.current = null;
-  };
-
-  useEffect(() => () => {
-    stopImagePolling();
-  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -593,53 +579,34 @@ export function CreateCharacter() {
     };
   }, []);
 
-  const extJson = (() => {
-    const payload: Record<string, unknown> = {
+  const buildSavePayload = (resolvedAvatarUrl = avatarUrl): TsRoleSavePayload => {
+    const extPayload: Record<string, unknown> = {
       tags: selectedTags,
     };
     if (voicePreviewAudioUrl) {
-      payload.voicePreviewAudioUrl = voicePreviewAudioUrl;
+      extPayload.voicePreviewAudioUrl = voicePreviewAudioUrl;
     }
-    if (avatarUrl) {
-      payload.generatedAvatarUrl = avatarUrl;
+    if (resolvedAvatarUrl) {
+      extPayload.generatedAvatarUrl = resolvedAvatarUrl;
     }
-    return JSON.stringify(payload);
-  })();
-
-  const buildSavePayload = (): TsRoleSavePayload => ({
-    roleName: name.trim(),
-    gender: normalizeGenderForSave(gender),
-    occupation: job.trim() || undefined,
-    backgroundStory: background.trim() || undefined,
-    greeting: greeting.trim() || undefined,
-    avatarUrl: avatarUrl || undefined,
-    voiceName: voiceName || undefined,
-    isPublic: isPublic ? 1 : 0,
-    dialogueLength: dialogLength === '默认' ? (null as any) : dialogLength,
-    toneTendency: toneTendency === '默认' ? (null as any) : toneTendency,
-    interactionMode: interactivity === '默认' ? (null as any) : interactivity,
-    dialoguePreview: dialoguePreview.trim() || undefined,
-    extJson,
-    basicAiGenerated: basicAiGenerated ? 1 : 0,
-    advancedAiGenerated: advancedAiGenerated ? 1 : 0,
-    status: 1,
-  });
-
-  const ensureRoleDraft = async () => {
-    if (roleId) {
-      return roleId;
-    }
-    const roleName = name.trim();
-    const draftRoleName = roleName || `未命名角色-${Date.now()}`;
-    const created = await tsRoleApi.createRole({
-      ...buildSavePayload(),
-      roleName: draftRoleName,
-    });
-    if (!created?.id) {
-      throw new Error('创建角色草稿失败，请稍后重试。');
-    }
-    setRoleId(created.id);
-    return created.id;
+    return {
+      roleName: name.trim(),
+      gender: normalizeGenderForSave(gender),
+      occupation: job.trim() || undefined,
+      backgroundStory: background.trim() || undefined,
+      greeting: greeting.trim() || undefined,
+      avatarUrl: resolvedAvatarUrl || undefined,
+      voiceName: voiceName || undefined,
+      isPublic: isPublic ? 1 : 0,
+      dialogueLength: dialogLength === '默认' ? (null as any) : dialogLength,
+      toneTendency: toneTendency === '默认' ? (null as any) : toneTendency,
+      interactionMode: interactivity === '默认' ? (null as any) : interactivity,
+      dialoguePreview: dialoguePreview.trim() || undefined,
+      extJson: JSON.stringify(extPayload),
+      basicAiGenerated: basicAiGenerated ? 1 : 0,
+      advancedAiGenerated: advancedAiGenerated ? 1 : 0,
+      status: 1,
+    };
   };
 
   const handleGenerateSetting = () => {
@@ -778,86 +745,26 @@ export function CreateCharacter() {
     }
     setGeneratingImage(true);
     try {
-      const draftRoleId = await ensureRoleDraft();
       const result = await tsRoleApi.generateRoleImage({
-        roleId: draftRoleId,
         roleName: name.trim() || undefined,
         gender,
         occupation: job.trim() || undefined,
         backgroundStory: background.trim() || undefined,
-        asyncGenerate: true,
       });
-
-      if (result?.generateRecordId) {
-        const recordId = result.generateRecordId;
-        stopImagePolling();
-        imagePollingRecordIdRef.current = recordId;
-        showMessage('形象生成任务已提交，后台生成中。');
-
-        const pollImageResult = async () => {
-          if (imagePollingInFlightRef.current || imagePollingRecordIdRef.current !== recordId) {
-            return;
-          }
-          imagePollingInFlightRef.current = true;
-          try {
-            const detail = await tsRoleApi.getImageGenerateRecordDetail(recordId);
-            const status = (detail?.generateStatus || '').toLowerCase();
-            if (status === 'success') {
-              if (!detail?.resultImageUrl) {
-                stopImagePolling();
-                setGeneratingImage(false);
-                showMessage('形象生成完成，但未返回图片地址。');
-                return;
-              }
-              setAvatarUrl(detail.resultImageUrl);
-              setAdvancedAiGenerated(true);
-              stopImagePolling();
-              setGeneratingImage(false);
-              showMessage('角色形象生成成功。');
-              return;
-            }
-            if (status === 'failed') {
-              stopImagePolling();
-              setGeneratingImage(false);
-              showMessage(detail?.failReason || '形象生成失败，请稍后重试。');
-            }
-          }
-          catch (error) {
-            console.error('Polling individual error', error);
-          }
-          finally {
-            imagePollingInFlightRef.current = false;
-          }
-        };
-
-        await pollImageResult();
-        if (imagePollingRecordIdRef.current === recordId && !imagePollingTimerRef.current) {
-          imagePollingTimerRef.current = setInterval(() => {
-            void pollImageResult();
-          }, 10000);
-        }
-        return;
-      }
 
       if (!result?.imageUrl) {
         throw new Error('形象生成成功，但未返回图片地址。');
       }
       setAvatarUrl(result.imageUrl);
+      setAvatarNeedsImport(true);
       setAdvancedAiGenerated(true);
-      setGeneratingImage(false);
       showMessage('角色形象生成成功。');
     }
     catch (error) {
-      stopImagePolling();
-      setGeneratingImage(false);
       showMessage(extractErrorMessage(error, '形象生成失败，请稍后重试。'));
     }
     finally {
-      // Fallback to ensure generatingImage is reset if not handled by success/fail paths
-      // Note: If polling is active, we don't reset here.
-      if (!imagePollingRecordIdRef.current) {
-        setGeneratingImage(false);
-      }
+      setGeneratingImage(false);
     }
   };
 
@@ -1078,7 +985,20 @@ export function CreateCharacter() {
     }
     setSaving(true);
     try {
-      const payload = buildSavePayload();
+      let persistedAvatarUrl = avatarUrl.trim();
+      if (avatarNeedsImport) {
+        const asset = await tsRoleImageApi.importGeneratedImage({
+          sourceImageUrl: persistedAvatarUrl,
+          sourceType: 'ai_generate',
+        });
+        if (!asset?.fileUrl?.trim()) {
+          throw new Error('角色形象保存失败，请稍后重试。');
+        }
+        persistedAvatarUrl = asset.fileUrl.trim();
+        setAvatarUrl(persistedAvatarUrl);
+        setAvatarNeedsImport(false);
+      }
+      const payload = buildSavePayload(persistedAvatarUrl);
       const result = roleId
         ? await tsRoleApi.updateRole({ ...payload, id: roleId })
         : await tsRoleApi.createRole(payload);

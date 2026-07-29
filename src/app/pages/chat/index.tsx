@@ -619,9 +619,7 @@ function ChatView({
 
   const tipsAnimatedStyle = useAnimatedStyle(() => ({
     opacity: tipsExpandProgress.value,
-    height: interpolate(tipsExpandProgress.value, [0, 1], [0, 130]), // Approximate height for 3 tips + padding
     transform: [{ translateY: interpolate(tipsExpandProgress.value, [0, 1], [10, 0]) }],
-    marginBottom: interpolate(tipsExpandProgress.value, [0, 1], [0, 12]),
   }));
 
   let lastAiIndex = -1;
@@ -710,7 +708,14 @@ function ChatView({
         </ScrollView>
 
         <View style={{ marginBottom: 12 }}>
-          <Animated.View style={[styles.tipsWrap, tipsAnimatedStyle]}>
+          <Animated.View
+            style={[
+              styles.tipsWrap,
+              tipsExpanded ? styles.tipsWrapExpanded : styles.tipsWrapCollapsed,
+              tipsAnimatedStyle,
+            ]}
+            onLayout={tipsExpanded ? onScrollToBottom : undefined}
+          >
             <ChatTip
               items={tips}
               loading={tipsLoading}
@@ -1286,5 +1291,13 @@ const styles = StyleSheet.create({
   tipsWrap: {
     overflow: 'hidden',
     marginHorizontal: 15,
+  },
+  tipsWrapExpanded: {
+    height: 130,
+    marginBottom: 12,
+  },
+  tipsWrapCollapsed: {
+    height: 0,
+    marginBottom: 0,
   },
 });

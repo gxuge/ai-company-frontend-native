@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
-import { hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from "@/lib/api";
+import { createAsyncToolHistoryState, createImageToolHistoryState, hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from '@/lib/api';
 import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
 import AdminChatMarkdownContent from '@/components/pages/admin-chat/admin-chat-markdown-content';
 import { useAgentChatStream } from "@/hooks";
@@ -40,7 +40,7 @@ function useViewportScale() {
 type ChatRole = "ai" | "user";
 
 type ChatMessage = {
-  id: number;
+  id: number | string;
   role: ChatRole;
   content: string;
   status?: string;
@@ -115,14 +115,30 @@ function writeLastAgentSessionId(sessionId: number | null) {
 
 function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
   const source = Array.isArray(records) ? [...records] : [];
-  return source.map((item, index) => {
+  return source.flatMap((item, index) => {
+    const mapped: ChatMessage[] = [];
     const roleType = typeof item.roleType === "string" ? item.roleType.trim().toLowerCase() : "";
     const content = typeof item.content === "string" && item.content.trim() ? item.content.trim() : " ";
-    return {
+    mapped.push({
       id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
       role: roleType === "user" ? "user" as const : "ai" as const,
       content,
-    };
+    });
+    item.events?.forEach((event) => {
+      const streamState = createAsyncToolHistoryState(event) || createImageToolHistoryState(event);
+      if (!streamState) {
+        return;
+      }
+      mapped.push({
+        id: `tool-event-${event.id}`,
+        role: 'ai',
+        content: '',
+        loading: streamState.active,
+        status: streamState.finalStatus,
+        streamState,
+      });
+    });
+    return mapped;
   });
 }
 

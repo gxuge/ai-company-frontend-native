@@ -139,7 +139,6 @@ export type TsRoleOneClickSettingGenerateResult = {
 };
 
 export type TsRoleOneClickImagePayload = {
-  roleId?: number;
   roleName?: string;
   gender?: TsRoleGender;
   occupation?: string;
@@ -147,34 +146,12 @@ export type TsRoleOneClickImagePayload = {
   styleName?: string;
   aspectRatio?: string;
   referenceImageUrl?: string;
-  asyncGenerate?: boolean;
 };
 
 export type TsRoleOneClickImageResult = {
-  accepted?: boolean;
-  generateStatus?: string;
   imageUrl?: string;
-  imageAssetId?: number;
-  generateRecordId?: number;
-  imagePrompt?: string;
   promptCode?: string;
   promptVersion?: string;
-  renderedPrompt?: string;
-  snapshotKey?: string;
-};
-
-export type TsRoleImageGenerateRecordDetail = {
-  id: number;
-  roleId?: number;
-  generateStatus?: string;
-  applyStatus?: string;
-  resultAssetId?: number;
-  resultImageUrl?: string;
-  failReason?: string;
-  promptText?: string;
-  styleName?: string;
-  createdAt?: string;
-  updatedAt?: string;
 };
 
 export type TsRoleOneClickVoiceGeneratePayload = {
@@ -330,16 +307,9 @@ export const tsRoleApi = {
 
   async generateRoleImage(payload: TsRoleOneClickImagePayload) {
     return defHttp.post<TsRoleOneClickImageResult>({
-      url: '/sys/ts-roles/one-click-image',
+      url: '/sys/ai-images/generate',
       data: payload,
       timeout: 60_000,
-    });
-  },
-
-  async getImageGenerateRecordDetail(id: number) {
-    return defHttp.get<TsRoleImageGenerateRecordDetail>({
-      url: '/sys/ts-role-image-generate-records/detail',
-      params: { id },
     });
   },
 

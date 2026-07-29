@@ -51,6 +51,18 @@ export type TsAgentChatSessionUpdatePayload = {
   memoryJson?: string;
 };
 
+export type TsAgentChatMessageEvent = {
+  id: string;
+  type?: string;
+  name?: string;
+  nodeName?: string;
+  nodeType?: string;
+  content?: string;
+  status?: number;
+  data?: Record<string, unknown>;
+  createdAt?: string;
+};
+
 export type TsAgentChatMessage = {
   id: number;
   sessionId?: number;
@@ -69,6 +81,7 @@ export type TsAgentChatMessage = {
   isDeleted?: number;
   createdAt?: string;
   updatedAt?: string;
+  events?: TsAgentChatMessageEvent[];
 };
 
 export type TsAgentChatMessagePage = {

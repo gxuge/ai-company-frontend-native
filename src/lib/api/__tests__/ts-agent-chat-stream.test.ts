@@ -1,4 +1,7 @@
+import { iterateSseEvents } from '../stream';
 import {
+  createAsyncToolHistoryState,
+  createImageToolHistoryState,
   createInitialAgentChatStreamState,
   hasVisibleAgentChatToolStep,
   reduceAgentChatStreamState,
@@ -124,6 +127,256 @@ describe('reduceAgentChatStreamState tool confirmation', () => {
     );
 
     expect(hasVisibleAgentChatToolStep(state)).toBe(true);
+  });
+});
+
+describe('reduceAgentChatStreamState async tool', () => {
+  it('marks any tool as asynchronous only from async=true', () => {
+    const state = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.start',
+      {
+        async: true,
+        eventId: 'event-1',
+        name: 'custom_node',
+        toolName: 'any_background_tool',
+        status: 2,
+      },
+    );
+
+    expect(state.steps[0]).toMatchObject({
+      eventId: 'event-1',
+      toolName: 'any_background_tool',
+      asynchronous: true,
+      status: 'running',
+    });
+  });
+
+  it('keeps async tools visible regardless of their tool name', () => {
+    const state = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.start',
+      {
+        async: true,
+        eventId: 'event-confirm-name',
+        name: 'custom_node',
+        toolName: 'custom_request_confirmation',
+        status: 2,
+      },
+    );
+
+    expect(hasVisibleAgentChatToolStep(state)).toBe(true);
+  });
+
+  it('updates the matching async tool by eventId', () => {
+    const asyncStarted = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.start',
+      {
+        async: true,
+        eventId: 'event-async',
+        name: 'shared_node',
+        toolName: 'background_tool',
+        status: 2,
+      },
+    );
+    const ordinaryStarted = applyAgentEvent(asyncStarted, 'tool.start', {
+      eventId: 'event-sync',
+      name: 'shared_node',
+      toolName: 'ordinary_tool',
+      status: 2,
+    });
+    const completed = applyAgentEvent(ordinaryStarted, 'tool.end', {
+      async: true,
+      eventId: 'event-async',
+      name: 'shared_node',
+      toolName: 'background_tool',
+      status: 1,
+      content: 'result must not be rendered',
+    });
+
+    expect(completed.steps.find(step => step.eventId === 'event-async')).toMatchObject({
+      asynchronous: true,
+      status: 'done',
+      text: '',
+    });
+    expect(completed.steps.find(step => step.eventId === 'event-sync')?.status).toBe('running');
+  });
+});
+
+describe('async tool history and late completion', () => {
+  it('restores async tool markers from message history', () => {
+    const historyState = createAsyncToolHistoryState({
+      id: 'history-event',
+      type: 'tool',
+      name: 'background_tool',
+      nodeName: 'role_create_dialog',
+      content: '完整结果不展示',
+      status: 1,
+      data: {
+        async: true,
+        output: { roleId: 1 },
+      },
+    });
+
+    expect(historyState?.active).toBe(false);
+    expect(historyState?.finalStatus).toBe('done');
+    expect(historyState?.steps[0]).toMatchObject({
+      eventId: 'history-event',
+      asynchronous: true,
+      status: 'done',
+      text: '',
+    });
+    expect(JSON.stringify(historyState)).not.toContain('roleId');
+  });
+
+  it('does not reactivate a completed agent state when the async tool finishes later', () => {
+    const started = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.start',
+      {
+        async: true,
+        eventId: 'event-late',
+        name: 'background_node',
+        toolName: 'background_tool',
+        status: 2,
+      },
+    );
+    const agentCompleted = applyAgentEvent(started, 'agent.end', {
+      name: 'ts_agent_chat',
+      status: 1,
+      content: '执行完成',
+    });
+    const toolCompleted = applyAgentEvent(agentCompleted, 'tool.end', {
+      async: true,
+      eventId: 'event-late',
+      name: 'background_node',
+      toolName: 'background_tool',
+      status: 1,
+    });
+
+    expect(toolCompleted.active).toBe(false);
+    expect(toolCompleted.finalStatus).toBe('done');
+    expect(toolCompleted.steps.find(step => step.eventId === 'event-late')?.status).toBe('done');
+  });
+
+  it('ignores history tools without a strict async=true marker', () => {
+    expect(createAsyncToolHistoryState({
+      id: 'sync-history-event',
+      type: 'tool',
+      name: 'ordinary_tool',
+      status: 1,
+      data: {
+        async: 'true',
+      },
+    })).toBeNull();
+  });
+});
+
+describe('image tool realtime and history', () => {
+  it('parses raw SSE image tool events into the realtime state', async () => {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode(
+          'event: tool.start\n'
+          + 'data: {"eventId":"image-sse-event","name":"role_create_image","toolName":"role_generate_role_image","status":2}\n\n'
+          + 'event: tool.end\n',
+        ));
+        controller.enqueue(encoder.encode(
+          'data: {"eventId":"image-sse-event","name":"role_create_image","toolName":"role_generate_role_image","status":1,'
+          + '"contentType":"image","resourceType":"role_image","imageUrl":"https://example.com/sse-role.png",'
+          + '"promptCode":"role_image_generate","promptVersion":"v1"}\n\n',
+        ));
+        controller.close();
+      },
+    });
+    let state = createInitialAgentChatStreamState();
+
+    for await (const event of iterateSseEvents(stream)) {
+      state = reduceAgentChatStreamState(state, event.event, event.data);
+    }
+
+    expect(state.steps).toHaveLength(1);
+    expect(state.steps[0]).toMatchObject({
+      eventId: 'image-sse-event',
+      toolName: 'role_generate_role_image',
+      contentType: 'image',
+      resourceType: 'role_image',
+      imageUrl: 'https://example.com/sse-role.png',
+      promptCode: 'role_image_generate',
+      promptVersion: 'v1',
+      status: 'done',
+      text: '',
+    });
+  });
+
+  it.each([
+    ['role_image', 'role_generate_role_image'],
+    ['story_scene_image', 'story_generate_scene_image'],
+  ])('reads flat image fields for %s', (resourceType, toolName) => {
+    const started = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.start',
+      {
+        eventId: `${resourceType}-event`,
+        name: 'image_node',
+        toolName,
+        status: 2,
+      },
+    );
+    const completed = applyAgentEvent(started, 'tool.end', {
+      eventId: `${resourceType}-event`,
+      name: 'image_node',
+      toolName,
+      status: 1,
+      contentType: 'image',
+      resourceType,
+      imageUrl: 'https://example.com/generated.png',
+      promptCode: `${resourceType}_prompt`,
+      promptVersion: 'v1',
+    });
+
+    expect(completed.steps[0]).toMatchObject({
+      contentType: 'image',
+      resourceType,
+      imageUrl: 'https://example.com/generated.png',
+      promptCode: `${resourceType}_prompt`,
+      promptVersion: 'v1',
+      status: 'done',
+      text: '',
+    });
+  });
+
+  it('restores flat image fields from history output', () => {
+    const historyState = createImageToolHistoryState({
+      id: 'image-history-event',
+      type: 'tool',
+      name: 'role_generate_role_image',
+      nodeName: 'role_create_image',
+      content: '已生成角色形象',
+      status: 1,
+      data: {
+        output: {
+          summary: '已生成角色形象',
+          contentType: 'image',
+          resourceType: 'role_image',
+          imageUrl: 'https://example.com/role.png',
+          promptCode: 'role_image_generate',
+          promptVersion: 'v1',
+        },
+      },
+    });
+
+    expect(historyState?.steps[0]).toMatchObject({
+      contentType: 'image',
+      resourceType: 'role_image',
+      imageUrl: 'https://example.com/role.png',
+      promptCode: 'role_image_generate',
+      promptVersion: 'v1',
+      status: 'done',
+    });
+    expect(JSON.stringify(historyState)).not.toContain('"result"');
   });
 });
 

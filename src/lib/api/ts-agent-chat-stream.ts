@@ -1,3 +1,5 @@
+import type { TsAgentChatMessageEvent } from './ts-agent-chat';
+
 export type AgentChatStepStatus = 'idle' | 'running' | 'done' | 'error';
 export type AgentChatStepKind = 'agent' | 'llm' | 'tool';
 
@@ -11,7 +13,14 @@ export type AgentChatStep = {
   agentType?: string;
   error?: string;
   promptCode?: string;
+  promptVersion?: string;
   toolName?: string;
+  contentType?: string;
+  resourceType?: string;
+  imageUrl?: string;
+  eventId?: string;
+  taskId?: string;
+  asynchronous?: boolean;
   data?: Record<string, unknown>;
 };
 
@@ -55,6 +64,9 @@ export function isAgentChatConfirmationToolStep(
   if (step.kind !== 'tool') {
     return false;
   }
+  if (step.asynchronous) {
+    return false;
+  }
   const toolName = (step.toolName || step.name || '').trim().toLowerCase();
   if (!toolName) {
     return false;
@@ -77,9 +89,17 @@ export type AgentChatSsePayload = {
   status?: number | string | null;
   toolName?: string;
   contentType?: string;
+  resourceType?: string;
+  imageUrl?: string;
+  promptCode?: string;
+  promptVersion?: string;
   interactionId?: string;
   question?: string;
   options?: unknown;
+  async?: boolean;
+  eventId?: string;
+  taskId?: string;
+  error?: string;
   data?: unknown;
 };
 
@@ -257,6 +277,49 @@ const getToolName = (payload: AgentChatSsePayload) =>
   || readNestedString(payload.data, ['toolName'])
   || readString(payload.name);
 
+function getToolEventId(payload: AgentChatSsePayload) {
+  return readString(payload.eventId)
+    || readNestedString(payload.data, ['eventId']);
+}
+
+function getToolTaskId(payload: AgentChatSsePayload) {
+  return readString(payload.taskId)
+    || readNestedString(payload.data, ['taskId']);
+}
+
+function isAsyncToolPayload(payload: AgentChatSsePayload) {
+  return payload.async === true
+    || readRecord(payload.data)?.async === true;
+}
+
+function isImageToolPayload(payload: AgentChatSsePayload) {
+  return readString(payload.contentType)?.toLowerCase() === 'image';
+}
+
+function getToolMediaFields(payload: AgentChatSsePayload) {
+  return {
+    contentType: readString(payload.contentType),
+    resourceType: readString(payload.resourceType),
+    imageUrl: readString(payload.imageUrl),
+    promptCode: readString(payload.promptCode),
+    promptVersion: readString(payload.promptVersion),
+  };
+}
+
+function getToolStepData(
+  payload: AgentChatSsePayload,
+  data: Record<string, unknown> | undefined,
+) {
+  if (!isAsyncToolPayload(payload)) {
+    return data;
+  }
+  return {
+    async: true,
+    eventId: getToolEventId(payload),
+    taskId: getToolTaskId(payload),
+  };
+}
+
 function getPayloadObject(payload: AgentChatSsePayload) {
   const data = readRecord(payload.data);
   if (!data) {
@@ -270,6 +333,7 @@ function getPayloadObject(payload: AgentChatSsePayload) {
 
 const getPayloadText = (payload: AgentChatSsePayload) =>
   readString(payload.content)
+  || readString(payload.error)
   || readNestedString(payload.data, ['summary'])
   || readNestedString(payload.data, ['handoffReason'])
   || readNestedString(payload.data, ['error'])
@@ -312,7 +376,17 @@ const resolveStepIndex = (
   state: AgentChatStreamState,
   kind: AgentChatStepKind,
   name: string,
+  eventId?: string,
 ) => {
+  if (kind === 'tool' && eventId) {
+    const eventIndex = state.steps.findIndex(
+      item => item.kind === 'tool' && item.eventId === eventId,
+    );
+    if (eventIndex >= 0) {
+      return eventIndex;
+    }
+  }
+
   if (state.currentStepId) {
     const currentIndex = state.steps.findIndex((item) => item.id === state.currentStepId);
     if (currentIndex >= 0 && state.steps[currentIndex]?.kind === kind) {
@@ -339,6 +413,9 @@ const createStep = (
 ): AgentChatStep => {
   const name = getNodeName(payload);
   const toolName = kind === 'tool' ? getToolName(payload) : undefined;
+  const asynchronous = kind === 'tool' && isAsyncToolPayload(payload);
+  const mediaFields = kind === 'tool' ? getToolMediaFields(payload) : {};
+  const data = getPayloadObject(payload) || undefined;
   return {
     id: createStepId(kind, name),
     kind,
@@ -348,8 +425,12 @@ const createStep = (
     text: getPayloadText(payload),
     agentType: getAgentType(payload),
     promptCode: getPromptCode(payload),
+    ...mediaFields,
     toolName,
-    data: getPayloadObject(payload) || undefined,
+    eventId: kind === 'tool' ? getToolEventId(payload) : undefined,
+    taskId: kind === 'tool' ? getToolTaskId(payload) : undefined,
+    asynchronous,
+    data: kind === 'tool' ? getToolStepData(payload, data) : data,
   };
 };
 
@@ -370,7 +451,12 @@ const updateStep = (
   updater: (step: AgentChatStep) => AgentChatStep,
 ) => {
   const name = getNodeName(payload);
-  const index = resolveStepIndex(state, kind, name);
+  const index = resolveStepIndex(
+    state,
+    kind,
+    name,
+    kind === 'tool' ? getToolEventId(payload) : undefined,
+  );
   if (index < 0) {
     const created = createStep(kind, payload);
     return {
@@ -703,7 +789,7 @@ export const reduceAgentChatStreamState = (
       nextStep.status = 'running';
       nextStep.text = '';
       nextStep.toolName = getToolName(payload);
-      nextStep.data = data || undefined;
+      nextStep.data = getToolStepData(payload, data);
 
       return {
         ...previous,
@@ -719,13 +805,23 @@ export const reduceAgentChatStreamState = (
 
     case 'tool.delta': {
       const delta = getPayloadText(payload);
+      const asynchronous = isAsyncToolPayload(payload);
+      const mediaFields = getToolMediaFields(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('tool', payload),
         status: mergeStepStatus(step.status, 'running'),
-        text: appendStepText(step.text, delta),
+        text: asynchronous || step.asynchronous ? '' : appendStepText(step.text, delta),
         toolName: step.toolName || getToolName(payload),
-        data: data || step.data,
+        eventId: step.eventId || getToolEventId(payload),
+        taskId: step.taskId || getToolTaskId(payload),
+        asynchronous: step.asynchronous || asynchronous,
+        contentType: mediaFields.contentType || step.contentType,
+        resourceType: mediaFields.resourceType || step.resourceType,
+        imageUrl: mediaFields.imageUrl || step.imageUrl,
+        promptCode: mediaFields.promptCode || step.promptCode,
+        promptVersion: mediaFields.promptVersion || step.promptVersion,
+        data: asynchronous ? getToolStepData(payload, data) : data || step.data,
       }));
 
       return {
@@ -742,46 +838,77 @@ export const reduceAgentChatStreamState = (
 
     case 'tool.error': {
       const message = getPayloadText(payload) || readNestedString(data, ['errorMessage']) || 'Tool step failed';
+      const payloadAsynchronous = isAsyncToolPayload(payload);
+      const mediaFields = getToolMediaFields(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('tool', payload),
         status: 'error',
-        text: step.text || message,
+        text: payloadAsynchronous || step.asynchronous ? '' : step.text || message,
         error: message,
         toolName: step.toolName || getToolName(payload),
-        data: data || step.data,
+        eventId: step.eventId || getToolEventId(payload),
+        taskId: step.taskId || getToolTaskId(payload),
+        asynchronous: step.asynchronous || payloadAsynchronous,
+        contentType: mediaFields.contentType || step.contentType,
+        resourceType: mediaFields.resourceType || step.resourceType,
+        imageUrl: mediaFields.imageUrl || step.imageUrl,
+        promptCode: mediaFields.promptCode || step.promptCode,
+        promptVersion: mediaFields.promptVersion || step.promptVersion,
+        data: payloadAsynchronous ? getToolStepData(payload, data) : data || step.data,
       }));
+      const updatedStep = next.steps.find(step => step.id === next.currentStepId);
+      const asynchronous = payloadAsynchronous || updatedStep?.asynchronous === true;
+      const completedAfterRun = asynchronous && !previous.active;
 
       return {
         ...previous,
-        active: true,
-        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
-        finalStatus: 'running',
+        active: completedAfterRun ? previous.active : true,
+        agentStatus: completedAfterRun
+          ? previous.agentStatus
+          : previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+        finalStatus: completedAfterRun ? previous.finalStatus : 'running',
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
-        error: message,
+        error: asynchronous ? previous.error : message,
       };
     }
 
     case 'tool.end': {
       const nextStatus = getPayloadStatus(payload, 'done');
-      const optionPrompt = getOptionPrompt(payload);
-      const content = optionPrompt ? '' : getPayloadText(payload);
+      const payloadAsynchronous = isAsyncToolPayload(payload);
+      const payloadImage = isImageToolPayload(payload);
+      const mediaFields = getToolMediaFields(payload);
+      const optionPrompt = payloadAsynchronous ? null : getOptionPrompt(payload);
+      const content = optionPrompt || payloadAsynchronous || payloadImage ? '' : getPayloadText(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('tool', payload),
         status: mergeStepStatus(step.status, nextStatus),
-        text: optionPrompt ? '' : content || step.text,
+        text: optionPrompt || payloadAsynchronous || payloadImage || step.asynchronous ? '' : content || step.text,
         toolName: step.toolName || getToolName(payload),
-        data: data || step.data,
+        eventId: step.eventId || getToolEventId(payload),
+        taskId: step.taskId || getToolTaskId(payload),
+        asynchronous: step.asynchronous || payloadAsynchronous,
+        contentType: mediaFields.contentType || step.contentType,
+        resourceType: mediaFields.resourceType || step.resourceType,
+        imageUrl: mediaFields.imageUrl || step.imageUrl,
+        promptCode: mediaFields.promptCode || step.promptCode,
+        promptVersion: mediaFields.promptVersion || step.promptVersion,
+        data: payloadAsynchronous ? getToolStepData(payload, data) : data || step.data,
       }));
+      const updatedStep = next.steps.find(step => step.id === next.currentStepId);
+      const asynchronous = payloadAsynchronous || updatedStep?.asynchronous === true;
+      const completedAfterRun = asynchronous && !previous.active;
 
       return {
         ...previous,
-        active: true,
-        agentStatus: previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
-        finalStatus: 'running',
+        active: completedAfterRun ? previous.active : true,
+        agentStatus: completedAfterRun
+          ? previous.agentStatus
+          : previous.agentStatus === 'idle' ? 'running' : previous.agentStatus,
+        finalStatus: completedAfterRun ? previous.finalStatus : 'running',
         agentName: previous.agentName || agentName,
         currentStepId: next.currentStepId,
         steps: next.steps,
@@ -848,3 +975,83 @@ export const reduceAgentChatStreamState = (
       return previous;
   }
 };
+
+export function createAsyncToolHistoryState(
+  event: TsAgentChatMessageEvent,
+): AgentChatStreamState | null {
+  if (event.type !== 'tool' || event.data?.async !== true) {
+    return null;
+  }
+
+  const payload = {
+    async: true,
+    eventId: event.id,
+    name: event.nodeName || event.name || 'Tool',
+    toolName: event.name,
+    taskId: readString(event.data.taskId),
+    status: event.status,
+    content: event.content,
+  };
+  const started = reduceAgentChatStreamState(
+    createInitialAgentChatStreamState(),
+    'tool.start',
+    JSON.stringify(payload),
+  );
+
+  if (event.status === 2 || event.status == null) {
+    return started;
+  }
+
+  const completed = reduceAgentChatStreamState(
+    started,
+    event.status === 0 ? 'tool.error' : 'tool.end',
+    JSON.stringify(payload),
+  );
+  return {
+    ...completed,
+    active: false,
+    agentStatus: event.status === 0 ? 'error' : 'done',
+    finalStatus: event.status === 0 ? 'error' : 'done',
+  };
+}
+
+export function createImageToolHistoryState(
+  event: TsAgentChatMessageEvent,
+): AgentChatStreamState | null {
+  if (event.type !== 'tool') {
+    return null;
+  }
+  const output = readRecord(event.data?.output);
+  if (readString(output?.contentType)?.toLowerCase() !== 'image') {
+    return null;
+  }
+
+  const payload = {
+    eventId: event.id,
+    name: event.nodeName || event.name || 'Tool',
+    toolName: event.name,
+    status: event.status,
+    content: event.content,
+    contentType: 'image',
+    resourceType: readString(output?.resourceType),
+    imageUrl: readString(output?.imageUrl),
+    promptCode: readString(output?.promptCode),
+    promptVersion: readString(output?.promptVersion),
+  };
+  const started = reduceAgentChatStreamState(
+    createInitialAgentChatStreamState(),
+    'tool.start',
+    JSON.stringify(payload),
+  );
+  const completed = reduceAgentChatStreamState(
+    started,
+    event.status === 0 ? 'tool.error' : 'tool.end',
+    JSON.stringify(payload),
+  );
+  return {
+    ...completed,
+    active: false,
+    agentStatus: event.status === 0 ? 'error' : 'done',
+    finalStatus: event.status === 0 ? 'error' : 'done',
+  };
+}

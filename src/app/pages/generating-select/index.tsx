@@ -1,9 +1,11 @@
 import type { GeneratedImageCandidate } from './components/figma-character-screen';
+import type { CharacterGenerationDraft } from '@/features/character-generation/use-character-generation-store';
 
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { AiHeader } from '@/components/ai-company/ai-header';
+import { CharacterGenerationEditor } from '@/components/pages/create-character/character-generation-editor';
 import { useCharacterGenerationStore } from '@/features/character-generation/use-character-generation-store';
 import { tsRoleImageApi } from '@/lib/api';
 
@@ -22,6 +24,61 @@ function GeneratingSelectHeader({ onBack }: { onBack: () => void }) {
         className="h-16 bg-black/70 px-4 backdrop-blur-md"
         onBack={onBack}
       />
+    </div>
+  );
+}
+
+function CharacterEditorSheet({
+  draft,
+  isGenerating,
+  onClose,
+  onApply,
+}: {
+  draft: CharacterGenerationDraft;
+  isGenerating: boolean;
+  onClose: () => void;
+  onApply: (nextDraft: CharacterGenerationDraft) => void;
+}) {
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[92%] w-full overflow-y-auto rounded-t-[28px] border-t border-white/15 bg-black pt-3 shadow-[0_-20px_60px_rgba(0,0,0,0.55)]"
+        style={{ animation: 'character-editor-sheet-in 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both' }}
+        onClick={event => event.stopPropagation()}
+      >
+        <style>
+          {`
+            @keyframes character-editor-sheet-in {
+              from { transform: translateY(100%); }
+              to { transform: translateY(0); }
+            }
+          `}
+        </style>
+        <div className="sticky top-0 z-10 mb-4 bg-black/95 px-4 pb-3 backdrop-blur-md">
+          <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-white/25" />
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-white">编辑形象</h2>
+            <button
+              type="button"
+              aria-label="关闭编辑"
+              onClick={onClose}
+              className="flex size-9 items-center justify-center rounded-full bg-white/10 text-xl text-white"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        <CharacterGenerationEditor
+          initialDraft={draft}
+          submitLabel="应用并重新生成"
+          submittingLabel="应用中..."
+          disabled={isGenerating}
+          onSubmit={onApply}
+        />
+      </div>
     </div>
   );
 }
@@ -71,6 +128,8 @@ async function downloadImage(imageUrl: string) {
   }
 }
 
+// The hook keeps one generation batch's state transitions together.
+// eslint-disable-next-line max-lines-per-function
 function useGeneratedImages({
   styleName,
   referenceImageUrl,
@@ -153,6 +212,17 @@ function useGeneratedImages({
     );
   }, [generateBatch, remainingCount]);
 
+  const restartImages = useCallback(async (description: string) => {
+    if (generationInProgressRef.current) {
+      return;
+    }
+    setCandidates([]);
+    setSelectedCandidateId('');
+    selectedCandidateIdRef.current = '';
+    setErrorMessage('');
+    await generateBatch(description, IMAGE_BATCH_SIZE);
+  }, [generateBatch]);
+
   const selectCandidate = useCallback((candidateId: string) => {
     selectedCandidateIdRef.current = candidateId;
     setSelectedCandidateId(candidateId);
@@ -168,20 +238,29 @@ function useGeneratedImages({
     selectedCandidateId,
     selectedImageUrl,
     isSelectedImageLoading: selectedCandidate?.status === 'loading',
+    isSelectedImageFailed: selectedCandidate?.status === 'failed',
     isGenerating,
     errorMessage,
     generateInitialImages,
     generateMoreImages,
+    restartImages,
     selectCandidate,
   };
 }
 
+// The page coordinates scaling, generation, selection, and editor-sheet state.
+// eslint-disable-next-line max-lines-per-function
 export default function GeneratingSelectPage() {
   const draft = useCharacterGenerationStore.use.draft();
+  const setDraft = useCharacterGenerationStore.use.setDraft();
   const clearDraft = useCharacterGenerationStore.use.clearDraft();
   const containerRef = useRef<HTMLDivElement>(null);
   const generationStartedRef = useRef(false);
+  const pendingRestartRef = useRef(false);
   const [scale, setScale] = useState(1);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveErrorMessage, setSaveErrorMessage] = useState('');
   const description = draft?.promptText.trim() || '';
   const styleName = draft?.styleName.trim() || '通用';
   const referenceImageUrl = draft?.referenceImageUrl?.trim() || undefined;
@@ -190,10 +269,12 @@ export default function GeneratingSelectPage() {
     selectedCandidateId,
     selectedImageUrl,
     isSelectedImageLoading,
+    isSelectedImageFailed,
     isGenerating,
     errorMessage,
     generateInitialImages,
     generateMoreImages,
+    restartImages,
     selectCandidate,
   } = useGeneratedImages({ styleName, referenceImageUrl });
 
@@ -228,9 +309,34 @@ export default function GeneratingSelectPage() {
     void generateInitialImages(draft.promptText);
   }, [draft, generateInitialImages]);
 
-  const handleComplete = () => {
-    clearDraft();
-    router.replace('/pages/my-gallery');
+  useEffect(() => {
+    if (!pendingRestartRef.current || !draft) {
+      return;
+    }
+    pendingRestartRef.current = false;
+    void restartImages(draft.promptText);
+  }, [draft, restartImages]);
+
+  const handleComplete = async () => {
+    if (!selectedImageUrl || isSaving) {
+      return;
+    }
+    setIsSaving(true);
+    setSaveErrorMessage('');
+    try {
+      await tsRoleImageApi.importGeneratedImage({
+        sourceImageUrl: selectedImageUrl,
+        sourceType: 'ai_generate',
+      });
+      clearDraft();
+      router.replace('/pages/my-gallery');
+    }
+    catch (error) {
+      setSaveErrorMessage(getGenerationErrorMessage(error));
+    }
+    finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -255,15 +361,29 @@ export default function GeneratingSelectPage() {
           candidates={candidates}
           selectedCandidateId={selectedCandidateId}
           isSelectedImageLoading={isSelectedImageLoading}
-          isGenerating={isGenerating}
-          errorMessage={errorMessage}
-          onEdit={() => router.back()}
+          isSelectedImageFailed={isSelectedImageFailed}
+          isGenerating={isGenerating || isSaving}
+          isEditorOpen={isEditorOpen}
+          errorMessage={saveErrorMessage || errorMessage}
+          onEdit={() => setIsEditorOpen(true)}
           onSelectCandidate={selectCandidate}
           onAddImages={() => generateMoreImages(description)}
           onDownload={() => downloadImage(selectedImageUrl)}
-          onComplete={handleComplete}
+          onComplete={() => void handleComplete()}
         />
       </div>
+      {isEditorOpen && draft && (
+        <CharacterEditorSheet
+          draft={draft}
+          isGenerating={isGenerating}
+          onClose={() => setIsEditorOpen(false)}
+          onApply={(nextDraft) => {
+            pendingRestartRef.current = true;
+            setDraft(nextDraft);
+            setIsEditorOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
