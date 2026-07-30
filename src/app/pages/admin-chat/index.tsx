@@ -6,6 +6,7 @@ import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, wi
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
 import { createAsyncToolHistoryState, createImageToolHistoryState, hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from '@/lib/api';
+import { resolveApiErrorMessage } from '@/lib/i18n';
 import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
 import AdminChatMarkdownContent from '@/components/pages/admin-chat/admin-chat-markdown-content';
 import { useAgentChatStream } from "@/hooks";
@@ -48,12 +49,6 @@ type ChatMessage = {
   streamState?: AgentChatStreamState | null;
   localOnly?: boolean;
 };
-const SEND_ERROR_TEXT = "消息发送失败，请稍后重试。";
-const SESSION_CREATE_ERROR_TEXT = "Agent 会话创建失败，请稍后重试。";
-const SESSION_LOAD_ERROR_TEXT = "Agent 会话加载失败，请稍后重试。";
-const DEFAULT_SESSION_TITLE = "Agent 会话";
-const DEFAULT_SESSION_SUMMARY = "内容由AI生成";
-const DEFAULT_AI_REPLY_TEXT = "我收到了您的消息。";
 const FEATURE_CARDS_EXPANDED_HEIGHT = 251;
 const DEFAULT_AGENT_CHAT_APP_ID = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || "";
 const DEFAULT_AGENT_CHAT_AGENT_CODE = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || "admin_chat";
@@ -413,6 +408,7 @@ function FeatureCard({ icon, label }: { icon: ReactNode; label: string }) {
 
 /* ─── AI Creation Button ─────────────────────────────────────────────────── */
 function AIButton() {
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -452,7 +448,7 @@ function AIButton() {
             fontSize: 26,
           }}
         >
-          AI创作
+          {t('adminChat.brand')}
         </Text>
       </Pressable>
     </Animated.View>
@@ -460,10 +456,11 @@ function AIButton() {
 }
 
 function WebMenuIcon() {
+  const { t } = useTranslation();
   return (
     <button
       type="button"
-      aria-label="菜单"
+      aria-label={t('adminChat.menu')}
       onMouseEnter={(event) => {
         const image = event.currentTarget.querySelector("img");
         if (image) {
@@ -572,6 +569,7 @@ function AdminSidebar({
   reloadToken: number;
   creatingSession: boolean;
 }) {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState<{id: number; title: string; summary: string; appId: string | null; agentCode: string | null}[]>([]);
 
   useEffect(() => {
@@ -586,15 +584,15 @@ function AdminSidebar({
       tsAgentChatApi.getSessionList(query).then(res => {
         const mapped = (res.records || []).map(r => ({
           id: r.id,
-          title: r.sessionTitle || r.agentCode || "Agent 会话",
-          summary: r.sessionSummary || "内容由AI生成",
+          title: r.sessionTitle || r.agentCode || t('adminChat.defaultSessionTitle'),
+          summary: r.sessionSummary || t('adminChat.defaultSessionSummary'),
           appId: typeof r.appId === "string" && r.appId.trim() ? r.appId.trim() : null,
           agentCode: typeof r.agentCode === "string" && r.agentCode.trim() ? r.agentCode.trim() : null,
         }));
         setSessions(mapped);
       }).catch(console.error);
     }
-  }, [agentCode, isOpen, reloadToken]);
+  }, [agentCode, isOpen, reloadToken, t]);
 
   return (
     <div
@@ -612,7 +610,7 @@ function AdminSidebar({
       >
         <div className="mb-[20px] flex items-center justify-between gap-[14px]">
           <h2 className="text-[28px] text-white font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif]">
-            会话列表
+            {t('adminChat.sessionList')}
           </h2>
           <button
             onClick={onCreateSession}
@@ -620,7 +618,7 @@ function AdminSidebar({
             className="inline-flex items-center gap-[8px] rounded-[14px] border border-white/10 bg-[#ff8904] px-[16px] py-[11px] text-[18px] text-white active:scale-95 transition-transform disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Image source={imgFluentAdd12Filled} style={{ width: 16, height: 16 }} resizeMode="contain" />
-            {creatingSession ? "创建中..." : "新建会话"}
+            {creatingSession ? t('adminChat.sessionState.creating') : t('adminChat.newConversation')}
           </button>
         </div>
 
@@ -656,13 +654,13 @@ function AdminSidebar({
                   onClick={() => onRenameSession(s.id, s.title)}
                   className="text-[#4da6ff] text-[20px] p-[10px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] active:scale-95 transition-transform bg-transparent border-none cursor-pointer"
                 >
-                  重命名
+                  {t('adminChat.sessionActions.rename')}
                 </button>
                 <button
                   onClick={() => onDeleteSession(s.id)}
                   className="text-[#ff4444] text-[20px] p-[10px] font-['Alibaba_PuHuiTi_3.0','Noto_Sans_SC',sans-serif] active:scale-95 transition-transform bg-transparent border-none cursor-pointer"
                 >
-                  删除
+                  {t('adminChat.sessionActions.delete')}
                 </button>
               </div>
             </div>
@@ -676,6 +674,9 @@ function AdminSidebar({
 /* ─── App ────────────────────────────────────────────────────────────────── */
 export default function App() {
   const { t } = useTranslation();
+  const defaultSessionTitle = t('adminChat.defaultSessionTitle');
+  const defaultSessionSummary = t('adminChat.defaultSessionSummary');
+  const defaultAiReplyText = t('adminChat.defaultReply');
   const params = useLocalSearchParams<{ agentSessionId?: string | string[]; agentCode?: string | string[]; appId?: string | string[] }>();
   const initialSessionId = parseSessionId(params.agentSessionId);
   const initialAgentCode = firstParam(params.agentCode)?.trim() || DEFAULT_AGENT_CHAT_AGENT_CODE;
@@ -685,16 +686,16 @@ export default function App() {
   const [sending, setSending] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState(DEFAULT_SESSION_TITLE);
-  const [sessionSummary, setSessionSummary] = useState(DEFAULT_SESSION_SUMMARY);
+  const [sessionTitle, setSessionTitle] = useState(defaultSessionTitle);
+  const [sessionSummary, setSessionSummary] = useState(defaultSessionSummary);
   const [resolvedAgentCode, setResolvedAgentCode] = useState<string | null>(initialAgentCode);
   const [resolvedAppId, setResolvedAppId] = useState<string | null>(initialAppId);
   const [currentSessionId, setCurrentSessionId] = useState<number | null>(initialSessionId);
   const [pendingSession, setPendingSession] = useState<PendingSessionState | null>(() => ({
     appId: initialAppId,
     agentCode: initialAgentCode,
-    sessionTitle: DEFAULT_SESSION_TITLE,
-    sessionSummary: DEFAULT_SESSION_SUMMARY,
+    sessionTitle: defaultSessionTitle,
+    sessionSummary: defaultSessionSummary,
   }));
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [renameTargetId, setRenameTargetId] = useState<number | null>(null);
@@ -753,16 +754,16 @@ export default function App() {
     let alive = true;
     const applyBlankState = () => {
       setCurrentSessionId(null);
-      setSessionTitle(DEFAULT_SESSION_TITLE);
-      setSessionSummary(DEFAULT_SESSION_SUMMARY);
+      setSessionTitle(defaultSessionTitle);
+      setSessionSummary(defaultSessionSummary);
       setMessages([createLocalGreetingMessage(greetingText)]);
       setResolvedAgentCode(initialAgentCode);
       setResolvedAppId(initialAppId);
       setPendingSession({
         appId: initialAppId,
         agentCode: initialAgentCode,
-        sessionTitle: DEFAULT_SESSION_TITLE,
-        sessionSummary: DEFAULT_SESSION_SUMMARY,
+        sessionTitle: defaultSessionTitle,
+        sessionSummary: defaultSessionSummary,
       });
     };
 
@@ -777,12 +778,12 @@ export default function App() {
       setSessionTitle(
         typeof detail?.sessionTitle === "string" && detail.sessionTitle.trim()
           ? detail.sessionTitle.trim()
-          : nextAgentCode || DEFAULT_SESSION_TITLE,
+          : nextAgentCode || defaultSessionTitle,
       );
       setSessionSummary(
         typeof detail?.sessionSummary === "string" && detail.sessionSummary.trim()
           ? detail.sessionSummary.trim()
-          : DEFAULT_SESSION_SUMMARY,
+          : defaultSessionSummary,
       );
       setResolvedAgentCode(nextAgentCode || initialAgentCode);
       setResolvedAppId(nextAppId || initialAppId);
@@ -852,20 +853,27 @@ export default function App() {
 
       try {
         await resolveLatestSession();
-      } catch {
+      } catch (error) {
         if (!alive) {
           return;
         }
         setCurrentSessionId(null);
-        setSessionTitle(DEFAULT_SESSION_TITLE);
-        setSessionSummary(DEFAULT_SESSION_SUMMARY);
+        setSessionTitle(defaultSessionTitle);
+        setSessionSummary(defaultSessionSummary);
         setPendingSession({
           appId: initialAppId,
           agentCode: initialAgentCode,
-          sessionTitle: DEFAULT_SESSION_TITLE,
-          sessionSummary: DEFAULT_SESSION_SUMMARY,
+          sessionTitle: defaultSessionTitle,
+          sessionSummary: defaultSessionSummary,
         });
-        setMessages([{ id: Date.now(), role: "ai", content: SESSION_LOAD_ERROR_TEXT, loading: false, status: "error", streamState: null }]);
+        setMessages([{
+          id: Date.now(),
+          role: "ai",
+          content: resolveApiErrorMessage(error, t('adminChat.errors.loadSession')),
+          loading: false,
+          status: "error",
+          streamState: null,
+        }]);
       }
     };
 
@@ -873,7 +881,15 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, [greetingText, initialAgentCode, initialAppId, initialSessionId]);
+  }, [
+    defaultSessionSummary,
+    defaultSessionTitle,
+    greetingText,
+    initialAgentCode,
+    initialAppId,
+    initialSessionId,
+    t,
+  ]);
 
   const appendMessage = (next: ChatMessage) => {
     setMessages(prev => [...prev, next]);
@@ -896,37 +912,37 @@ export default function App() {
         ? {
             appId: (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim(),
             agentCode: (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim(),
-            sessionTitle: DEFAULT_SESSION_TITLE,
-            sessionSummary: DEFAULT_SESSION_SUMMARY,
+            sessionTitle: defaultSessionTitle,
+            sessionSummary: defaultSessionSummary,
           }
         : pendingSession ?? {
             appId: (resolvedAppId || initialAppId || DEFAULT_AGENT_CHAT_APP_ID).trim(),
             agentCode: (resolvedAgentCode || initialAgentCode || DEFAULT_AGENT_CHAT_AGENT_CODE).trim(),
-            sessionTitle: sessionTitle.trim() || DEFAULT_SESSION_TITLE,
-            sessionSummary: sessionSummary.trim() || DEFAULT_SESSION_SUMMARY,
+            sessionTitle: sessionTitle.trim() || defaultSessionTitle,
+            sessionSummary: sessionSummary.trim() || defaultSessionSummary,
           };
       const nextAppId = draftSession.appId.trim();
       const nextAgentCode = draftSession.agentCode.trim();
       if (!nextAppId || !nextAgentCode) {
-        throw new Error(SESSION_CREATE_ERROR_TEXT);
+        throw new Error(t('adminChat.errors.createSession'));
       }
 
       const created = await tsAgentChatApi.createSession({
         appId: nextAppId,
         agentCode: nextAgentCode,
-        sessionTitle: draftSession.sessionTitle.trim() || DEFAULT_SESSION_TITLE,
-        sessionSummary: draftSession.sessionSummary.trim() || DEFAULT_SESSION_SUMMARY,
+        sessionTitle: draftSession.sessionTitle.trim() || defaultSessionTitle,
+        sessionSummary: draftSession.sessionSummary.trim() || defaultSessionSummary,
       });
       if (!created?.id || !Number.isFinite(created.id)) {
-        throw new Error("创建会话失败");
+        throw new Error(t('adminChat.errors.createSession'));
       }
 
       const nextSessionId = created.id;
       setCurrentSessionId(nextSessionId);
       setResolvedAppId(typeof created.appId === "string" && created.appId.trim() ? created.appId.trim() : nextAppId);
       setResolvedAgentCode(typeof created.agentCode === "string" && created.agentCode.trim() ? created.agentCode.trim() : nextAgentCode);
-      setSessionTitle(typeof created.sessionTitle === "string" && created.sessionTitle.trim() ? created.sessionTitle.trim() : DEFAULT_SESSION_TITLE);
-      setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : DEFAULT_SESSION_SUMMARY);
+      setSessionTitle(typeof created.sessionTitle === "string" && created.sessionTitle.trim() ? created.sessionTitle.trim() : defaultSessionTitle);
+      setSessionSummary(typeof created.sessionSummary === "string" && created.sessionSummary.trim() ? created.sessionSummary.trim() : defaultSessionSummary);
       setPendingSession(null);
       if (options?.clearMessages) {
         setMessages([createLocalGreetingMessage(greetingText)]);
@@ -940,8 +956,15 @@ export default function App() {
       writeLastAgentSessionId(nextSessionId);
       setSidebarReloadToken((prev) => prev + 1);
       return nextSessionId;
-    } catch {
-      appendMessage({ id: Date.now(), role: "ai", content: SESSION_CREATE_ERROR_TEXT, loading: false, status: "error", streamState: null });
+    } catch (error) {
+      appendMessage({
+        id: Date.now(),
+        role: "ai",
+        content: resolveApiErrorMessage(error, t('adminChat.errors.createSession')),
+        loading: false,
+        status: "error",
+        streamState: null,
+      });
       return null;
     } finally {
       creatingSessionRef.current = false;
@@ -994,7 +1017,7 @@ export default function App() {
     }
     const nextTitle = renameDraft.trim();
     if (!nextTitle) {
-      appendMessage({ id: Date.now(), role: "ai", content: "会话标题不能为空。" });
+      appendMessage({ id: Date.now(), role: "ai", content: t('adminChat.rename.titleRequired') });
       return;
     }
     try {
@@ -1006,14 +1029,18 @@ export default function App() {
       setRenameModalVisible(false);
       setRenameTargetId(null);
       setSidebarReloadToken(prev => prev + 1);
-    } catch {
-      appendMessage({ id: Date.now(), role: "ai", content: "重命名失败，请稍后重试。" });
+    } catch (error) {
+      appendMessage({
+        id: Date.now(),
+        role: "ai",
+        content: resolveApiErrorMessage(error, t('adminChat.errors.renameSession')),
+      });
     }
   };
 
   const handleDeleteSession = async (id: number) => {
     const confirmDelete = typeof globalThis.confirm === "function"
-      ? globalThis.confirm("确定删除这个会话吗？")
+      ? globalThis.confirm(t('adminChat.deleteConfirm'))
       : true;
     if (!confirmDelete) {
       return;
@@ -1022,21 +1049,25 @@ export default function App() {
       await tsAgentChatApi.deleteSession(id);
       if (currentSessionId === id) {
         setCurrentSessionId(null);
-        setSessionTitle(DEFAULT_SESSION_TITLE);
-        setSessionSummary(DEFAULT_SESSION_SUMMARY);
+        setSessionTitle(defaultSessionTitle);
+        setSessionSummary(defaultSessionSummary);
         setMessages([createLocalGreetingMessage(greetingText)]);
         setPendingSession({
           appId: initialAppId,
           agentCode: initialAgentCode,
-          sessionTitle: DEFAULT_SESSION_TITLE,
-          sessionSummary: DEFAULT_SESSION_SUMMARY,
+          sessionTitle: defaultSessionTitle,
+          sessionSummary: defaultSessionSummary,
         });
         writeLastAgentSessionId(null);
       }
       setSidebarReloadToken(prev => prev + 1);
       setIsSidebarOpen(false);
-    } catch {
-      appendMessage({ id: Date.now(), role: "ai", content: "删除失败，请稍后重试。" });
+    } catch (error) {
+      appendMessage({
+        id: Date.now(),
+        role: "ai",
+        content: resolveApiErrorMessage(error, t('adminChat.errors.deleteSession')),
+      });
     }
   };
 
@@ -1120,7 +1151,7 @@ export default function App() {
           });
           const aiText = typeof reply?.contentText === "string" && reply.contentText.trim()
             ? reply.contentText.trim()
-            : DEFAULT_AI_REPLY_TEXT;
+            : defaultAiReplyText;
           updateMessageById(aiId, (item) => ({
             ...item,
             content: aiText,
@@ -1131,7 +1162,7 @@ export default function App() {
           return;
         }
 
-        const errMsg = streamError instanceof Error ? streamError.message : String(streamError);
+        const errMsg = resolveApiErrorMessage(streamError, t('adminChat.errors.sendMessage'));
         const failedState = agentStream.markError(aiId, errMsg);
         if (!failedState) {
           return;
@@ -1158,7 +1189,7 @@ export default function App() {
         return;
       }
 
-      const errMsg = error instanceof Error ? error.message : String(error);
+      const errMsg = resolveApiErrorMessage(error, t('adminChat.errors.sendMessage'));
       updateMessageById(aiId, (item) => ({
         ...item,
         content: errMsg,
@@ -1451,7 +1482,7 @@ export default function App() {
                   setInputValue("");
                 }
               }}
-              placeholder="发消息或按住说话..."
+              placeholder={t('adminChat.inputPlaceholder')}
               maxLength={300}
               rows={1}
               onKeyDown={(event) => {
@@ -1515,28 +1546,28 @@ export default function App() {
               }}
             >
               <FeatureCard
-                label="相机"
+                label={t('adminChat.features.camera')}
                 icon={
                   <Image source={imgFeatureCamera} style={{ width: 37.5, height: 33.75 }} resizeMode="contain" />
                 }
               />
 
               <FeatureCard
-                label="图片"
+                label={t('adminChat.features.image')}
                 icon={
                   <Image source={imgFeatureImage} style={{ width: 42.3, height: 42.3 }} resizeMode="contain" />
                 }
               />
 
               <FeatureCard
-                label="文件"
+                label={t('adminChat.features.file')}
                 icon={
                   <Image source={imgFeatureFile} style={{ width: 38.8, height: 38.8 }} resizeMode="contain" />
                 }
               />
 
               <FeatureCard
-                label="通话"
+                label={t('adminChat.features.call')}
                 icon={
                   <Image source={imgFeatureCall} style={{ width: 48, height: 48 }} resizeMode="contain" />
                 }
@@ -1565,11 +1596,13 @@ export default function App() {
         >
           <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "center", alignItems: "center", padding: 24 }}>
             <View style={{ width: "100%", maxWidth: 520, borderRadius: 20, backgroundColor: "#2d2520", padding: 20 }}>
-              <Text style={{ color: "#fff", fontSize: 24, marginBottom: 12 }}>重命名会话</Text>
+              <Text style={{ color: "#fff", fontSize: 24, marginBottom: 12 }}>
+                {t('adminChat.rename.title')}
+              </Text>
               <TextInput
                 value={renameDraft}
                 onChangeText={setRenameDraft}
-                placeholder="请输入会话标题"
+                placeholder={t('adminChat.rename.placeholder')}
                 placeholderTextColor="rgba(255,255,255,0.35)"
                 style={{
                   borderRadius: 14,
@@ -1585,10 +1618,14 @@ export default function App() {
               />
               <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12, marginTop: 18 }}>
                 <Pressable onPress={() => { setRenameModalVisible(false); setRenameTargetId(null); }} style={{ paddingHorizontal: 18, paddingVertical: 12 }}>
-                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 16 }}>取消</Text>
+                  <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 16 }}>
+                    {t('adminChat.cancel')}
+                  </Text>
                 </Pressable>
                 <Pressable onPress={() => void confirmRenameSession()} style={{ paddingHorizontal: 18, paddingVertical: 12, borderRadius: 12, backgroundColor: "#ff8904" }}>
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>确定</Text>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>
+                    {t('adminChat.confirmAction')}
+                  </Text>
                 </Pressable>
               </View>
             </View>

@@ -1,0 +1,84 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "loadingMore": "加载更多...",
+    "done": "完成",
+    "manage": "管理",
+    "use": "使用",
+    "deleting": "删除中..."
+  },
+  "browse": {
+    "storyTab": "故事",
+    "characterTab": "角色",
+    "searchStory": "搜索故事",
+    "searchCharacter": "搜索角色",
+    "storyLoadFailed": "故事列表加载失败",
+    "characterLoadFailed": "角色列表加载失败",
+    "noStories": "暂无故事",
+    "noCharacters": "暂无角色",
+    "tryDifferentKeyword": "请尝试搜索其他关键词",
+    "categories": {
+      "recommended": "推荐",
+      "subscribed": "订阅",
+      "liked": "点赞",
+      "anime": "二次元",
+      "urban": "都市",
+      "ancient": "古风",
+      "sciFi": "科幻"
+    }
+  },
+  "roleDetail": {
+    "follow": "关注",
+    "authorLabel": "作者：",
+    "connections": "连接者",
+    "followers": "粉丝",
+    "chats": "对话数",
+    "aboutTab": "关于 TA",
+    "storyTab": "故事",
+    "roleFallback": "角色",
+    "authorFallback": "作者",
+    "noStory": "暂无故事内容",
+    "roleLoadFailed": "角色信息加载失败",
+    "authorLoadFailed": "作者信息加载失败",
+    "pageLoadFailed": "页面数据加载失败"
+  },
+  "selectRole": {
+    "title": "选择角色",
+    "search": "搜索角色",
+    "roleFallback": "角色{{id}}",
+    "loadFailed": "角色加载失败，请稍后重试",
+    "noSelectable": "暂无可选角色",
+    "noData": "暂无数据"
+  },
+  "gallery": {
+    "sourceTypes": {
+      "reference": "参考图",
+      "generated": "生成图",
+      "favorite": "收藏图"
+    },
+    "uncategorized": "未分类",
+    "imageFallback": "图片{{id}}",
+    "role": {
+      "title": "我的图库",
+      "emptyTitle": "你还没有角色图片",
+      "emptyDescription": "生成或保存角色图片后，会显示在这里",
+      "emptyAction": "返回创建角色"
+    },
+    "story": {
+      "title": "故事背景图库",
+      "emptyTitle": "你还没有故事背景图片",
+      "emptyDescription": "保存故事背景图片后，会显示在这里",
+      "emptyAction": "返回创建故事"
+    },
+    "default": {
+      "title": "我的图库",
+      "emptyTitle": "你还没有图片",
+      "emptyDescription": "上传参考图或保存生成结果后，会显示在这里",
+      "emptyAction": "返回创建人物"
+    },
+    "loadFailed": "图库加载失败，请稍后重试",
+    "unavailable": "当前图片地址不可用，无法回填",
+    "deleteFailed": "有 {{count}} 张图片删除失败，请重试",
+    "deleteCount": "删除 {{count}} 张图片"
+  }
+}

@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 import type { TsRoleDetail, TsStory } from '@/lib/api';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dimensions,
   Image,
@@ -73,19 +74,6 @@ type MineGridSectionProps = {
   onTabChange: (value: number) => void;
   onItemPress: (item: GridItem) => void;
 };
-
-const FALLBACK_GRID_ITEMS: GridItem[] = Array.from({ length: 6 }, (_, i) => ({
-  id: `fallback-${i}`,
-  image: imgGridImage,
-  views: '--',
-  author: '@用户',
-  authorAvatar: imgUserAvatar,
-}));
-
-const TABS = [
-  { label: '故事', value: 0 },
-  { label: '角色', value: 1 },
-];
 
 function toAssetUri(source: ImageSourcePropType | null | undefined) {
   const resolved = source as any;
@@ -199,6 +187,7 @@ function GridCard({ item, onPress, showDetails = false }: { item: GridItem; onPr
 }
 
 function useMineData() {
+  const { t } = useTranslation();
   const [state, setState] = React.useState<MineDataState>({
     userInfo: null,
     stories: [],
@@ -223,13 +212,13 @@ function useMineData() {
 
       const failedMessages: string[] = [];
       if (userResult.status !== 'fulfilled') {
-        failedMessages.push('用户信息加载失败');
+        failedMessages.push(t('profile.errors.userLoadFailed'));
       }
       if (storyResult.status !== 'fulfilled') {
-        failedMessages.push('故事列表加载失败');
+        failedMessages.push(t('profile.errors.storyLoadFailed'));
       }
       if (roleResult.status !== 'fulfilled') {
-        failedMessages.push('角色列表加载失败');
+        failedMessages.push(t('profile.errors.roleLoadFailed'));
       }
 
       setState(prev => ({
@@ -245,19 +234,20 @@ function useMineData() {
       if (!alive) {
         return;
       }
-      const fallbackMessage = error instanceof Error ? error.message : '页面数据加载失败';
+      const fallbackMessage = error instanceof Error ? error.message : t('profile.errors.pageLoadFailed');
       setState(prev => ({ ...prev, loading: false, loadError: fallbackMessage }));
     });
 
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t]);
 
   return state;
 }
 
 function MineHeaderSection(props: MineHeaderSectionProps) {
+  const { t } = useTranslation();
   const {
     avatarSource,
     displayName,
@@ -295,9 +285,9 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
         </div>
 
         <div style={webStyles.statsRow}>
-          <StatItem value={followStat} label="关注" />
-          <StatItem value={fansStat} label="粉丝" />
-          <StatItem value={likeStat} label="点赞" />
+          <StatItem value={followStat} label={t('profile.stats.following')} />
+          <StatItem value={fansStat} label={t('profile.stats.followers')} />
+          <StatItem value={likeStat} label={t('profile.stats.likes')} />
         </div>
       </div>
     );
@@ -339,9 +329,9 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
         </View>
 
         <View style={styles.statsRow}>
-          <StatItem value={followStat} label="关注" />
-          <StatItem value={fansStat} label="粉丝" />
-          <StatItem value={likeStat} label="点赞" />
+          <StatItem value={followStat} label={t('profile.stats.following')} />
+          <StatItem value={fansStat} label={t('profile.stats.followers')} />
+          <StatItem value={likeStat} label={t('profile.stats.likes')} />
         </View>
       </View>
 
@@ -350,6 +340,7 @@ function MineHeaderSection(props: MineHeaderSectionProps) {
 }
 
 function MineGridSection(props: MineGridSectionProps) {
+  const { t } = useTranslation();
   const {
     activeGridItems,
     activeTab,
@@ -358,13 +349,17 @@ function MineGridSection(props: MineGridSectionProps) {
     onTabChange,
     onItemPress,
   } = props;
+  const tabs = [
+    { label: t('profile.tabs.stories'), value: 0 },
+    { label: t('profile.tabs.characters'), value: 1 },
+  ];
 
   if (Platform.OS === 'web') {
     return (
       <>
         <div style={webStyles.tabBar}>
           <AiNavigateTabs
-            options={TABS}
+            options={tabs}
             activeValue={activeTab}
             onChange={value => onTabChange(Number(value))}
             activeTextClassName="text-brand-green/90 text-[18px] font-bold pb-[10px]"
@@ -389,8 +384,10 @@ function MineGridSection(props: MineGridSectionProps) {
           ) : !loading && !loadError ? (
             <div style={webStyles.emptyWrap}>
               <AiEmpty
-                title={activeTab === 0 ? '还没有发布故事' : '还没有发布角色'}
-                description="快去发现页看看大家的创作，或者自己动笔试试吧！"
+                title={activeTab === 0
+                  ? t('profile.empty.stories')
+                  : t('profile.empty.characters')}
+                description={t('profile.empty.description')}
                 style={{ marginTop: 40, width: width - GRID_PADDING * 2 }}
               />
             </div>
@@ -404,7 +401,7 @@ function MineGridSection(props: MineGridSectionProps) {
     <>
       <View style={styles.tabBar}>
         <AiNavigateTabs
-          options={TABS}
+          options={tabs}
           activeValue={activeTab}
           onChange={value => onTabChange(Number(value))}
           activeTextClassName="text-brand-green/90 text-[18px] font-bold pb-[10px]"
@@ -427,9 +424,11 @@ function MineGridSection(props: MineGridSectionProps) {
             <GridCard key={item.id} item={item} onPress={() => onItemPress(item)} />
           ))
         ) : !loading && !loadError ? (
-          <AiEmpty 
-            title={activeTab === 0 ? "还没有发布故事" : "还没有发布角色"} 
-            description="快去发现页看看大家的创作，或者自己动笔试试吧！" 
+          <AiEmpty
+            title={activeTab === 0
+              ? t('profile.empty.stories')
+              : t('profile.empty.characters')}
+            description={t('profile.empty.description')}
             style={{ marginTop: 40, width: width - GRID_PADDING * 2 }}
           />
         ) : null}
@@ -439,11 +438,12 @@ function MineGridSection(props: MineGridSectionProps) {
 }
 
 function useMineViewModel(activeTab: number) {
+  const { t } = useTranslation();
   const { userInfo, stories, roles, loading, loadError } = useMineData();
 
   const displayName = React.useMemo(
-    () => String(pickFirstValue(userInfo, ['realname', 'nickname', 'username']) || '用户'),
-    [userInfo],
+    () => String(pickFirstValue(userInfo, ['realname', 'nickname', 'username']) || t('profile.fallbackUser')),
+    [t, userInfo],
   );
   const displayUid = React.useMemo(
     () => String(pickFirstValue(userInfo, ['id', 'username', 'phone']) || '--'),
@@ -514,6 +514,7 @@ function useMineViewModel(activeTab: number) {
 }
 
 export default function Mine() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = React.useState(1);
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   const [isResolving, setIsResolving] = React.useState(false);
@@ -613,7 +614,7 @@ export default function Mine() {
             <div style={webStyles.previewBox}>
               <img src={toAssetUri(viewModel.avatarSource)} style={webStyles.previewImage} />
             </div>
-            <div style={webStyles.previewTip}>点击任意区域关闭</div>
+            <div style={webStyles.previewTip}>{t('profile.previewClose')}</div>
           </div>
         ) : null}
       </div>
@@ -664,7 +665,7 @@ export default function Mine() {
                 resizeMode="cover"
               />
             </View>
-            <Text style={styles.previewTip}>点击任意区域关闭</Text>
+            <Text style={styles.previewTip}>{t('profile.previewClose')}</Text>
           </View>
         </TouchableWithoutFeedback>
       </Modal>

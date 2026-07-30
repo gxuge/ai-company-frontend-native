@@ -1,6 +1,8 @@
+import type { TFunction } from 'i18next';
 import type { TsChatSession } from '@/lib/api';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
@@ -18,38 +20,6 @@ const imgIconMoreSquare = ((m: any) => m?.default ?? m?.uri ?? m)(require('../..
 const imgImage = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/fe8f8455c56209efe0d72facc734a87895b2dd6d.png'));
 const imgAvatar = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/session-list/5acb32030bcf30b8d2528774380aabcaab7e2018.png'));
 const imgSystemAvatar = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/quick-login/logo.png'));
-
-const tabs = [
-  { label: '消息', value: '消息' },
-  { label: '关注', value: '关注' },
-];
-
-const categories = [
-  {
-    label: '关注',
-    color: '#3B82F6',
-    fillOpacity: 0.3,
-    icon: 'addUser',
-  },
-  {
-    label: '订阅',
-    color: '#F97316',
-    fillOpacity: 0.2,
-    icon: 'frame',
-  },
-  {
-    label: '点赞',
-    color: '#EF4444',
-    fillOpacity: 0.2,
-    icon: 'heart',
-  },
-  {
-    label: '评论',
-    color: '#84CC16',
-    fillOpacity: 0.2,
-    icon: 'moreSquare',
-  },
-];
 
 type Conversation = {
   id: number;
@@ -96,7 +66,7 @@ function normalizeBadge(value: unknown) {
   return 0;
 }
 
-async function buildConversationRows(sessions: TsChatSession[]) {
+async function buildConversationRows(sessions: TsChatSession[], t: TFunction) {
   const messageEntries = await Promise.all(
     sessions.map(async (session) => {
       if (!session.id || !Number.isFinite(session.id)) {
@@ -120,8 +90,8 @@ async function buildConversationRows(sessions: TsChatSession[]) {
   const messageMap = new Map<number, string>(messageEntries);
   return sessions.map(session => ({
     id: session.id,
-    name: session.sessionTitle?.trim() || `会话${session.id}`,
-    message: messageMap.get(session.id) || '暂无消息',
+    name: session.sessionTitle?.trim() || t('chat.sessionList.sessionFallback', { id: session.id }),
+    message: messageMap.get(session.id) || t('chat.sessionList.noMessage'),
     time: formatConversationTime(session.lastMessageAt || session.updatedAt || session.createdAt),
     badge: normalizeBadge(session.unreadCount),
     isSystemSession: session.isSystemSession === true,
@@ -130,6 +100,7 @@ async function buildConversationRows(sessions: TsChatSession[]) {
 }
 
 function useSessionListData() {
+  const { t } = useTranslation();
   const [state, setState] = useState<SessionListState>({
     conversations: [],
     loading: false,
@@ -149,7 +120,7 @@ function useSessionListData() {
       }
 
       const sessions = sessionPage?.records || [];
-      const conversations = await buildConversationRows(sessions);
+      const conversations = await buildConversationRows(sessions, t);
       if (!alive) {
         return;
       }
@@ -164,14 +135,14 @@ function useSessionListData() {
       if (!alive) {
         return;
       }
-      const message = error instanceof Error ? error.message : '会话列表加载失败';
+      const message = error instanceof Error ? error.message : t('chat.sessionList.loadFailed');
       setState(prev => ({ ...prev, loading: false, loadError: message }));
     });
 
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t]);
 
   return state;
 }
@@ -265,8 +236,39 @@ function ConversationItem({
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('关注');
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<string>('following');
   const { conversations, loading } = useSessionListData();
+  const tabs = [
+    { label: t('chat.sessionList.tabs.messages'), value: 'messages' },
+    { label: t('chat.sessionList.tabs.following'), value: 'following' },
+  ];
+  const categories = [
+    {
+      label: t('chat.sessionList.categories.following'),
+      color: '#3B82F6',
+      fillOpacity: 0.3,
+      icon: 'addUser',
+    },
+    {
+      label: t('chat.sessionList.categories.subscribed'),
+      color: '#F97316',
+      fillOpacity: 0.2,
+      icon: 'frame',
+    },
+    {
+      label: t('chat.sessionList.categories.liked'),
+      color: '#EF4444',
+      fillOpacity: 0.2,
+      icon: 'heart',
+    },
+    {
+      label: t('chat.sessionList.categories.comments'),
+      color: '#84CC16',
+      fillOpacity: 0.2,
+      icon: 'moreSquare',
+    },
+  ];
   const handleOpenConversation = (conversation: Conversation) => {
     const pathname = conversation.isSystemSession ? '/pages/system-chat' : '/pages/chat';
     router.push({
@@ -326,7 +328,10 @@ export default function App() {
           ) : null}
           {!loading && conversations.length === 0 ? (
             <div className="mt-10">
-              <AiEmpty title="暂无会话" description="这里还没有任何会话记录" />
+              <AiEmpty
+                title={t('chat.sessionList.emptyTitle')}
+                description={t('chat.sessionList.emptyDescription')}
+              />
             </div>
           ) : null}
           {conversations.map(conv => (

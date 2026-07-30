@@ -1,0 +1,24 @@
+{
+  "fallbackUser": "User",
+  "stats": {
+    "following": "Following",
+    "followers": "Followers",
+    "likes": "Likes"
+  },
+  "tabs": {
+    "stories": "Stories",
+    "characters": "Characters"
+  },
+  "errors": {
+    "userLoadFailed": "Failed to load user information",
+    "storyLoadFailed": "Failed to load stories",
+    "roleLoadFailed": "Failed to load characters",
+    "pageLoadFailed": "Failed to load page data"
+  },
+  "empty": {
+    "stories": "No published stories yet",
+    "characters": "No published characters yet",
+    "description": "Explore other creations or start making your own."
+  },
+  "previewClose": "Tap anywhere to close"
+}

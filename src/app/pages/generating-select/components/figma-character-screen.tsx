@@ -6,6 +6,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const resolveAsset = (module: any) => module?.default ?? module?.uri ?? module;
 const addImageIcon = resolveAsset(require('@/assets/images/generating-select/d7c543af9a5ae14dd578336d153ad1d83603de12.png'));
@@ -63,6 +64,8 @@ function PreviewSection({
   isSelectedImageFailed,
   isSelectedImageLoading,
 }: PreviewSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <section className="absolute inset-0 overflow-hidden bg-[#0f0f10]">
       {imageUrl && (
@@ -70,7 +73,7 @@ function PreviewSection({
           <img
             key={imageUrl}
             src={imageUrl}
-            alt="生成的角色形象"
+            alt={t('generatingSelect.previewAlt')}
             className="size-full object-cover"
             style={{ animation: 'generating-select-image-in 520ms ease-out both' }}
           />
@@ -80,7 +83,7 @@ function PreviewSection({
       {isSelectedImageLoading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-black/48 backdrop-blur-[2px]">
           <LoaderCircle className="animate-spin text-[#c4a664]" size={58} strokeWidth={1.8} />
-          <span className="text-[24px] tracking-[2px] text-[#d5c8b0]">正在生成形象...</span>
+          <span className="text-[24px] tracking-[2px] text-[#d5c8b0]">{t('generatingSelect.generating')}</span>
           <div
             className="absolute inset-y-0 w-[32%] rotate-12 bg-linear-to-r from-transparent via-white/10 to-transparent"
             style={{ animation: 'generating-select-shimmer 1.8s linear infinite' }}
@@ -93,8 +96,8 @@ function PreviewSection({
             <ImageOff size={45} strokeWidth={1.5} className="text-white/75" />
           </span>
           <div className="flex flex-col items-center gap-2">
-            <span className="text-[25px] font-medium text-white/85">图片生成失败</span>
-            <span className="text-[18px] text-white/45">请选择其他图片</span>
+            <span className="text-[25px] font-medium text-white/85">{t('generatingSelect.failed')}</span>
+            <span className="text-[18px] text-white/45">{t('generatingSelect.selectAnother')}</span>
           </div>
         </div>
       )}
@@ -112,6 +115,8 @@ function DescriptionEditor({
   errorMessage,
   onEdit,
 }: DescriptionEditorProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="absolute top-[282px] right-[54px] left-[54px]">
       <div className="mb-[18px] flex items-center justify-between">
@@ -121,11 +126,11 @@ function DescriptionEditor({
             alt=""
             className="h-[24px] w-[26px] object-contain"
           />
-          图片描述
+          {t('generatingSelect.description')}
         </h2>
         <button
           type="button"
-          aria-label="返回编辑图片描述"
+          aria-label={t('generatingSelect.editDescription')}
           className="flex size-[44px] items-center justify-center rounded-full text-[#9c8d7d] transition-colors hover:bg-white/5 active:bg-white/10"
           onClick={onEdit}
         >
@@ -142,7 +147,7 @@ function DescriptionEditor({
           wordBreak: 'break-word',
         }}
       >
-        {description || '暂无图片描述'}
+        {description || t('generatingSelect.emptyDescription')}
       </p>
       {errorMessage && (
         <p className="mt-2 truncate text-[19px] text-[#d88181]" title={errorMessage}>
@@ -181,6 +186,8 @@ function CandidateImages({
   onSelectCandidate,
   onAddImages,
 }: CandidateImagesProps) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="absolute top-[112px] right-[54px] left-[54px] flex justify-start gap-[18px] overflow-x-auto [&::-webkit-scrollbar]:hidden"
@@ -190,7 +197,7 @@ function CandidateImages({
         <button
           key={candidate.id}
           type="button"
-          aria-label={`选择第${index + 1}张形象`}
+          aria-label={t('generatingSelect.selectCandidate', { index: index + 1 })}
           onClick={() => onSelectCandidate(candidate.id)}
           className={`h-[144px] w-[104px] shrink-0 overflow-hidden rounded-[18px] border-2 bg-[#242220] transition-transform active:scale-95 ${getCandidateBorderClass(candidate, selectedCandidateId)}`}
         >
@@ -212,7 +219,7 @@ function CandidateImages({
                 <ImageOff size={25} strokeWidth={1.8} className="text-white/75" />
               </span>
               <span className="text-[15px] font-medium text-white/75">
-                生成失败
+                {t('generatingSelect.candidateFailed')}
               </span>
             </span>
           )}
@@ -221,7 +228,7 @@ function CandidateImages({
       {candidates.length < MAX_IMAGE_COUNT && (
         <button
           type="button"
-          aria-label="生成四张新的候选形象"
+          aria-label={t('generatingSelect.addCandidates')}
           onClick={onAddImages}
           disabled={isGenerating}
           className="flex h-[144px] w-[104px] shrink-0 items-center justify-center rounded-[18px] border-2 border-dashed border-[#77736e] bg-[#111113] transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
@@ -248,6 +255,7 @@ function DrawerHandle({
   isExpanded,
   onExpandedChange,
 }: DrawerHandleProps) {
+  const { t } = useTranslation();
   const pointerStartYRef = useRef<number | null>(null);
   const suppressClickRef = useRef(false);
 
@@ -267,7 +275,7 @@ function DrawerHandle({
   return (
     <button
       type="button"
-      aria-label={isExpanded ? '收起操作' : '展开操作'}
+      aria-label={isExpanded ? t('generatingSelect.collapse') : t('generatingSelect.expand')}
       className="absolute inset-x-0 top-0 z-20 flex h-[38px] touch-none items-center justify-center text-[#8c8884]"
       onPointerDown={(event) => {
         pointerStartYRef.current = event.clientY;
@@ -314,6 +322,8 @@ function ControlPanel({
   isExpanded,
   onExpandedChange,
 }: ControlPanelProps) {
+  const { t } = useTranslation();
+
   return (
     <section
       className="absolute right-[13px] bottom-0 z-10 h-[569px] w-[779px] overflow-hidden rounded-t-[35px] border border-b-0 border-[#292827] bg-[#131214]/98 shadow-[0_-16px_48px_rgba(0,0,0,0.34)]"
@@ -356,7 +366,7 @@ function ControlPanel({
               className="flex w-[196px] items-center justify-center gap-3 rounded-[18px] bg-[#1f1f1e] text-[22px] text-[#aaa6a2] transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-45"
             >
               <Download size={26} />
-              下载图片
+              {t('generatingSelect.download')}
             </button>
             <button
               type="button"
@@ -364,7 +374,7 @@ function ControlPanel({
               disabled={isGenerating || !imageUrl}
               className="flex flex-1 items-center justify-center rounded-[22px] border border-[#967943] bg-[#b28d4b] text-[28px] font-bold text-[#372b16] transition-transform active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-45"
             >
-              完成
+              {t('generatingSelect.complete')}
             </button>
           </div>
         </div>
@@ -379,6 +389,8 @@ function ExpandPrompt({
   isExpanded,
   onExpandedChange,
 }: ExpandPromptProps) {
+  const { t } = useTranslation();
+
   if (isExpanded) {
     return null;
   }
@@ -386,7 +398,7 @@ function ExpandPrompt({
   return (
     <button
       type="button"
-      aria-label="展开更多操作"
+      aria-label={t('generatingSelect.expandMore')}
       onClick={() => onExpandedChange(true)}
       className="absolute inset-x-0 bottom-[62px] z-10 flex flex-col items-center gap-2 text-[#aaa6a2]"
     >
@@ -394,7 +406,7 @@ function ExpandPrompt({
         <ChevronUp size={28} strokeWidth={1.8} />
         <ChevronUp className="-mt-4" size={28} strokeWidth={1.8} />
       </span>
-      <span className="text-[19px]">上滑查看更多操作</span>
+      <span className="text-[19px]">{t('generatingSelect.swipeUp')}</span>
     </button>
   );
 }

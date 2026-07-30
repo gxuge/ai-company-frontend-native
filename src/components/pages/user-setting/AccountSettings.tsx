@@ -1,10 +1,11 @@
-import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { AiFormInput } from "@/components/ai-company/ai-form-input";
-import { AiDateInput } from "@/components/ai-company/ai-date-input";
-import { AiSelectTab } from "@/components/ai-company/ai-select-tab";
-import Env from "env";
-import { userApi } from "@/lib/api";
+import Env from 'env';
+import { router } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AiDateInput } from '@/components/ai-company/ai-date-input';
+import { AiFormInput } from '@/components/ai-company/ai-form-input';
+import { AiSelectTab } from '@/components/ai-company/ai-select-tab';
+import { userApi } from '@/lib/api';
 
 const imgAvatarEditButton = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/avatar_edit_button.svg"));
 const imgCalendarIcon = ((m: any) => m?.default ?? m?.uri ?? m)(require("../../../assets/images/user-setting/calendar_icon.svg"));
@@ -77,6 +78,7 @@ function joinBaseUrl(baseUrl: string, path: string) {
 }
 
 export default function AccountSettings() {
+  const { t } = useTranslation();
   const [userId, setUserId] = useState("");
   const [userCode, setUserCode] = useState(FALLBACK_USER_ID);
   const [nickname, setNickname] = useState("");
@@ -89,12 +91,16 @@ export default function AccountSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const genderOptions: { value: Gender; label: string }[] = [
-    { value: "male", label: "男生" },
-    { value: "female", label: "女生" },
-    { value: "secret", label: "保密" },
+    { value: 'male', label: t('settings.account.genderOptions.male') },
+    { value: 'female', label: t('settings.account.genderOptions.female') },
+    { value: 'secret', label: t('settings.account.genderOptions.secret') },
   ];
 
-  const tags = ["都市", "职场", "情感陪伴"];
+  const tags = [
+    t('settings.account.preferenceTags.urban'),
+    t('settings.account.preferenceTags.workplace'),
+    t('settings.account.preferenceTags.companionship'),
+  ];
 
   useEffect(() => {
     let alive = true;
@@ -201,10 +207,10 @@ export default function AccountSettings() {
       {/* Header */}
       <div className="flex items-center justify-between px-[5vw] pt-2 pb-5">
         <button onClick={handleCancel} className="text-[16px] text-white/90 active:opacity-60 transition-opacity" style={{ fontFamily: "sans-serif" }}>
-          取消
+          {t('settings.account.cancel')}
         </button>
         <span className="text-[18px] tracking-[0.5px]" style={{ fontFamily: "sans-serif", fontWeight: 500 }}>
-          账号设置
+          {t('settings.account.title')}
         </span>
         <button
           onClick={handleSave}
@@ -212,7 +218,7 @@ export default function AccountSettings() {
           className="text-[16px] text-brand-green/90 active:opacity-60 transition-opacity disabled:opacity-50"
           style={{ fontFamily: "sans-serif" }}
         >
-          保存
+          {t('settings.account.save')}
         </button>
       </div>
 
@@ -230,7 +236,7 @@ export default function AccountSettings() {
             )}
             <img
               src={avatarUrl ? (avatarUrl.startsWith('http') ? avatarUrl : joinBaseUrl(Env.EXPO_PUBLIC_API_URL, `/sys/common/static/${avatarUrl}`)) : imgProfilePicture}
-              alt="Profile"
+              alt={t('settings.account.avatarAlt')}
               className="w-full h-full rounded-full object-cover"
             />
           </div>
@@ -246,14 +252,14 @@ export default function AccountSettings() {
         {/* Nickname */}
         <div className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
-            昵称
+            {t('settings.account.nickname')}
           </label>
           <div className="relative">
             <AiFormInput
               value={nickname}
               onChangeText={setNickname}
               editable={!isSaving}
-              placeholder="输入昵称"
+              placeholder={t('settings.account.nicknamePlaceholder')}
               placeholderTextColor="rgba(255,255,255,0.4)"
               className="w-full h-[56px] px-5 bg-transparent border-0 outline-none text-white text-[16px]"
               customContainerClass="w-full bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px]"
@@ -279,7 +285,7 @@ export default function AccountSettings() {
         {/* Gender */}
         <div className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
-            性别
+            {t('settings.account.gender')}
           </label>
           <AiSelectTab
             options={genderOptions}
@@ -299,7 +305,7 @@ export default function AccountSettings() {
         {/* Birthday */}
         <div className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
-            生日
+            {t('settings.account.birthday')}
           </label>
           <AiDateInput
             value={birthday}
@@ -313,7 +319,7 @@ export default function AccountSettings() {
         {/* Content Preferences */}
         <div className="flex flex-col gap-2">
           <label className="text-[#9ca3af] text-[13px] tracking-[1px] uppercase pl-1">
-            内容偏好
+            {t('settings.account.preferences')}
           </label>
           <div className="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.3)] rounded-[20px] px-5 py-5 flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">

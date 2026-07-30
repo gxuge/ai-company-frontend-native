@@ -1,11 +1,13 @@
 import type { TsVoiceProfile } from '@/lib/api';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { tsVoiceApi } from '@/lib/api';
-import EditSoundText from '@/components/pages/sound-edit/edit-sound-text';
-import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
-import { Check, Play, MoreVertical, Pencil, Trash2, X, Loader2 } from 'lucide-react';
-import { AiEmpty } from '@/components/ai-company/ai-empty';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Check, Loader2, MoreVertical, Pencil, Play, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { AiNavigateTabs } from '@/components/ai-company/ai-navigate-tabs';
+import EditSoundText from '@/components/pages/sound-edit/edit-sound-text';
+import { tsVoiceApi } from '@/lib/api';
+import { translate } from '@/lib/i18n';
 import { setItem } from '@/lib/storage';
 
 const imgPlay = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/play.svg'));
@@ -14,8 +16,7 @@ const imgChevronDown = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets
 const imgListenHeadphone = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/sound-edit/listen_headphone.svg'));
 const imgWaveGreenTiny = ((m: any) => m?.default ?? m?.uri ?? m)(require('@/assets/images/wave-icon/wave-green-tiny.gif'));
 
-const DEFAULT_PREVIEW_TEXT = '\u8FD9\u662F\u8BD5\u542C\u6587\u672C\uFF0C\u8BF7\u6839\u636E\u97F3\u8272\u53C2\u6570\u64AD\u653E\u3002';
-const GENDERS = ['\u5168\u90E8', '\u7537', '\u5973'] as const;
+const GENDERS = ['all', 'male', 'female'] as const;
 const AGE_OPTIONS = ['\u5C11\u5E74', '\u9752\u5E74', '\u4E2D\u5E74', '\u8001\u5E74'] as const;
 const AUDIO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const AUDIO_CACHE_NAME = 'sound-edit-preview-audio-v1';
@@ -202,7 +203,7 @@ async function savePreviewBlobToCache(params: {
     memoryCache,
   } = params;
   if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
-    throw new TypeError('当前环境不支持音频对象URL');
+    throw new TypeError(translate('settings.sound.errors.objectUrlUnsupported'));
   }
   const objectUrl = URL.createObjectURL(blob);
 
@@ -231,14 +232,8 @@ async function savePreviewBlobToCache(params: {
   return objectUrl;
 }
 
-function toGenderQuery(label: string) {
-  if (label === '\u7537') {
-    return 'male';
-  }
-  if (label === '\u5973') {
-    return 'female';
-  }
-  return undefined;
+function toGenderQuery(gender: (typeof GENDERS)[number]) {
+  return gender === 'all' ? undefined : gender;
 }
 
 function toAgeGroupQuery(label: string) {
@@ -254,14 +249,8 @@ function toAgeGroupQuery(label: string) {
   return undefined;
 }
 
-function toGenderLabel(gender?: string) {
-  if (gender === 'male') {
-    return '\u7537';
-  }
-  if (gender === 'female') {
-    return '\u5973';
-  }
-  return '\u5168\u90E8';
+function toGenderLabel(gender?: string): (typeof GENDERS)[number] {
+  return gender === 'male' || gender === 'female' ? gender : 'all';
 }
 
 function toAgeLabel(ageGroup?: string) {
@@ -347,7 +336,13 @@ type VoiceCardProps = {
 };
 
 function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, isPlaying, isLoading }: VoiceCardProps) {
-  const tags = resolveVoiceTags(voice);
+  const { t } = useTranslation();
+  const tags = resolveVoiceTags(voice).map((tag) => {
+    if (['male', 'female', 'child', 'teen', 'adult', 'senior'].includes(tag)) {
+      return t(`settings.sound.knownTags.${tag}`);
+    }
+    return tag;
+  });
   const [showMenu, setShowMenu] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
@@ -407,7 +402,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
           )}
         </div>
         <div className="flex flex-col gap-[6px]">
-          <span className="text-[14px] font-medium transition-colors duration-300 text-white group-hover:text-brand-green/90">{voice.name || '\u672A\u547D\u540D\u97F3\u8272'}</span>
+          <span className="text-[14px] font-medium text-white transition-colors duration-300 group-hover:text-brand-green/90">{voice.name || t('settings.sound.unnamedVoice')}</span>
           <div className="flex gap-[4px]">
             {tags.map(tag => (
               <span key={tag} className="rounded-[5px] border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.05)] px-[7px] py-[3px] text-[10px] text-[#9ca3af]">{tag}</span>
@@ -465,7 +460,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-white/90 hover:bg-white/5 active:bg-white/10 transition-colors"
                     >
                       <Pencil className="size-3 text-white/70" />
-                      <span>重命名</span>
+                      <span>{t('settings.sound.rename')}</span>
                     </button>
                     <div className="h-px w-full bg-white/5" />
                     <button
@@ -477,7 +472,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
                       className="flex items-center gap-2 px-3 py-2.5 text-[12px] text-red-500/90 hover:bg-red-500/5 active:bg-red-500/10 transition-colors"
                     >
                       <Trash2 className="size-3 text-red-500/70" />
-                      <span>删除</span>
+                      <span>{t('settings.sound.delete')}</span>
                     </button>
                   </div>
                 </div>
@@ -492,6 +487,7 @@ function VoiceCard({ voice, selected, onSelect, isMyVoice, onRename, onDelete, i
 
 // eslint-disable-next-line max-lines-per-function
 export default function SoundEditPage() {
+  const { t } = useTranslation();
   const searchParams = useLocalSearchParams<{
     voiceProfileId?: string | string[];
     providerVoiceId?: string | string[];
@@ -504,11 +500,12 @@ export default function SoundEditPage() {
   const [myVoices, setMyVoices] = useState<TsVoiceProfile[]>(DEFAULT_MY_VOICE_LIST);
   const [selectedVoiceId, setSelectedVoiceId] = useState<number | null>(null);
   const [configSelectedVoiceId, setConfigSelectedVoiceId] = useState<number | null>(null);
-  const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('\u5168\u90E8');
+  const [genderFilter, setGenderFilter] = useState<(typeof GENDERS)[number]>('all');
   const [ageOpen, setAgeOpen] = useState(false);
   const [age, setAge] = useState<(typeof AGE_OPTIONS)[number]>('\u5C11\u5E74');
   const [isEditSoundTextOpen, setIsEditSoundTextOpen] = useState(false);
-  const [previewText, setPreviewText] = useState(DEFAULT_PREVIEW_TEXT);
+  const defaultPreviewText = t('settings.sound.defaultPreviewText');
+  const [previewText, setPreviewText] = useState(defaultPreviewText);
   const [listenPhase, setListenPhase] = useState<ListenPhase>('idle');
   const [isSettingsCollapsed, setIsSettingsCollapsed] = useState(false);
   const previewMemoryCacheRef = useRef(new Map<string, PreviewAudioCacheItem>());
@@ -538,7 +535,7 @@ export default function SoundEditPage() {
   }, [searchParams.voiceName]);
 
   const displayedRecommendVoices = useMemo(() => {
-    if (genderFilter === '\u5168\u90E8') {
+    if (genderFilter === 'all') {
       return allRecommendVoices;
     }
     const queryGender = toGenderQuery(genderFilter);
@@ -767,12 +764,12 @@ export default function SoundEditPage() {
       });
       const audioUrl = preview.previewAudioUrl;
       if (!audioUrl) {
-        throw new Error('\u8BD5\u542C\u751F\u6210\u6210\u529F\uFF0C\u4F46\u6682\u672A\u83B7\u53D6\u5230\u97F3\u9891\u5730\u5740');
+        throw new Error(t('settings.sound.errors.missingAudioUrl'));
       }
 
       const response = await fetch(audioUrl);
       if (!response.ok) {
-        throw new Error('\u97F3\u9891\u4E0B\u8F7D\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5');
+        throw new Error(t('settings.sound.errors.downloadFailed'));
       }
       const blob = await response.blob();
       return savePreviewBlobToCache({
@@ -794,17 +791,17 @@ export default function SoundEditPage() {
       return;
     }
     if (!selectedVoice) {
-      notifyMessage('\u8BF7\u5148\u9009\u62E9\u97F3\u8272');
+      notifyMessage(t('settings.sound.errors.selectVoiceFirst'));
       return;
     }
     const selectedVoiceProfileId = selectedVoice.id;
     const providerVoiceId = selectedVoice.providerVoiceId?.trim();
     if (!selectedVoiceProfileId && !providerVoiceId) {
-      notifyMessage('\u5F53\u524D\u97F3\u8272\u7F3A\u5C11\u53EF\u7528\u6807\u8BC6\uFF0C\u65E0\u6CD5\u8BD5\u542C');
+      notifyMessage(t('settings.sound.errors.missingVoiceId'));
       return;
     }
 
-    const normalizedPreviewText = previewText.trim() || DEFAULT_PREVIEW_TEXT;
+    const normalizedPreviewText = previewText.trim() || defaultPreviewText;
     const normalizedSpeed = toPreviewSpeedValue(speed);
     const normalizedPitch = toPreviewPitchValue(pitch);
     const normalizedVolume = 1.0;
@@ -837,7 +834,7 @@ export default function SoundEditPage() {
       }
 
       if (typeof window === 'undefined' || typeof window.Audio === 'undefined') {
-        throw new Error('\u5F53\u524D\u73AF\u5883\u4E0D\u652F\u6301\u8BD5\u542C\u64AD\u653E');
+        throw new TypeError(t('settings.sound.errors.playbackUnsupported'));
       }
 
       const audio = new window.Audio(audioObjectUrl);
@@ -850,7 +847,7 @@ export default function SoundEditPage() {
       };
       audio.onerror = () => {
         if (listenRequestIdRef.current === requestId) {
-          notifyMessage('\u8BD5\u542C\u64AD\u653E\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5');
+          notifyMessage(t('settings.sound.errors.playbackFailed'));
           setListenPhase('idle');
         }
         audioRef.current = null;
@@ -863,18 +860,18 @@ export default function SoundEditPage() {
       if (listenRequestIdRef.current !== requestId) {
         return;
       }
-      const message = error instanceof Error ? error.message : '\u8BD5\u542C\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5';
+      const message = error instanceof Error ? error.message : t('settings.sound.errors.previewFailed');
       notifyMessage(message);
       setListenPhase('idle');
     }
   };
 
   const handleMyVoiceRename = (voiceId: number) => {
-    notifyMessage(`\u97F3\u8272ID ${voiceId}\uFF1A\u91CD\u547D\u540D\u80FD\u529B\u5F85\u540E\u7AEF\u63A5\u53E3\u8865\u5145`);
+    notifyMessage(t('settings.sound.errors.renamePending', { id: voiceId }));
   };
 
   const handleMyVoiceDelete = (voiceId: number) => {
-    notifyMessage(`\u97F3\u8272ID ${voiceId}\uFF1A\u5220\u9664\u80FD\u529B\u5F85\u540E\u7AEF\u63A5\u53E3\u8865\u5145`);
+    notifyMessage(t('settings.sound.errors.deletePending', { id: voiceId }));
   };
 
   const handleDone = async () => {
@@ -922,7 +919,7 @@ export default function SoundEditPage() {
                   <span className="flex size-full items-center justify-center rounded-full border border-[rgba(255,255,255,0.1)]">🎙️</span>
                 </div>
                 <span className={`text-white transition-all duration-500 ${isSettingsCollapsed ? 'text-[14px]' : 'text-[18px] tracking-[-0.45px]'} ${!selectedVoice ? 'text-white/40' : ''}`} style={{ fontWeight: 700 }}>
-                  {selectedVoice?.name || '请选择'}
+                {selectedVoice?.name || t('settings.sound.chooseVoice')}
                 </span>
               </div>
               <div className="flex items-center gap-[8px]">
@@ -951,7 +948,6 @@ export default function SoundEditPage() {
                           type="button"
                           onClick={() => setIsEditSoundTextOpen(true)}
                           className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-brand-green/90 bg-[#161616] hover:bg-white/5 transition-colors"
-                          title="编辑试听文案"
                         >
                           <img src={imgEdit} alt="" className="size-[14px] object-contain" />
                         </button>
@@ -960,7 +956,6 @@ export default function SoundEditPage() {
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setSelectedVoiceId(null); }}
                           className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                          title="取消选择"
                         >
                           <X className="size-[14px] text-red-500" />
                         </button>
@@ -991,20 +986,20 @@ export default function SoundEditPage() {
             >
               <div className="flex min-h-0 flex-col gap-[12px] overflow-hidden">
                 <div className="flex items-center justify-between py-[4px]">
-                  <span className="text-[12px] tracking-[0.6px] text-[#9ca3af] uppercase" style={{ fontWeight: 700 }}>{`\u53C2\u6570\u8C03\u6574`}</span>
+                <span className="text-[12px] tracking-[0.6px] text-[#9ca3af] uppercase" style={{ fontWeight: 700 }}>{t('settings.sound.parameterAdjustment')}</span>
                   <button
                     type="button"
                     onClick={handleReset}
                     className="rounded-[5px] border border-brand-green/90 px-[9px] py-[3px] text-[10px] text-brand-green/90"
                   >
-                    {`\u91CD\u7F6E`}
+                  {t('settings.sound.reset')}
                   </button>
                 </div>
 
                 <div className="flex gap-[32px] pt-[8px] pb-[16px]">
                   <div className="flex flex-1 flex-col gap-[8px]">
                     <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u97F3\u8C03`}</span>
+                    <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{t('settings.sound.pitch')}</span>
                       <span className="font-mono text-[12px] text-brand-green/90" style={{ fontWeight: 700 }}>
                         {pitch > 0 ? '+' : ''}
                         {pitch}
@@ -1015,7 +1010,7 @@ export default function SoundEditPage() {
                   </div>
                   <div className="flex flex-1 flex-col gap-[8px]">
                     <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{`\u8BED\u901F`}</span>
+                    <span className="text-[11px] text-[#9ca3af]" style={{ fontWeight: 500 }}>{t('settings.sound.speed')}</span>
                       <span className="font-mono text-[12px] text-brand-green/90" style={{ fontWeight: 700 }}>
                         {speed.toFixed(1)}
                         x
@@ -1040,7 +1035,7 @@ export default function SoundEditPage() {
                       <img src={imgListenHeadphone} alt="" className="size-[19px] object-contain" />
                     )}
                     <span className="text-[16px] text-brand-green/90" style={{ fontWeight: 700 }}>
-                      {isListening ? '试听中...' : '试听音色'}
+                    {isListening ? t('settings.sound.listening') : t('settings.sound.listenVoice')}
                     </span>
                   </button>
                 </div>
@@ -1052,8 +1047,8 @@ export default function SoundEditPage() {
           <div className="flex flex-row justify-center border-b border-[#1a1a1a] mb-[16px]">
             <AiNavigateTabs 
               options={[
-                { label: '推荐音色库', value: 'recommend' },
-                { label: '我的音色库', value: 'my' }
+                { label: t('settings.sound.recommendedLibrary'), value: 'recommend' },
+                { label: t('settings.sound.myLibrary'), value: 'my' },
               ]} 
               activeValue={activeLibraryTab} 
               onChange={setActiveLibraryTab} 
@@ -1067,7 +1062,7 @@ export default function SoundEditPage() {
             <>
               <div className="flex items-center justify-between px-[4px]">
                 <div className="flex items-center gap-[8px]">
-                  <span className="pr-[4px] text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{`\u6027\u522B`}</span>
+                  <span className="pr-[4px] text-[12px] text-[#6b7280]" style={{ fontWeight: 700 }}>{t('settings.sound.gender')}</span>
                   <div className="relative flex h-[31px] w-[150px] rounded-[8px] border border-[rgba(255,255,255,0.05)] bg-[#222] p-[3.5px]">
                     <div
                       className="absolute top-[3.5px] bottom-[3.5px] w-[calc((100%-7px)/3)] rounded-[5px] bg-brand-green/20 shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-transform duration-300 ease-in-out"
@@ -1081,7 +1076,7 @@ export default function SoundEditPage() {
                         className={`relative z-10 flex h-full flex-1 items-center justify-center rounded-[5px] text-[11px] transition-colors duration-300 ${genderFilter === g ? 'text-brand-green' : 'text-[#9ca3af]'}`}
                         style={{ fontWeight: 500 }}
                       >
-                        {g}
+                        {t(`settings.sound.genderOptions.${g}`)}
                       </button>
                     ))}
                   </div>
@@ -1123,8 +1118,8 @@ export default function SoundEditPage() {
                 ))}
                 {myVoices.length === 0 && (
                   <AiEmpty 
-                    title="还没有录音" 
-                    description="在推荐音色库中选择音色或开始您的创作" 
+                    title={t('settings.sound.emptyTitle')}
+                    description={t('settings.sound.emptyDescription')}
                     style={{ marginTop: 40 }}
                   />
                 )}
@@ -1152,7 +1147,7 @@ export default function SoundEditPage() {
           onClick={handleDone}
           className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(var(--color-brand-green-rgb),0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none"
         >
-          <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
+          <span className="text-[16px] font-bold text-brand-green">{t('settings.sound.done')}</span>
         </button>
       </div>
     </div>

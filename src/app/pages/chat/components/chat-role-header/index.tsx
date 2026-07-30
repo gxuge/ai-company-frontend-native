@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { styles } from './styles';
 
@@ -40,8 +41,8 @@ interface ChatRoleHeaderProps {
 // ─── Main Component ───
 
 export function ChatRoleHeader({
-  name = '林梦',
-  username = '@莫耀誉',
+  name,
+  username = '',
   chatCount = '244',
   avatarSource,
   onAddUserPress,
@@ -49,6 +50,9 @@ export function ChatRoleHeader({
   onVolumePress,
   onAvatarPress,
 }: ChatRoleHeaderProps) {
+  const { t } = useTranslation();
+  const displayName = name || t('chat.main.defaultRoleName');
+
   if (Platform.OS === 'web') {
     const avatarUri = avatarSource ? toAssetUri(avatarSource) : toAssetUri(imgAvatar);
     return (
@@ -59,7 +63,7 @@ export function ChatRoleHeader({
               <img src={avatarUri} style={webStyles.avatar} />
             </button>
             <div style={webStyles.nameBlock}>
-              <div style={webStyles.nameText}>{name}</div>
+              <div style={webStyles.nameText}>{displayName}</div>
               <div style={webStyles.usernameText}>{username}</div>
             </div>
             <button type="button" style={webStyles.addUserBtn} onClick={onAddUserPress}>
@@ -97,7 +101,7 @@ export function ChatRoleHeader({
           {/* 名字 + 用户名 */}
           <View style={styles.nameBlock}>
             <Text style={styles.nameText} numberOfLines={1}>
-              {name}
+              {displayName}
             </Text>
             <Text style={styles.usernameText} numberOfLines={1}>
               {username}

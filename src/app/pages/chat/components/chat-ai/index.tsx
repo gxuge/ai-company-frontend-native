@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, Image, ImageBackground, Platform } from 'react-native';
 import { styles } from './styles';
 
@@ -53,8 +54,8 @@ interface ChatAiProps {
 // ─── Main Component ───
 
 export function ChatAi({
-  name = 'Assistant',
-  speechText = '来挺精神的嘛，不知道能坚持多久不被熏',
+  name,
+  speechText,
   audioDuration = '8"',
   segments,
   onRefresh,
@@ -63,10 +64,13 @@ export function ChatAi({
   isPlaying,
   showActions = true,
 }: ChatAiProps) {
+  const { t } = useTranslation();
+  const displayName = name || t('chat.common.systemName');
+  const displaySpeechText = speechText || t('chat.main.defaultAiMessage');
   const normalizedSegments = Array.isArray(segments) && segments.length > 0
     ? segments
-    : speechText
-      ? [{ text: speechText, type: 'speech' as const }]
+    : displaySpeechText
+      ? [{ text: displaySpeechText, type: 'speech' as const }]
       : [];
 
   if (Platform.OS === 'web') {
@@ -75,7 +79,7 @@ export function ChatAi({
         <div style={webStyles.bubbleWrapper}>
           <div style={webStyles.nameTagBg}>
             <img src={toAssetUri(imgNameTagBg)} style={webStyles.nameTagBgImage} />
-            <div style={webStyles.nameTagText}>{name}</div>
+            <div style={webStyles.nameTagText}>{displayName}</div>
           </div>
 
           <button type="button" style={webStyles.playBgWrapper} onClick={onPlayAudio}>
@@ -125,7 +129,7 @@ export function ChatAi({
       <View style={styles.bubbleWrapper}>
         {/* Absolute headers fixed to left and right corners, sitting BEHIND the bubble wrapper */}
         <ImageBackground source={imgNameTagBg} style={styles.nameTagBg} imageStyle={styles.nameTagBgImage}>
-          <Text style={styles.nameTagText}>{name}</Text>
+          <Text style={styles.nameTagText}>{displayName}</Text>
         </ImageBackground>
 
         <Pressable style={styles.playBgWrapper} onPress={onPlayAudio}>

@@ -1,0 +1,22 @@
+{
+  "headingLine1": "あなたの",
+  "headingLine2": "創作を始めよう",
+  "subtitle": "高度な AI クリエイティブスイート",
+  "character": {
+    "title": "新しいキャラクター",
+    "descriptionLine1": "世界に新しい人物を加えよう",
+    "descriptionLine2": "特徴を書いて形にしましょう",
+    "action": "作成開始"
+  },
+  "story": {
+    "title": "新しいストーリー",
+    "descriptionLine1": "心を引き込む物語を作ろう",
+    "descriptionLine2": "新しい章を始めましょう",
+    "action": "創作開始"
+  },
+  "drafts": "下書き",
+  "draftEmpty": "下書きはありません。",
+  "draftLoadFailed": "下書きの読み込みに失敗しました。もう一度お試しください。",
+  "acknowledge": "了解",
+  "aiAssistant": "AI アシスタント"
+}

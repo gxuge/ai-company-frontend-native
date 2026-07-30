@@ -1,0 +1,81 @@
+{
+  "common": {
+    "alertTitle": "Notice",
+    "loading": "Loading...",
+    "systemName": "System"
+  },
+  "main": {
+    "defaultAiMessage": "Hello, I'm here.",
+    "defaultUserMessage": "Hello",
+    "defaultReply": "I received your message.",
+    "defaultStoryTitle": "Story Conversation",
+    "defaultRoleName": "Character",
+    "sendFailed": "Failed to send the message. Please try again.",
+    "sessionInvalid": "This conversation no longer exists. Return to the conversation list and try again.",
+    "roleUnavailable": "The speaking character is still loading. Please try again shortly.",
+    "suggestionEmpty": "No reply suggestions are available.",
+    "suggestionLoadFailed": "Failed to load suggestions. Please try again.",
+    "agentSuggestionUnsupported": "Reply suggestions are not available for Agent conversations yet.",
+    "micUnsupported": "Voice input is not available yet. Enter a message to send.",
+    "agentAudioUnsupported": "Audio playback is not available for Agent conversations yet.",
+    "audioDeviceUnsupported": "Audio playback is not available on this device. Please use the Web version.",
+    "audioFetchFailed": "Failed to load the audio. Please try again.",
+    "autoVoiceEnabled": "Automatic voice preparation is on. Future character replies will prepare playable audio in advance.",
+    "autoVoiceDisabled": "Automatic voice preparation is off. Future character replies will return text and fetch audio when played.",
+    "features": {
+      "camera": "Camera",
+      "image": "Image",
+      "file": "File",
+      "call": "Call"
+    }
+  },
+  "input": {
+    "placeholder": "Send a message...",
+    "holdToTalk": "Hold to talk"
+  },
+  "sessionList": {
+    "tabs": {
+      "messages": "Messages",
+      "following": "Following"
+    },
+    "categories": {
+      "following": "Following",
+      "subscribed": "Subscribed",
+      "liked": "Likes",
+      "comments": "Comments"
+    },
+    "sessionFallback": "Conversation {{id}}",
+    "noMessage": "No messages yet",
+    "loadFailed": "Failed to load conversations",
+    "emptyTitle": "No conversations",
+    "emptyDescription": "Your conversation history will appear here"
+  },
+  "conversation": {
+    "fallbackDescription": "No story description yet",
+    "fallbackTitle": "Story Details",
+    "fallbackAuthor": "Anonymous Author",
+    "roleFallback": "Character {{id}}",
+    "dataMissing": "No story data is available to display",
+    "storyLoadFailed": "Failed to load story details",
+    "chapterLoadFailed": "Failed to load chapters",
+    "detailLoadFailed": "Failed to load conversation details",
+    "follow": "Follow",
+    "storyDetails": "Story Details",
+    "characterList": "Characters",
+    "impressions": "Impressions",
+    "modal": {
+      "untitledStory": "Untitled Story",
+      "storySetting": "Story Setting",
+      "storySettingEmpty": "No story setting yet",
+      "background": "Background",
+      "backgroundEmpty": "No background details yet",
+      "chapterDetails": "Chapter Details",
+      "chapterTitle": "Chapter {{number}}",
+      "chapterEmpty": "No chapter content yet",
+      "chapterLoading": "Loading chapters...",
+      "tip": "Tip",
+      "tipPrefix": "Open",
+      "tipSuffix": "from the chat page to review the setting and chapters."
+    }
+  }
+}

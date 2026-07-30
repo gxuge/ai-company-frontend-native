@@ -1,0 +1,81 @@
+{
+  "common": {
+    "alertTitle": "提示",
+    "loading": "加载中...",
+    "systemName": "系统"
+  },
+  "main": {
+    "defaultAiMessage": "你好，我在这里。",
+    "defaultUserMessage": "你好",
+    "defaultReply": "我收到了你的消息。",
+    "defaultStoryTitle": "故事会话",
+    "defaultRoleName": "角色",
+    "sendFailed": "消息发送失败，请稍后重试。",
+    "sessionInvalid": "会话不存在，请返回会话列表重试。",
+    "roleUnavailable": "当前会话还未加载可发言角色，请稍后再试。",
+    "suggestionEmpty": "当前暂无可用建议。",
+    "suggestionLoadFailed": "获取建议失败，请稍后重试。",
+    "agentSuggestionUnsupported": "当前 Agent 会话暂未接入候选回复。",
+    "micUnsupported": "语音识别暂未接入，请先输入文本后发送。",
+    "agentAudioUnsupported": "当前 Agent 会话暂未接入语音播放。",
+    "audioDeviceUnsupported": "当前设备暂未接入语音播放，请先在 Web 端使用。",
+    "audioFetchFailed": "语音获取失败，请稍后重试。",
+    "autoVoiceEnabled": "已开启自动准备语音。后续角色回复会提前生成可播放语音。",
+    "autoVoiceDisabled": "已关闭自动准备语音。后续角色回复仅返回文字，点播放时再获取语音。",
+    "features": {
+      "camera": "相机",
+      "image": "图片",
+      "file": "文件",
+      "call": "通话"
+    }
+  },
+  "input": {
+    "placeholder": "发送消息...",
+    "holdToTalk": "按住说话"
+  },
+  "sessionList": {
+    "tabs": {
+      "messages": "消息",
+      "following": "关注"
+    },
+    "categories": {
+      "following": "关注",
+      "subscribed": "订阅",
+      "liked": "点赞",
+      "comments": "评论"
+    },
+    "sessionFallback": "会话{{id}}",
+    "noMessage": "暂无消息",
+    "loadFailed": "会话列表加载失败",
+    "emptyTitle": "暂无会话",
+    "emptyDescription": "这里还没有任何会话记录"
+  },
+  "conversation": {
+    "fallbackDescription": "暂无故事简介",
+    "fallbackTitle": "故事详情",
+    "fallbackAuthor": "匿名作者",
+    "roleFallback": "角色{{id}}",
+    "dataMissing": "未找到可展示的故事数据",
+    "storyLoadFailed": "故事详情加载失败",
+    "chapterLoadFailed": "章节列表加载失败",
+    "detailLoadFailed": "会话详情加载失败",
+    "follow": "关注",
+    "storyDetails": "故事详情",
+    "characterList": "角色列表",
+    "impressions": "观感",
+    "modal": {
+      "untitledStory": "未命名故事",
+      "storySetting": "故事设定",
+      "storySettingEmpty": "暂无故事设定",
+      "background": "背景补充",
+      "backgroundEmpty": "暂无背景补充",
+      "chapterDetails": "章节详情",
+      "chapterTitle": "第{{number}}章",
+      "chapterEmpty": "暂无章节内容",
+      "chapterLoading": "章节加载中...",
+      "tip": "提示",
+      "tipPrefix": "可以在聊天页点击",
+      "tipSuffix": "持续查看设定与章节。"
+    }
+  }
+}

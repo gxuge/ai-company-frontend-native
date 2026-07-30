@@ -1,0 +1,31 @@
+{
+  "title": "形象生成",
+  "edit": "編輯形象",
+  "closeEdit": "關閉編輯",
+  "apply": "套用並重新生成",
+  "applying": "套用中...",
+  "defaultStyle": "通用",
+  "errors": {
+    "generate": "形象生成失敗，請稍後再試",
+    "download": "圖片下載失敗",
+    "missingUrl": "生成失敗：未回傳圖片網址",
+    "emptyDescription": "圖片描述不能為空"
+  },
+  "downloadName": "形象-{{timestamp}}.png",
+  "previewAlt": "生成的角色形象",
+  "generating": "正在生成形象...",
+  "failed": "圖片生成失敗",
+  "selectAnother": "請選擇其他圖片",
+  "description": "圖片描述",
+  "editDescription": "返回編輯圖片描述",
+  "emptyDescription": "暫無圖片描述",
+  "selectCandidate": "選擇第{{index}}張形象",
+  "candidateFailed": "生成失敗",
+  "addCandidates": "生成四張新的候選形象",
+  "collapse": "收起操作",
+  "expand": "展開操作",
+  "download": "下載圖片",
+  "complete": "完成",
+  "expandMore": "展開更多操作",
+  "swipeUp": "上滑查看更多操作"
+}

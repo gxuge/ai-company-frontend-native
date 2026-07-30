@@ -1,0 +1,126 @@
+{
+  "title": "オリジナル物語を作成",
+  "tabs": {
+    "basic": "基本情報",
+    "advanced": "詳細設定"
+  },
+  "optional": "（任意）",
+  "publicStatus": {
+    "title": "公開設定",
+    "label": "物語を公開する",
+    "description": "公開すると他のユーザーもこの物語を体験できます"
+  },
+  "storySetting": {
+    "title": "物語設定",
+    "placeholder": "物語の背景、世界のルール、ユーザーの立場、主な目的を入力してください。例：深夜になると異常な街区が現れ、ユーザーは手掛かりを集めて真相を追う。"
+  },
+  "roles": {
+    "title": "キャラクター一覧",
+    "user": "ユーザー",
+    "add": "追加",
+    "unknown": "不明なキャラクター",
+    "fallback": "キャラクター{{id}}",
+    "addFirst": "先にキャラクターを追加してください。"
+  },
+  "sceneImage": {
+    "title": "シーン画像",
+    "loading": "読み込み中...",
+    "add": "タップして画像を追加"
+  },
+  "sceneSetting": {
+    "title": "シーン設定",
+    "placeholder": "時間、場所、雰囲気、操作できる手掛かりを入力してください。例：夜明け前の古い駅は無人で、存在しない列車の案内が表示されている。"
+  },
+  "outline": {
+    "title": "あらすじ",
+    "normal": "通常ストーリー",
+    "chapter": "章形式",
+    "placeholder": "あらすじを入力...",
+    "chapterTitle": "第{{number}}章",
+    "chapterDescription": "主な出来事と、ユーザーと他のキャラクターの関わりを説明します",
+    "opening": "オープニング",
+    "selectRole": "キャラクターを選択",
+    "openingPlaceholder": ">> 物語の導入を入力...",
+    "mission": "目標",
+    "missionPlaceholder": ">> 目標を入力...",
+    "addChapter": "次の章を追加"
+  },
+  "actions": {
+    "saving": "保存中...",
+    "next": "次へ",
+    "cancel": "キャンセル",
+    "confirm": "確認"
+  },
+  "generateModal": {
+    "title": "AI 一括生成",
+    "description": "AI にどのように物語を広げさせますか？",
+    "currentTitle": "現在の項目のみ：",
+    "currentDescription": "選択した項目だけを生成します。",
+    "allTitle": "すべて生成：",
+    "allDescription": "物語、シーン、あらすじを順番に補完します。",
+    "current": "現在のみ",
+    "all": "すべて生成"
+  },
+  "overwrite": {
+    "warningTitle": "上書き警告",
+    "noticeTitle": "上書きのお知らせ",
+    "all": "すべて生成すると、キャラクター一覧を除く物語設定、シーン設定、あらすじが再生成され、現在の内容が上書きされます。",
+    "setting": "現在のみを選ぶと物語設定が再生成され、入力済みのタイトル、紹介、設定、背景が上書きされる場合があります。",
+    "scene": "現在のみを選ぶとシーン設定が再生成され、入力済みの内容が上書きされる場合があります。",
+    "outline": "現在のみを選ぶとあらすじが再生成され、入力済みの内容が上書きされる場合があります。",
+    "continue": "続行しますか？",
+    "confirmAll": "上書きして生成",
+    "confirm": "確認して生成"
+  },
+  "userRole": {
+    "title": "ユーザーキャラクター設定",
+    "name": "キャラクター名",
+    "namePlaceholder": "キャラクター名を入力",
+    "setting": "キャラクター設定",
+    "settingPlaceholder": "性格や外見など"
+  },
+  "help": {
+    "storyTitle": "物語設定について",
+    "storyDescription": "テーマ、世界観、物語の始まりを簡潔に入力してください。AI がより充実したあらすじと章の詳細を生成します。",
+    "roleTitle": "キャラクター一覧について",
+    "roleDescription": "物語に登場するキャラクターを選択または作成します。ユーザーは主人公として参加し、他のキャラクターが物語を進めます。",
+    "sceneImageTitle": "シーン画像について",
+    "sceneImageDescription": "シーン画像をタップして背景ギャラリーを開き、選択した画像を物語に設定します。",
+    "sceneTitle": "シーン設定について",
+    "sceneDescription": "物語の場所と雰囲気を設定します。明確なシーンは、AI がより鮮明な描写を生成する助けになります。",
+    "outlineTitle": "あらすじについて",
+    "outlineDescription": "物語全体の流れを設定します。手動で入力するか、既存の設定をもとに AI で生成できます。"
+  },
+  "messages": {
+    "alertTitle": "お知らせ",
+    "configIncomplete": "物語生成の設定が完了していません：{{message}}",
+    "draftLoadFailed": "物語の下書きを読み込めませんでした。",
+    "detailLoadFailed": "物語を読み込めませんでした。",
+    "settingEmpty": "有効な物語設定を生成できませんでした。",
+    "settingGenerated": "物語設定を生成しました。",
+    "settingGenerateFailed": "物語設定を生成できませんでした。",
+    "sceneEmpty": "有効なシーン設定を生成できませんでした。",
+    "sceneGenerated": "シーン設定を生成しました。",
+    "sceneGenerateFailed": "シーン設定を生成できませんでした。",
+    "outlineEmpty": "有効なあらすじを生成できませんでした。",
+    "chapterOutlineEmpty": "有効な章構成を生成できませんでした。",
+    "outlineGenerated": "あらすじを生成しました。",
+    "outlineGenerateFailed": "あらすじを生成できませんでした。",
+    "settingOptimizeEmpty": "有効な物語設定を生成できませんでした。",
+    "settingOptimized": "物語設定を最適化しました。",
+    "settingOptimizeFailed": "物語設定を最適化できませんでした。",
+    "sceneOptimizeEmpty": "有効なシーン設定を生成できませんでした。",
+    "sceneOptimized": "シーン設定を最適化しました。",
+    "sceneOptimizeFailed": "シーン設定を最適化できませんでした。",
+    "outlineOptimizeEmpty": "有効なあらすじを生成できませんでした。",
+    "outlineOptimized": "あらすじを最適化しました。",
+    "outlineOptimizeFailed": "あらすじを最適化できませんでした。",
+    "allGenerated": "利用可能な設定をすべて生成しました。",
+    "allGenerateFailed": "一括生成に失敗しました。",
+    "saveFailed": "物語を保存できませんでした。",
+    "saved": "物語を保存しました。",
+    "draftSaveFailed": "下書きを保存できませんでした。"
+  },
+  "untitledStory": "無題の物語-{{timestamp}}",
+  "untitledDraft": "タイトル未設定"
+}

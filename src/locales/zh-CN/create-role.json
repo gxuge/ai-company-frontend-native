@@ -1,0 +1,141 @@
+{
+  "title": "创建角色",
+  "tabs": {
+    "basic": "基础信息",
+    "advanced": "高级设定"
+  },
+  "publicStatus": {
+    "title": "公开状态",
+    "label": "是否公开角色",
+    "description": "公开后其他用户可以与该角色对话"
+  },
+  "tags": {
+    "title": "角色标签",
+    "custom": "自定义",
+    "addTitle": "添加自定义标签",
+    "placeholder": "请输入标签名称（最多10个字符）"
+  },
+  "basic": {
+    "image": "角色形象",
+    "addImage": "点击添加形象",
+    "setting": "角色设定",
+    "name": "角色名字",
+    "namePlaceholder": "输入角色名字",
+    "gender": "性别",
+    "male": "男生",
+    "female": "女生",
+    "random": "随机",
+    "occupation": "职业/身份",
+    "occupationPlaceholder": "输入角色职业/身份",
+    "background": "角色背景设定",
+    "backgroundPlaceholder": "输入角色背景故事，可辅助生成人设和剧情。",
+    "greeting": "开场白",
+    "greetingPlaceholder": "输入角色开场白，将作为对话的第一句话。",
+    "optimizeComingSoon": "提示词美化功能开发中...",
+    "changeImage": "更换形象",
+    "back": "返回",
+    "voice": "角色声音",
+    "selectVoice": "选择角色声音",
+    "help": {
+      "imageTitle": "角色形象提示",
+      "imageDescription": "上传或使用 AI 生成角色的外观形象，这将作为角色的头像和主视觉展示。生成结果与角色的性别、职业和背景等设定密切相关，设定越详细，生成形象越符合预期。",
+      "settingTitle": "角色设定提示",
+      "settingDescription": "详细的名字、职业和背景设定可以帮助 AI 更好地理解角色，从而生成更符合预期的形象、声音和故事剧情。",
+      "voiceTitle": "角色声音提示",
+      "voiceDescription": "为角色选择或生成独特的声音音色。AI 会在对话和剧情中使用该声音进行语音播报。角色设定越详细，生成声音越符合预期。"
+    },
+    "confirm": {
+      "title": "完善角色设定",
+      "description": "当前缺少较多角色设定，可能影响 AI 生成{{target}}的准确度。建议先完善性别、职业和背景，是否仍要继续？",
+      "image": "形象",
+      "voice": "声音",
+      "improve": "去完善",
+      "continue": "继续生成"
+    }
+  },
+  "generating": {
+    "image": "生成形象中",
+    "imageSteps": [
+      "匹配外观风格中",
+      "细化五官特征中",
+      "渲染服装与配色中",
+      "完善最终形象中"
+    ],
+    "voice": "正在生成声音",
+    "voiceEllipsis": "正在生成声音...",
+    "voiceMatching": "匹配角色声线中"
+  },
+  "dialogStyle": {
+    "title": "对话风格设定",
+    "preview": "对话风格预览",
+    "previewPlaceholder": "哼，别以为你这样说我就会高兴。不过既然你这么诚恳，我就勉为其难帮你一次。",
+    "length": "对话长度",
+    "tone": "语气倾向",
+    "interactivity": "互动性",
+    "selectTone": "选择语气倾向",
+    "values": {
+      "default": "默认",
+      "short": "简短",
+      "detailed": "详细",
+      "active": "主动引导",
+      "passive": "被动回应",
+      "gentle": "轻声细语",
+      "concise": "惜字如金",
+      "talkative": "喋喋不休",
+      "casual": "慵懒随意",
+      "literary": "咬文嚼字",
+      "decisive": "干练果断",
+      "bold": "粗犷豪放"
+    }
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "确认",
+    "saving": "保存中...",
+    "save": "完成并保存"
+  },
+  "generateModal": {
+    "title": "AI 一键生成",
+    "description": "检测到您已填写了部分设定。您希望 AI 如何为您生成？",
+    "continueTitle": "接着生成：",
+    "continueDescription": "基于您当前的灵感，继续润色和扩写。",
+    "overwriteTitle": "全量覆盖：",
+    "overwriteDescription": "清空所有输入，重新随机生成完整角色。",
+    "continue": "接着生成",
+    "overwrite": "全量覆盖"
+  },
+  "messages": {
+    "draftLoadFailed": "加载角色草稿失败，请稍后重试。",
+    "settingGeneratedFull": "角色设定已全量生成。",
+    "settingGenerated": "角色设定已生成补全。",
+    "settingGenerateFailed": "生成设定失败，请稍后重试。",
+    "backgroundOptimized": "背景设定已美化。",
+    "backgroundEmpty": "未优化出有效背景设定，请稍后重试。",
+    "backgroundOptimizeFailed": "背景美化失败，请稍后重试。",
+    "greetingOptimized": "开场白已美化。",
+    "greetingEmpty": "未优化出有效开场白，请稍后重试。",
+    "greetingOptimizeFailed": "开场白美化失败，请稍后重试。",
+    "imageUrlMissing": "形象生成成功，但未返回图片地址。",
+    "imageGenerated": "角色形象生成成功。",
+    "imageGenerateFailed": "形象生成失败，请稍后重试。",
+    "voiceGenerated": "角色声音生成成功。",
+    "voiceGenerateFailed": "声音生成失败，请稍后重试。",
+    "previewUnsupported": "已获取试听音频，当前环境暂不支持直接播放。",
+    "previewPlayFailed": "试听播放失败，请稍后重试。",
+    "generateVoiceFirst": "请先点击一键生成声音，再进行试听。",
+    "previewUrlMissing": "试听生成成功，但未返回音频地址。",
+    "previewGeneratedUnsupported": "试听生成成功，当前环境暂不支持直接播放。",
+    "previewGenerateFailed": "试听生成失败，请稍后重试。",
+    "nameRequired": "请先填写角色名字。",
+    "genderRequired": "请先确认角色性别，不能保存为随机。",
+    "settingRequired": "请先生成或填写角色设定。",
+    "imageRequired": "请先生成或上传角色形象。",
+    "voiceRequired": "请先生成或选择角色声音。",
+    "imageSaveFailed": "角色形象保存失败，请稍后重试。",
+    "saved": "角色保存成功。",
+    "saveFailed": "保存失败，请稍后重试。",
+    "draftSaveFailed": "草稿保存失败，请稍后重试。"
+  },
+  "defaultVoicePreview": "你好呀，很高兴认识你。",
+  "untitledDraft": "暂未填写名称"
+}

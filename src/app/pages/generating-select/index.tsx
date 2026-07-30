@@ -3,11 +3,13 @@ import type { CharacterGenerationDraft } from '@/features/character-generation/u
 
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { CharacterGenerationEditor } from '@/components/pages/create-character/character-generation-editor';
 import { useCharacterGenerationStore } from '@/features/character-generation/use-character-generation-store';
 import { tsRoleImageApi } from '@/lib/api';
+import { translate } from '@/lib/i18n/utils';
 
 import FigmaCharacterScreen from './components/figma-character-screen';
 
@@ -17,10 +19,12 @@ const IMAGE_BATCH_SIZE = 4;
 const MAX_IMAGE_COUNT = 12;
 
 function GeneratingSelectHeader({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <div className="absolute inset-x-0 top-0 z-30">
       <AiHeader
-        title="形象生成"
+        title={t('generatingSelect.title')}
         className="h-16 bg-black/70 px-4 backdrop-blur-md"
         onBack={onBack}
       />
@@ -39,6 +43,8 @@ function CharacterEditorSheet({
   onClose: () => void;
   onApply: (nextDraft: CharacterGenerationDraft) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="absolute inset-0 z-50 flex items-end bg-black/70 backdrop-blur-sm"
@@ -60,10 +66,10 @@ function CharacterEditorSheet({
         <div className="sticky top-0 z-10 mb-4 bg-black/95 px-4 pb-3 backdrop-blur-md">
           <div className="mx-auto mb-3 h-1.5 w-14 rounded-full bg-white/25" />
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">编辑形象</h2>
+            <h2 className="text-lg font-bold text-white">{t('generatingSelect.edit')}</h2>
             <button
               type="button"
-              aria-label="关闭编辑"
+              aria-label={t('generatingSelect.closeEdit')}
               onClick={onClose}
               className="flex size-9 items-center justify-center rounded-full bg-white/10 text-xl text-white"
             >
@@ -73,8 +79,8 @@ function CharacterEditorSheet({
         </div>
         <CharacterGenerationEditor
           initialDraft={draft}
-          submitLabel="应用并重新生成"
-          submittingLabel="应用中..."
+          submitLabel={t('generatingSelect.apply')}
+          submittingLabel={t('generatingSelect.applying')}
           disabled={isGenerating}
           onSubmit={onApply}
         />
@@ -91,7 +97,7 @@ type GeneratedImagesOptions = {
 function getGenerationErrorMessage(error: unknown) {
   return error instanceof Error && error.message
     ? error.message
-    : '形象生成失败，请稍后重试';
+    : translate('generatingSelect.errors.generate');
 }
 
 let candidateSequence = 0;
@@ -110,12 +116,12 @@ async function downloadImage(imageUrl: string) {
   try {
     const response = await fetch(imageUrl);
     if (!response.ok) {
-      throw new Error('图片下载失败');
+      throw new Error(translate('generatingSelect.errors.download'));
     }
     const objectUrl = URL.createObjectURL(await response.blob());
     const link = document.createElement('a');
     link.href = objectUrl;
-    link.download = `形象-${Date.now()}.png`;
+    link.download = translate('generatingSelect.downloadName', { timestamp: Date.now() });
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
   }
@@ -149,7 +155,7 @@ function useGeneratedImages({
     });
     const imageUrl = result?.imageUrl?.trim();
     if (!imageUrl) {
-      throw new Error('生成失败：未返回图片地址');
+      throw new Error(translate('generatingSelect.errors.missingUrl'));
     }
     return imageUrl;
   }, [referenceImageUrl, styleName]);
@@ -158,7 +164,7 @@ function useGeneratedImages({
     const normalizedDescription = description.trim();
     if (!normalizedDescription || count <= 0 || generationInProgressRef.current) {
       if (!normalizedDescription) {
-        setErrorMessage('图片描述不能为空');
+        setErrorMessage(translate('generatingSelect.errors.emptyDescription'));
       }
       return;
     }
@@ -251,6 +257,7 @@ function useGeneratedImages({
 // The page coordinates scaling, generation, selection, and editor-sheet state.
 // eslint-disable-next-line max-lines-per-function
 export default function GeneratingSelectPage() {
+  const { t } = useTranslation();
   const draft = useCharacterGenerationStore.use.draft();
   const setDraft = useCharacterGenerationStore.use.setDraft();
   const clearDraft = useCharacterGenerationStore.use.clearDraft();
@@ -263,6 +270,26 @@ export default function GeneratingSelectPage() {
   const [saveErrorMessage, setSaveErrorMessage] = useState('');
   const description = draft?.promptText.trim() || '';
   const styleName = draft?.styleName.trim() || '通用';
+  const styleKeyMap: Record<string, string> = {
+    通用: 'general',
+    动漫插画: 'anime',
+    写实摄影: 'realistic',
+    半写实风: 'semiRealistic',
+    国风古韵: 'chinese',
+    赛博科幻: 'cyber',
+    奇幻史诗: 'fantasy',
+    像素复古: 'pixel',
+    卡通萌系: 'cute',
+    厚涂原画: 'painted',
+    水彩绘本: 'watercolor',
+    日系轻漫: 'manga',
+    暗黑哥特: 'gothic',
+    蒸汽朋克: 'steampunk',
+    梦幻超现实: 'surreal',
+  };
+  const localizedStyleName = styleKeyMap[styleName]
+    ? t(`createCharacter.styles.${styleKeyMap[styleName]}` as any)
+    : styleName;
   const referenceImageUrl = draft?.referenceImageUrl?.trim() || undefined;
   const {
     candidates,
@@ -356,7 +383,7 @@ export default function GeneratingSelectPage() {
       >
         <FigmaCharacterScreen
           description={description}
-          styleName={styleName}
+          styleName={localizedStyleName}
           imageUrl={selectedImageUrl}
           candidates={candidates}
           selectedCandidateId={selectedCandidateId}

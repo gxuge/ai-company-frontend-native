@@ -1,8 +1,7 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, Pressable, Text } from 'react-native';
 import { brandGreenRgba } from '@/components/ui/brand';
-
-const CATEGORIES = ['推荐', '订阅', '点赞', '二次元', '都市', '古风', '科幻'];
 
 interface CategoryTabsProps {
   active?: number;
@@ -10,8 +9,18 @@ interface CategoryTabsProps {
 }
 
 export function CategoryTabs({ active: externalActive, onChange }: CategoryTabsProps) {
+  const { t } = useTranslation();
   const [internalActive, setInternalActive] = useState(0);
   const active = externalActive ?? internalActive;
+  const categories = [
+    t('contentBrowse.browse.categories.recommended'),
+    t('contentBrowse.browse.categories.subscribed'),
+    t('contentBrowse.browse.categories.liked'),
+    t('contentBrowse.browse.categories.anime'),
+    t('contentBrowse.browse.categories.urban'),
+    t('contentBrowse.browse.categories.ancient'),
+    t('contentBrowse.browse.categories.sciFi'),
+  ];
 
   const handlePress = (i: number) => {
     setInternalActive(i);
@@ -24,7 +33,7 @@ export function CategoryTabs({ active: externalActive, onChange }: CategoryTabsP
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 12, gap: 8, flexDirection: 'row', paddingVertical: 4 }}
     >
-      {CATEGORIES.map((cat, i) => {
+      {categories.map((cat, i) => {
         const isActive = i === active;
         return (
           <Pressable

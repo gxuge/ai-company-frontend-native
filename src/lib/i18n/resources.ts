@@ -1,4 +1,3 @@
-import ar from '@/locales/ar';
 import enUS from '@/locales/en-US';
 import ja from '@/locales/ja';
 import zhCN from '@/locales/zh-CN';
@@ -16,9 +15,6 @@ export const resources = {
   },
   'ja': {
     translation: ja,
-  },
-  'ar': {
-    translation: ar,
   },
 } as const;
 

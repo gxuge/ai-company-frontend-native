@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import imgLightbulbIcon from '../../../../../assets/images/chat/chat-input/lightbulb.svg';
@@ -58,6 +59,7 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
   onPlusPress,
   onFocus,
 }, ref) => {
+  const { t } = useTranslation();
   const [inputType, setInputType] = React.useState<'keyboard' | 'voice'>('keyboard');
   const [isFocused, setIsFocused] = React.useState(false);
   const [nativeInputHeight, setNativeInputHeight] = React.useState(40);
@@ -152,7 +154,7 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
           </div>
 
           <div onClick={onMicPress} style={webStyles.voiceHoldText}>
-            按住说话
+            {t('chat.input.holdToTalk')}
           </div>
 
           <div style={webStyles.rightSection}>
@@ -235,7 +237,7 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
           }}
           onBlur={handleInputBlur}
           disabled={submitting}
-          placeholder="发送消息..."
+          placeholder={t('chat.input.placeholder')}
           rows={1}
           style={{
             ...webStyles.holdInput,
@@ -335,7 +337,7 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
           editable={!submitting}
           multiline
           blurOnSubmit
-          placeholder="发送消息..."
+          placeholder={t('chat.input.placeholder')}
           placeholderTextColor="rgba(255,255,255,0.55)"
           style={[
             styles.holdInput,
@@ -356,7 +358,9 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
       )}
       {inputType === 'voice' && (
         <Pressable onPress={onMicPress} style={styles.voiceHoldText}>
-          <Text style={{ color: '#ffffff', fontSize: 16 }}>按住说话</Text>
+          <Text style={{ color: '#ffffff', fontSize: 16 }}>
+            {t('chat.input.holdToTalk')}
+          </Text>
         </Pressable>
       )}
 

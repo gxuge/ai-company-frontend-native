@@ -1,0 +1,24 @@
+{
+  "fallbackUser": "用户",
+  "stats": {
+    "following": "关注",
+    "followers": "粉丝",
+    "likes": "点赞"
+  },
+  "tabs": {
+    "stories": "故事",
+    "characters": "角色"
+  },
+  "errors": {
+    "userLoadFailed": "用户信息加载失败",
+    "storyLoadFailed": "故事列表加载失败",
+    "roleLoadFailed": "角色列表加载失败",
+    "pageLoadFailed": "页面数据加载失败"
+  },
+  "empty": {
+    "stories": "还没有发布故事",
+    "characters": "还没有发布角色",
+    "description": "快去发现页看看大家的创作，或者自己动笔试试吧！"
+  },
+  "previewClose": "点击任意区域关闭"
+}

@@ -1,15 +1,17 @@
 import type { Gender } from './basic-info';
-import type { TsRoleSavePayload } from '@/lib/api';
+import type { TsDraftContent, TsRoleSavePayload } from '@/lib/api';
 import type { TsVoiceProfilePreviewPayload, TsVoiceProfilePreviewResult } from '@/lib/api/ts-voice';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Modal, ScrollView, TextInput } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
+import { AiDraftExitDialog } from '@/components/ai-company/ai-draft-exit-dialog';
 import { AiFormTextarea } from '@/components/ai-company/ai-form-textarea';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { AiSwitch } from '@/components/ai-company/ai-switch';
 import { AiTopTabs } from '@/components/ai-company/ai-top-tabs';
-import { tsRoleApi, tsRoleImageApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
+import { tsDraftApi, tsRoleApi, tsRoleImageApi, tsRoleTagApi, tsVoiceApi } from '@/lib/api';
 import { getItem, removeItem, setItem } from '@/lib/storage';
 import { BasicInfoSection } from './basic-info';
 
@@ -18,8 +20,6 @@ const imgPlusGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../as
 const imgChevronRightGreen = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-role/chevron_right_green.svg'));
 
 const fontBase = 'font-[\'Noto_Sans_SC\',sans-serif]';
-const DEFAULT_VOICE_PREVIEW_TEXT = '你好呀，很高兴认识你。';
-
 const VOICE_PREVIEW_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const VOICE_PREVIEW_CACHE_KEY_PREFIX = 'create-role:voice-preview:';
 const CREATE_ROLE_SELECTED_VOICE_KEY = 'create-role:selected-voice-v1';
@@ -34,6 +34,27 @@ type CreateRoleSelectedVoicePayload = {
   voiceName?: string;
   providerVoiceId?: string;
 };
+
+function parsePositiveInt(value?: string | string[]) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function readDraftString(content: TsDraftContent, keys: string[]) {
+  for (const key of keys) {
+    const value = content[key];
+    if (typeof value === 'string') {
+      return value;
+    }
+  }
+  return '';
+}
+
+function readDraftNumber(content: TsDraftContent, key: string, fallback: number) {
+  const value = content[key];
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
 
 function showMessage(message: string) {
   if (!message) {
@@ -99,17 +120,21 @@ function setCachedVoicePreview(payload: TsVoiceProfilePreviewPayload, preview: T
 function Header({
   activeTab,
   onTabChange,
+  onBack,
 }: {
   activeTab: 'basic' | 'advanced';
   onTabChange: (tab: 'basic' | 'advanced') => void;
+  onBack: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="sticky top-0 z-10 border-b border-white/10 bg-black px-4 py-3">
-      <AiHeader title="创建角色" className="mb-4" />
+      <AiHeader title={t('createRole.title')} className="mb-4" onBack={onBack} />
       <AiTopTabs
         tabs={[
-          { id: 'basic', label: '基础信息' },
-          { id: 'advanced', label: '高级设定' },
+          { id: 'basic', label: t('createRole.tabs.basic') },
+          { id: 'advanced', label: t('createRole.tabs.advanced') },
         ]}
         activeTab={activeTab}
         onTabChange={onTabChange}
@@ -129,15 +154,17 @@ function PublicStatusSection({
   isPublic: boolean;
   onPublicChange: (value: boolean) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="flex flex-col gap-3">
       <h2 className={`text-base text-white ${fontBase} px-1 font-bold tracking-wide`}>
-        公开状态
+        {t('createRole.publicStatus.title')}
       </h2>
       <div className="flex items-center justify-between rounded-2xl border border-[#494949] bg-black p-5">
         <div>
-          <p className={`text-sm text-white ${fontBase} font-medium`}>是否公开角色</p>
-          <p className={`text-xs text-[#6b7280] ${fontBase} mt-1`}>公开后其他用户可以与该角色对话</p>
+          <p className={`text-sm text-white ${fontBase} font-medium`}>{t('createRole.publicStatus.label')}</p>
+          <p className={`text-xs text-[#6b7280] ${fontBase} mt-1`}>{t('createRole.publicStatus.description')}</p>
         </div>
         <AiSwitch checked={isPublic} onCheckedChange={onPublicChange} checkedColorClassName="bg-[#a3e635]" />
       </div>
@@ -179,6 +206,7 @@ function TagsSection({
   onToggleTag: (tag: string) => void;
   onAddCustomTag: (tag: string) => void;
 }) {
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [customTag, setCustomTag] = useState('');
 
@@ -199,7 +227,7 @@ function TagsSection({
   return (
     <section className="flex flex-col gap-3">
       <div className="flex items-center justify-between px-1">
-        <h2 className={`text-base text-white ${fontBase} font-bold tracking-wide`}>角色标签</h2>
+        <h2 className={`text-base text-white ${fontBase} font-bold tracking-wide`}>{t('createRole.tags.title')}</h2>
       </div>
       <div className="rounded-2xl border border-[#494949] bg-black p-5">
         <div className="flex flex-wrap gap-3">
@@ -216,7 +244,7 @@ function TagsSection({
             className="flex items-center gap-1 rounded-full border border-dashed border-neutral-500 px-4 py-2"
           >
             <img src={imgPlusGray} alt="" className="size-[16px] object-contain" />
-            <span className={`text-sm text-[#9ca3af] ${fontBase} font-medium`}>自定义</span>
+            <span className={`text-sm text-[#9ca3af] ${fontBase} font-medium`}>{t('createRole.tags.custom')}</span>
           </button>
         </div>
       </div>
@@ -229,9 +257,9 @@ function TagsSection({
       >
         <div className="flex h-full w-full items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-[320px] rounded-2xl border border-[#494949] bg-[#111] p-5 shadow-xl">
-            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>添加自定义标签</h3>
+            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>{t('createRole.tags.addTitle')}</h3>
             <TextInput
-              placeholder="请输入标签名称 (最多10个字符)"
+              placeholder={t('createRole.tags.placeholder')}
               placeholderTextColor="#6b7280"
               maxLength={10}
               value={customTag}
@@ -245,13 +273,13 @@ function TagsSection({
                 onClick={handleCancel}
                 className={`rounded-full border border-[#494949] bg-transparent px-6 py-2 text-sm font-medium text-[#9ca3af] ${fontBase}`}
               >
-                取消
+                {t('createRole.actions.cancel')}
               </button>
               <button
                 onClick={handleConfirm}
                 className={`rounded-full border-2 border-solid border-brand-green bg-transparent px-6 py-2 text-sm font-bold text-brand-green active:bg-brand-green/10 ${fontBase}`}
               >
-                确认
+                {t('createRole.actions.confirm')}
               </button>
             </div>
           </div>
@@ -303,24 +331,43 @@ function DialogueStyleSection({
   onToneTendencyChange: (value: string) => void;
   onPreviewTextChange: (value: string) => void;
 }) {
+  const { t } = useTranslation();
   const [toneModalVisible, setToneModalVisible] = useState(false);
   const TONE_OPTIONS = ['默认', '轻声细语', '惜字如金', '喋喋不休', '慵懒随意', '咬文嚼字', '干练果断', '粗犷豪放'];
+  const optionLabelMap: Record<string, string> = {
+    默认: 'default',
+    简短: 'short',
+    详细: 'detailed',
+    主动引导: 'active',
+    被动回应: 'passive',
+    轻声细语: 'gentle',
+    惜字如金: 'concise',
+    喋喋不休: 'talkative',
+    慵懒随意: 'casual',
+    咬文嚼字: 'literary',
+    干练果断: 'decisive',
+    粗犷豪放: 'bold',
+  };
+  const getOptionLabel = (value: string) => {
+    const key = optionLabelMap[value];
+    return key ? t(`createRole.dialogStyle.values.${key}` as any) : value;
+  };
 
   return (
     <section className="flex flex-col gap-3">
       <h2 className={`text-base text-white ${fontBase} px-1 font-bold tracking-wide`}>
-        对话风格设定
+        {t('createRole.dialogStyle.title')}
       </h2>
       <div className="overflow-hidden rounded-2xl border border-[#494949] bg-black">
         <div className="p-5">
           <div className="mb-4 flex items-center">
             <div className="mr-3 h-5 w-[2.5px] rounded-full bg-brand-green/90" />
-            <span className={`text-sm text-white ${fontBase} font-bold tracking-wide`}>对话风格预览</span>
+            <span className={`text-sm text-white ${fontBase} font-bold tracking-wide`}>{t('createRole.dialogStyle.preview')}</span>
           </div>
           <AiFormTextarea
             containerClassName="bg-[#111] rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className={`w-full min-h-[96px] bg-transparent border-0 outline-none resize-none p-[16px] text-[#d1d5db] placeholder-[#6b7280] text-sm ${fontBase} leading-relaxed`}
-            placeholder="哼，别以为你这样说我就会高兴。不过既然你这么诚恳，我就勉为其难帮你一次。"
+            placeholder={t('createRole.dialogStyle.previewPlaceholder')}
             value={previewText}
             onChange={e => onPreviewTextChange(e.target.value)}
           />
@@ -329,20 +376,20 @@ function DialogueStyleSection({
         <div className="mx-5 h-px bg-brand-green/20" />
 
         <div className="flex items-center justify-between px-5 py-4">
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>对话长度</span>
+          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>{t('createRole.dialogStyle.length')}</span>
           <div className="flex gap-2">
             <OptionButton
-              label="默认"
+              label={getOptionLabel('默认')}
               selected={dialogLength === '默认'}
               onClick={() => onDialogLengthChange('默认')}
             />
             <OptionButton
-              label="简短"
+              label={getOptionLabel('简短')}
               selected={dialogLength === '简短'}
               onClick={() => onDialogLengthChange('简短')}
             />
             <OptionButton
-              label="详细"
+              label={getOptionLabel('详细')}
               selected={dialogLength === '详细'}
               onClick={() => onDialogLengthChange('详细')}
             />
@@ -355,9 +402,9 @@ function DialogueStyleSection({
           className="flex items-center justify-between px-5 py-4 cursor-pointer active:opacity-70"
           onClick={() => setToneModalVisible(true)}
         >
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>语气倾向</span>
+          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>{t('createRole.dialogStyle.tone')}</span>
           <div className="flex items-center gap-1.5">
-            <span className={`text-xs text-brand-green/90 ${fontBase}`}>{toneTendency}</span>
+            <span className={`text-xs text-brand-green/90 ${fontBase}`}>{getOptionLabel(toneTendency)}</span>
             <img src={imgChevronRightGreen} alt="" className="h-[10px] w-[6px] object-contain" />
           </div>
         </div>
@@ -365,20 +412,20 @@ function DialogueStyleSection({
         <div className="mx-5 h-px bg-brand-green/20" />
 
         <div className="flex items-center justify-between px-5 py-4">
-          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>互动性</span>
+          <span className={`text-sm text-[#d1d5db] ${fontBase} font-medium`}>{t('createRole.dialogStyle.interactivity')}</span>
           <div className="flex gap-2">
             <OptionButton
-              label="默认"
+              label={getOptionLabel('默认')}
               selected={interactivity === '默认'}
               onClick={() => onInteractivityChange('默认')}
             />
             <OptionButton
-              label="主动引导"
+              label={getOptionLabel('主动引导')}
               selected={interactivity === '主动引导'}
               onClick={() => onInteractivityChange('主动引导')}
             />
             <OptionButton
-              label="被动回应"
+              label={getOptionLabel('被动回应')}
               selected={interactivity === '被动回应'}
               onClick={() => onInteractivityChange('被动回应')}
             />
@@ -394,7 +441,7 @@ function DialogueStyleSection({
       >
         <div className="flex h-full w-full items-end justify-center bg-black/60 sm:items-center">
           <div className="w-full max-w-[480px] rounded-t-2xl sm:rounded-2xl border border-[#494949] bg-[#111] p-5 shadow-xl">
-            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>选择语气倾向</h3>
+            <h3 className={`mb-4 text-center text-lg font-bold text-white ${fontBase}`}>{t('createRole.dialogStyle.selectTone')}</h3>
             <div className="flex flex-wrap gap-3">
               {TONE_OPTIONS.map(tone => (
                 <button
@@ -409,7 +456,7 @@ function DialogueStyleSection({
                       : 'border border-[#4b5563] text-[#9ca3af]'
                   }`}
                 >
-                  {tone}
+                  {getOptionLabel(tone)}
                 </button>
               ))}
             </div>
@@ -417,7 +464,7 @@ function DialogueStyleSection({
               onClick={() => setToneModalVisible(false)}
               className={`mt-6 w-full rounded-full border border-[#494949] bg-transparent py-3 text-center text-sm font-medium text-[#9ca3af] ${fontBase}`}
             >
-              取消
+              {t('createRole.actions.cancel')}
             </button>
           </div>
         </div>
@@ -433,6 +480,8 @@ function SaveButton({
   onSave: () => void;
   saving: boolean;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="sticky bottom-0 z-10 bg-linear-to-t from-black via-black/95 to-transparent px-4 pt-6 pb-5">
       <button
@@ -440,7 +489,7 @@ function SaveButton({
         disabled={saving}
         className={`w-full rounded-full border-2 border-solid border-brand-green bg-transparent py-4 text-lg text-brand-green ${fontBase} font-bold tracking-wider active:bg-brand-green/10 ${saving ? 'opacity-60' : ''}`}
       >
-        {saving ? '保存中...' : '完成并保存'}
+        {saving ? t('createRole.actions.saving') : t('createRole.actions.save')}
       </button>
     </div>
   );
@@ -448,10 +497,12 @@ function SaveButton({
 
 // eslint-disable-next-line max-lines-per-function
 export function CreateCharacter() {
+  const { t } = useTranslation();
   const [generateModalVisible, setGenerateModalVisible] = useState(false);
 
   const isFocused = useIsFocused();
-  const params = useLocalSearchParams<{ selectedImageUrl?: string }>();
+  const params = useLocalSearchParams<{ selectedImageUrl?: string; draftId?: string | string[] }>();
+  const routeDraftId = parsePositiveInt(params.draftId);
   const [activeTab, setActiveTab] = useState<'basic' | 'advanced'>('basic');
   const [roleId, setRoleId] = useState<number | null>(null);
 
@@ -463,7 +514,7 @@ export function CreateCharacter() {
   const [voiceName, setVoiceName] = useState('');
   const [voiceProfileId, setVoiceProfileId] = useState<number | null>(null);
   const [providerVoiceId, setProviderVoiceId] = useState('');
-  const [voicePreviewText, setVoicePreviewText] = useState(DEFAULT_VOICE_PREVIEW_TEXT);
+  const [voicePreviewText, setVoicePreviewText] = useState(() => t('createRole.defaultVoicePreview'));
   const [avatarUrl, setAvatarUrl] = useState('');
   const [avatarNeedsImport, setAvatarNeedsImport] = useState(false);
   const [voicePreviewAudioUrl, setVoicePreviewAudioUrl] = useState('');
@@ -479,7 +530,7 @@ export function CreateCharacter() {
   }, [params.selectedImageUrl]);
 
   useEffect(() => {
-    if (!isFocused) {
+    if (!isFocused || routeDraftId) {
       return;
     }
     let alive = true;
@@ -526,7 +577,7 @@ export function CreateCharacter() {
     return () => {
       alive = false;
     };
-  }, [isFocused]);
+  }, [isFocused, routeDraftId]);
 
   const [isPublic, setIsPublic] = useState(true);
   const [tagOptions, setTagOptions] = useState<string[]>([]);
@@ -545,6 +596,95 @@ export function CreateCharacter() {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatingVoice, setGeneratingVoice] = useState(false);
   const [voiceListenPhase, setVoiceListenPhase] = useState<'idle' | 'loading' | 'playing'>('idle');
+  const [exitDialogVisible, setExitDialogVisible] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+
+  const hasEffectiveContent = useMemo(() => (
+    [name, job, background, greeting, dialoguePreview].some(value => value.trim().length > 0)
+    || gender !== 'random'
+    || avatarUrl.trim().length > 0
+    || voiceName.trim().length > 0
+    || providerVoiceId.trim().length > 0
+    || voiceProfileId !== null
+    || dialogLength !== '默认'
+    || interactivity !== '默认'
+    || toneTendency !== '默认'
+    || !isPublic
+  ), [
+    avatarUrl,
+    background,
+    dialogLength,
+    dialoguePreview,
+    gender,
+    greeting,
+    interactivity,
+    isPublic,
+    job,
+    name,
+    providerVoiceId,
+    toneTendency,
+    voiceName,
+    voiceProfileId,
+  ]);
+
+  useEffect(() => {
+    if (!routeDraftId) {
+      return;
+    }
+    let cancelled = false;
+    const loadDraft = async () => {
+      try {
+        const draft = await tsDraftApi.getDraftDetail(routeDraftId);
+        if (cancelled) {
+          return;
+        }
+        const content = draft?.content || {};
+        const draftGender = readDraftString(content, ['gender']);
+        setRoleId(draft?.sourceId || null);
+        setActiveTab(readDraftString(content, ['activeTab']) === 'advanced' ? 'advanced' : 'basic');
+        setName(readDraftString(content, ['name', 'roleName']));
+        setGender(
+          draftGender === 'male' || draftGender === 'female' || draftGender === 'unknown'
+            ? draftGender
+            : 'random',
+        );
+        setJob(readDraftString(content, ['job', 'occupation']));
+        setBackground(readDraftString(content, ['background', 'backgroundStory']));
+        setGreeting(readDraftString(content, ['greeting']));
+        setVoiceName(readDraftString(content, ['voiceName']));
+        setVoiceProfileId(parsePositiveInt(String(content.voiceProfileId ?? '')));
+        setProviderVoiceId(readDraftString(content, ['providerVoiceId']));
+        setVoicePreviewText(readDraftString(content, ['voicePreviewText']) || t('createRole.defaultVoicePreview'));
+        setAvatarUrl(readDraftString(content, ['avatarUrl', 'generatedAvatarUrl']));
+        setAvatarNeedsImport(content.avatarNeedsImport === true);
+        setVoicePreviewAudioUrl(readDraftString(content, ['voicePreviewAudioUrl']));
+        setVoiceSpeed(readDraftNumber(content, 'voiceSpeed', 1));
+        setVoicePitch(readDraftNumber(content, 'voicePitch', 0));
+        setVoiceVolume(readDraftNumber(content, 'voiceVolume', 1));
+        setIsPublic(content.isPublic !== false && content.isPublic !== 0);
+        setSelectedTags(
+          Array.isArray(content.selectedTags)
+            ? content.selectedTags.filter((tag): tag is string => typeof tag === 'string')
+            : [],
+        );
+        setDialogLength(readDraftString(content, ['dialogLength']) || '默认');
+        setInteractivity(readDraftString(content, ['interactivity', 'interactionMode']) || '默认');
+        setToneTendency(readDraftString(content, ['toneTendency']) || '默认');
+        setDialoguePreview(readDraftString(content, ['dialoguePreview']));
+        setBasicAiGenerated(content.basicAiGenerated === true || content.basicAiGenerated === 1);
+        setAdvancedAiGenerated(content.advancedAiGenerated === true || content.advancedAiGenerated === 1);
+      }
+      catch (error) {
+        if (!cancelled) {
+          showMessage(extractErrorMessage(error, t('createRole.messages.draftLoadFailed')));
+        }
+      }
+    };
+    void loadDraft();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeDraftId, t]);
 
   useEffect(() => {
     let alive = true;
@@ -663,10 +803,12 @@ export function CreateCharacter() {
         setGreeting(greetingText);
       }
       setBasicAiGenerated(true);
-      showMessage(generateMode === 'full' ? '角色设定已全量生成。' : '角色设定已生成补全。');
+      showMessage(generateMode === 'full'
+        ? t('createRole.messages.settingGeneratedFull')
+        : t('createRole.messages.settingGenerated'));
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '生成设定失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.settingGenerateFailed')));
     }
     finally {
       setGeneratingSetting(false);
@@ -693,13 +835,13 @@ export function CreateCharacter() {
       if (typeof backgroundStory === 'string' && backgroundStory.trim()) {
         setBackground(backgroundStory.trim());
         setBasicAiGenerated(true);
-        showMessage('背景设定已美化。');
+        showMessage(t('createRole.messages.backgroundOptimized'));
         return;
       }
-      throw new Error('未优化出有效背景设定，请稍后重试。');
+      throw new Error(t('createRole.messages.backgroundEmpty'));
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '背景美化失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.backgroundOptimizeFailed')));
     }
     finally {
       setOptimizingBackground(false);
@@ -726,13 +868,13 @@ export function CreateCharacter() {
       if (typeof optimizedGreeting === 'string' && optimizedGreeting.trim()) {
         setGreeting(optimizedGreeting.trim());
         setBasicAiGenerated(true);
-        showMessage('开场白已美化。');
+        showMessage(t('createRole.messages.greetingOptimized'));
         return;
       }
-      throw new Error('未优化出有效开场白，请稍后重试。');
+      throw new Error(t('createRole.messages.greetingEmpty'));
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '开场白美化失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.greetingOptimizeFailed')));
     }
     finally {
       setOptimizingGreeting(false);
@@ -753,15 +895,15 @@ export function CreateCharacter() {
       });
 
       if (!result?.imageUrl) {
-        throw new Error('形象生成成功，但未返回图片地址。');
+        throw new Error(t('createRole.messages.imageUrlMissing'));
       }
       setAvatarUrl(result.imageUrl);
       setAvatarNeedsImport(true);
       setAdvancedAiGenerated(true);
-      showMessage('角色形象生成成功。');
+      showMessage(t('createRole.messages.imageGenerated'));
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '形象生成失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.imageGenerateFailed')));
     }
     finally {
       setGeneratingImage(false);
@@ -817,7 +959,7 @@ export function CreateCharacter() {
             ? resolvedVoiceProfileId
             : undefined,
           voiceId: resolvedProviderVoiceId || undefined,
-          previewText: resolvedPreviewText || DEFAULT_VOICE_PREVIEW_TEXT,
+          previewText: resolvedPreviewText || t('createRole.defaultVoicePreview'),
           speed: roundVoiceParam(resolvedSpeed, 2),
           pitch: roundVoiceParam(resolvedPitch, 2),
           volume: roundVoiceParam(resolvedVolume, 2),
@@ -827,10 +969,10 @@ export function CreateCharacter() {
         });
       }
       setAdvancedAiGenerated(true);
-      showMessage('角色声音生成成功。');
+      showMessage(t('createRole.messages.voiceGenerated'));
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '声音生成失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.voiceGenerateFailed')));
     }
     finally {
       setGeneratingVoice(false);
@@ -885,15 +1027,15 @@ export function CreateCharacter() {
         try {
           const played = await playPreviewAudio(voicePreviewAudioUrl);
           if (!played) {
-            showMessage('已获取试听音频，当前环境暂不支持直接播放。');
+            showMessage(t('createRole.messages.previewUnsupported'));
           }
         }
         catch (error) {
-          showMessage(extractErrorMessage(error, '试听播放失败，请稍后重试。'));
+          showMessage(extractErrorMessage(error, t('createRole.messages.previewPlayFailed')));
         }
         return;
       }
-      showMessage('请先点击一键生成声音，再进行试听。');
+      showMessage(t('createRole.messages.generateVoiceFirst'));
       return;
     }
 
@@ -902,7 +1044,7 @@ export function CreateCharacter() {
       const previewPayload: TsVoiceProfilePreviewPayload = {
         voiceProfileId: previewProfileId,
         voiceId: previewProviderVoiceId,
-        previewText: voicePreviewText || DEFAULT_VOICE_PREVIEW_TEXT,
+        previewText: voicePreviewText || t('createRole.defaultVoicePreview'),
         speed: roundVoiceParam(voiceSpeed, 2),
         pitch: roundVoiceParam(voicePitch, 2),
         volume: roundVoiceParam(voiceVolume, 2),
@@ -911,18 +1053,18 @@ export function CreateCharacter() {
 
       const audioUrl = preview?.previewAudioUrl || voicePreviewAudioUrl;
       if (!audioUrl) {
-        showMessage('试听生成成功，但未返回音频地址。');
+        showMessage(t('createRole.messages.previewUrlMissing'));
         return;
       }
       setVoicePreviewAudioUrl(audioUrl);
       setVoiceListenPhase('playing');
       const played = await playPreviewAudio(audioUrl);
       if (!played) {
-        showMessage('试听生成成功，当前环境暂不支持直接播放。');
+        showMessage(t('createRole.messages.previewGeneratedUnsupported'));
       }
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '试听生成失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.previewGenerateFailed')));
     }
     finally {
       setVoiceListenPhase('idle');
@@ -956,22 +1098,22 @@ export function CreateCharacter() {
       return;
     }
     if (!name.trim()) {
-      showMessage('请先填写角色名字。');
+      showMessage(t('createRole.messages.nameRequired'));
       setActiveTab('basic');
       return;
     }
     if (gender === 'random') {
-      showMessage('请先确认角色性别，不能保存为随机。');
+      showMessage(t('createRole.messages.genderRequired'));
       setActiveTab('basic');
       return;
     }
     if (!background.trim()) {
-      showMessage('请先生成或填写角色设定。');
+      showMessage(t('createRole.messages.settingRequired'));
       setActiveTab('basic');
       return;
     }
     if (!avatarUrl.trim()) {
-      showMessage('请先生成或上传角色形象。');
+      showMessage(t('createRole.messages.imageRequired'));
       setActiveTab('basic');
       return;
     }
@@ -979,7 +1121,7 @@ export function CreateCharacter() {
       || (typeof voiceProfileId === 'number' && Number.isFinite(voiceProfileId))
       || !!providerVoiceId.trim();
     if (!hasVoice) {
-      showMessage('请先生成或选择角色声音。');
+      showMessage(t('createRole.messages.voiceRequired'));
       setActiveTab('basic');
       return;
     }
@@ -992,7 +1134,7 @@ export function CreateCharacter() {
           sourceType: 'ai_generate',
         });
         if (!asset?.fileUrl?.trim()) {
-          throw new Error('角色形象保存失败，请稍后重试。');
+          throw new Error(t('createRole.messages.imageSaveFailed'));
         }
         persistedAvatarUrl = asset.fileUrl.trim();
         setAvatarUrl(persistedAvatarUrl);
@@ -1012,20 +1154,93 @@ export function CreateCharacter() {
       if (result?.voiceName) {
         setVoiceName(result.voiceName);
       }
-      showMessage('角色保存成功。');
+      showMessage(t('createRole.messages.saved'));
       router.navigate('/pages/create-page');
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '保存失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createRole.messages.saveFailed')));
     }
     finally {
       setSaving(false);
     }
   };
 
+  const leaveCreateRole = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/pages/create-page');
+  };
+
+  const handleBack = () => {
+    if (saving || savingDraft) {
+      return;
+    }
+    if (hasEffectiveContent) {
+      setExitDialogVisible(true);
+      return;
+    }
+    leaveCreateRole();
+  };
+
+  const handleSaveDraftAndExit = async () => {
+    if (savingDraft) {
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      const payload = {
+        draftType: 'role' as const,
+        draftName: name.trim() || t('createRole.untitledDraft'),
+        sourceId: roleId || undefined,
+        content: {
+          activeTab,
+          name,
+          gender,
+          job,
+          background,
+          greeting,
+          voiceName,
+          voiceProfileId,
+          providerVoiceId,
+          voicePreviewText,
+          avatarUrl,
+          avatarNeedsImport,
+          voicePreviewAudioUrl,
+          voiceSpeed,
+          voicePitch,
+          voiceVolume,
+          isPublic,
+          selectedTags,
+          dialogLength,
+          interactivity,
+          toneTendency,
+          dialoguePreview,
+          basicAiGenerated,
+          advancedAiGenerated,
+        },
+      };
+      if (routeDraftId) {
+        await tsDraftApi.updateDraft({ ...payload, id: routeDraftId });
+      }
+      else {
+        await tsDraftApi.createDraft(payload);
+      }
+      setExitDialogVisible(false);
+      leaveCreateRole();
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, t('createRole.messages.draftSaveFailed')));
+    }
+    finally {
+      setSavingDraft(false);
+    }
+  };
+
   return (
     <div className="mx-auto flex size-full max-w-[480px] flex-col bg-black">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} onBack={handleBack} />
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 112 }}>
         <div className="flex flex-col gap-8 px-4 pt-5">
           {activeTab === 'advanced'
@@ -1105,16 +1320,26 @@ export function CreateCharacter() {
             className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-center text-lg font-bold tracking-wide text-white">AI 一键生成</h3>
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">{t('createRole.generateModal.title')}</h3>
             <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
-              <p>检测到您已填写了部分设定。您希望 AI 如何为您生成？</p>
+              <p>{t('createRole.generateModal.description')}</p>
               <div className="flex items-start gap-1">
                 <span className="text-brand-green/90 mt-1">•</span>
-                <p><span className="text-white font-medium">接着生成：</span>基于您当前的灵感，继续润色和扩写。</p>
+                <p>
+                  <span className="text-white font-medium">
+                    {t('createRole.generateModal.continueTitle')}
+                  </span>
+                  {t('createRole.generateModal.continueDescription')}
+                </p>
               </div>
               <div className="flex items-start gap-1">
                 <span className="text-[#ff4d4f] mt-1">•</span>
-                <p><span className="text-white font-medium">全量覆盖：</span>清空所有输入，重新随机生成完整角色。</p>
+                <p>
+                  <span className="text-white font-medium">
+                    {t('createRole.generateModal.overwriteTitle')}
+                  </span>
+                  {t('createRole.generateModal.overwriteDescription')}
+                </p>
               </div>
             </div>
             <div className="flex flex-row gap-3 mt-4">
@@ -1126,7 +1351,7 @@ export function CreateCharacter() {
                   executeGenerateSetting('single');
                 }}
               >
-                接着生成
+                {t('createRole.generateModal.continue')}
               </button>
               <button
                 type="button"
@@ -1136,7 +1361,7 @@ export function CreateCharacter() {
                   executeGenerateSetting('full');
                 }}
               >
-                全量覆盖
+                {t('createRole.generateModal.overwrite')}
               </button>
             </div>
             <button
@@ -1151,6 +1376,17 @@ export function CreateCharacter() {
           </div>
         </div>
       </Modal>
+
+      <AiDraftExitDialog
+        visible={exitDialogVisible}
+        saving={savingDraft}
+        onContinue={() => setExitDialogVisible(false)}
+        onDiscard={() => {
+          setExitDialogVisible(false);
+          leaveCreateRole();
+        }}
+        onSaveAndExit={() => void handleSaveDraftAndExit()}
+      />
 
       <SaveButton onSave={handleSave} saving={saving} />
     </div>

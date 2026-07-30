@@ -1,6 +1,7 @@
-import { AiHeader } from '@/components/ai-company/ai-header';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AiHeader } from '@/components/ai-company/ai-header';
 import { signOut } from '@/features/auth/use-auth-store';
 import { useSelectedLanguage } from '@/lib/i18n';
 
@@ -87,10 +88,10 @@ const LANGUAGE_NAMES: Record<string, string> = {
   'en-US': 'English',
   'zh-TW': '繁體中文',
   'ja': '日本語',
-  'ar': 'العربية',
 };
 
 export function SettingsPage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { language } = useSelectedLanguage();
@@ -148,7 +149,7 @@ export function SettingsPage() {
       <div className="relative z-10 max-w-md mx-auto">
         {/* Header */}
         <div className="px-5" style={{ paddingTop: 12, paddingBottom: 12 }}>
-          <AiHeader title="通用设置" />
+          <AiHeader title={t('settings.general.title')} />
         </div>
 
         {/* Sections */}
@@ -162,7 +163,7 @@ export function SettingsPage() {
                   bgColor="rgba(6,182,212,0.1)"
                 />
               }
-              label="语言设置"
+              label={t('settings.general.language')}
               rightText={LANGUAGE_NAMES[language] || '简体中文'}
               onClick={() => router.push('/pages/language-setting')}
             />
@@ -174,7 +175,7 @@ export function SettingsPage() {
                   bgColor="rgba(59,130,246,0.1)"
                 />
               }
-              label="意见与反馈"
+              label={t('settings.general.feedback')}
             />
             <Divider />
             <MenuItem
@@ -184,7 +185,7 @@ export function SettingsPage() {
                   bgColor="rgba(168,85,247,0.1)"
                 />
               }
-              label="关于探拾"
+              label={t('settings.general.about')}
             />
           </SectionCard>
 
@@ -197,7 +198,7 @@ export function SettingsPage() {
                   bgColor="rgba(16,185,129,0.1)"
                 />
               }
-              label="账号设置"
+              label={t('settings.general.account')}
               onClick={() => router.push('/pages/user-setting')}
             />
             <Divider />
@@ -208,8 +209,8 @@ export function SettingsPage() {
                   bgColor="rgba(249,115,22,0.1)"
                 />
               }
-              label="实名认证"
-              rightText="已认证"
+              label={t('settings.general.verification')}
+              rightText={t('settings.general.verified')}
               showArrow={false}
             />
             <Divider />
@@ -220,7 +221,7 @@ export function SettingsPage() {
                   bgColor="rgba(236,72,153,0.1)"
                 />
               }
-              label="隐私设置"
+              label={t('settings.general.privacy')}
             />
           </SectionCard>
 
@@ -232,7 +233,7 @@ export function SettingsPage() {
             >
               <img src={imgLogoutRed} alt="" className="w-[16px] h-[17px] object-contain" />
               <span className="text-[#f87171] font-['Noto_Sans_SC',sans-serif]" style={{ fontSize: 15 }}>
-                退出登录
+                {t('settings.general.logout')}
               </span>
             </button>
           </SectionCard>
@@ -244,13 +245,13 @@ export function SettingsPage() {
             className="text-gray-500 tracking-wide font-['Inter','Noto_Sans_SC',sans-serif]"
             style={{ fontSize: 12 }}
           >
-            应用版本 1.0.0
+            {t('settings.general.version', { version: '1.0.0' })}
           </span>
           <span
             className="text-gray-600 font-['Noto_Sans_SC',sans-serif]"
             style={{ fontSize: 10 }}
           >
-            探拾AI伴侣
+            {t('settings.general.appName')}
           </span>
         </div>
       </div>
@@ -281,10 +282,10 @@ export function SettingsPage() {
             </div>
             
             <h3 className="text-[18px] font-semibold text-white mb-2 font-['Noto_Sans_SC',sans-serif] tracking-wide">
-              退出登录
+              {t('settings.general.logoutDialog.title')}
             </h3>
             <p className="text-[#9CA3AF] text-[14px] mb-8 text-center font-['Noto_Sans_SC',sans-serif] leading-relaxed">
-              确定要退出当前账号吗？<br />退出后将需要重新验证身份。
+              {t('settings.general.logoutDialog.message')}
             </p>
             
             <div className="flex w-full gap-3">
@@ -292,13 +293,13 @@ export function SettingsPage() {
                 onClick={() => setShowLogoutConfirm(false)}
                 className="flex-1 py-3 rounded-2xl bg-[#2A2F36] border border-white/5 text-white/80 text-[15px] font-medium hover:bg-[#323840] active:bg-[#2A2F36] transition-all font-['Noto_Sans_SC',sans-serif]"
               >
-                取消
+                {t('settings.general.logoutDialog.cancel')}
               </button>
               <button 
                 onClick={confirmLogout}
                 className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-red-500/80 to-red-600/80 text-white text-[15px] font-medium hover:from-red-500 hover:to-red-600 active:opacity-80 transition-all shadow-[0_0_15px_rgba(239,68,68,0.3)] font-['Noto_Sans_SC',sans-serif]"
               >
-                确定退出
+                {t('settings.general.logoutDialog.confirm')}
               </button>
             </div>
           </div>

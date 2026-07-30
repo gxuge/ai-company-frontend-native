@@ -1,0 +1,141 @@
+{
+  "title": "建立角色",
+  "tabs": {
+    "basic": "基本資訊",
+    "advanced": "進階設定"
+  },
+  "publicStatus": {
+    "title": "公開狀態",
+    "label": "是否公開角色",
+    "description": "公開後其他使用者可以與此角色對話"
+  },
+  "tags": {
+    "title": "角色標籤",
+    "custom": "自訂",
+    "addTitle": "新增自訂標籤",
+    "placeholder": "請輸入標籤名稱（最多10個字元）"
+  },
+  "basic": {
+    "image": "角色形象",
+    "addImage": "點擊新增形象",
+    "setting": "角色設定",
+    "name": "角色名字",
+    "namePlaceholder": "輸入角色名字",
+    "gender": "性別",
+    "male": "男生",
+    "female": "女生",
+    "random": "隨機",
+    "occupation": "職業／身分",
+    "occupationPlaceholder": "輸入角色職業／身分",
+    "background": "角色背景設定",
+    "backgroundPlaceholder": "輸入角色背景故事，可輔助生成人設和劇情。",
+    "greeting": "開場白",
+    "greetingPlaceholder": "輸入角色開場白，將作為對話的第一句話。",
+    "optimizeComingSoon": "提示詞美化功能開發中...",
+    "changeImage": "更換形象",
+    "back": "返回",
+    "voice": "角色聲音",
+    "selectVoice": "選擇角色聲音",
+    "help": {
+      "imageTitle": "角色形象提示",
+      "imageDescription": "上傳或使用 AI 生成角色外觀，並作為角色頭像與主視覺。性別、職業和背景設定越詳細，生成結果越符合預期。",
+      "settingTitle": "角色設定提示",
+      "settingDescription": "詳細的名字、職業和背景設定能幫助 AI 生成更合適的形象、聲音與故事劇情。",
+      "voiceTitle": "角色聲音提示",
+      "voiceDescription": "為角色選擇或生成獨特聲線，並用於對話與劇情播報。角色設定越詳細，生成聲音越符合預期。"
+    },
+    "confirm": {
+      "title": "完善角色設定",
+      "description": "目前缺少較多角色設定，可能影響 AI 生成{{target}}的準確度。建議先完善性別、職業和背景，是否仍要繼續？",
+      "image": "形象",
+      "voice": "聲音",
+      "improve": "去完善",
+      "continue": "繼續生成"
+    }
+  },
+  "generating": {
+    "image": "生成形象中",
+    "imageSteps": [
+      "比對外觀風格中",
+      "細化五官特徵中",
+      "繪製服裝與配色中",
+      "完善最終形象中"
+    ],
+    "voice": "正在生成聲音",
+    "voiceEllipsis": "正在生成聲音...",
+    "voiceMatching": "比對角色聲線中"
+  },
+  "dialogStyle": {
+    "title": "對話風格設定",
+    "preview": "對話風格預覽",
+    "previewPlaceholder": "哼，別以為你這樣說我就會高興。不過既然你這麼誠懇，我就勉為其難幫你一次。",
+    "length": "對話長度",
+    "tone": "語氣傾向",
+    "interactivity": "互動性",
+    "selectTone": "選擇語氣傾向",
+    "values": {
+      "default": "預設",
+      "short": "簡短",
+      "detailed": "詳細",
+      "active": "主動引導",
+      "passive": "被動回應",
+      "gentle": "輕聲細語",
+      "concise": "惜字如金",
+      "talkative": "喋喋不休",
+      "casual": "慵懶隨意",
+      "literary": "咬文嚼字",
+      "decisive": "幹練果斷",
+      "bold": "粗獷豪放"
+    }
+  },
+  "actions": {
+    "cancel": "取消",
+    "confirm": "確認",
+    "saving": "儲存中...",
+    "save": "完成並儲存"
+  },
+  "generateModal": {
+    "title": "AI 一鍵生成",
+    "description": "偵測到您已填寫部分設定。您希望 AI 如何生成？",
+    "continueTitle": "接著生成：",
+    "continueDescription": "根據目前靈感繼續潤飾與擴寫。",
+    "overwriteTitle": "全部覆蓋：",
+    "overwriteDescription": "清空所有輸入，重新隨機生成完整角色。",
+    "continue": "接著生成",
+    "overwrite": "全部覆蓋"
+  },
+  "messages": {
+    "draftLoadFailed": "載入角色草稿失敗，請稍後再試。",
+    "settingGeneratedFull": "角色設定已全部生成。",
+    "settingGenerated": "角色設定已生成補全。",
+    "settingGenerateFailed": "生成設定失敗，請稍後再試。",
+    "backgroundOptimized": "背景設定已美化。",
+    "backgroundEmpty": "未產生有效背景設定，請稍後再試。",
+    "backgroundOptimizeFailed": "背景美化失敗，請稍後再試。",
+    "greetingOptimized": "開場白已美化。",
+    "greetingEmpty": "未產生有效開場白，請稍後再試。",
+    "greetingOptimizeFailed": "開場白美化失敗，請稍後再試。",
+    "imageUrlMissing": "形象生成成功，但未回傳圖片網址。",
+    "imageGenerated": "角色形象生成成功。",
+    "imageGenerateFailed": "形象生成失敗，請稍後再試。",
+    "voiceGenerated": "角色聲音生成成功。",
+    "voiceGenerateFailed": "聲音生成失敗，請稍後再試。",
+    "previewUnsupported": "已取得試聽音訊，目前環境不支援直接播放。",
+    "previewPlayFailed": "試聽播放失敗，請稍後再試。",
+    "generateVoiceFirst": "請先一鍵生成聲音，再進行試聽。",
+    "previewUrlMissing": "試聽生成成功，但未回傳音訊網址。",
+    "previewGeneratedUnsupported": "試聽生成成功，目前環境不支援直接播放。",
+    "previewGenerateFailed": "試聽生成失敗，請稍後再試。",
+    "nameRequired": "請先填寫角色名字。",
+    "genderRequired": "請先確認角色性別，不能以隨機性別儲存。",
+    "settingRequired": "請先生成或填寫角色設定。",
+    "imageRequired": "請先生成或上傳角色形象。",
+    "voiceRequired": "請先生成或選擇角色聲音。",
+    "imageSaveFailed": "角色形象儲存失敗，請稍後再試。",
+    "saved": "角色儲存成功。",
+    "saveFailed": "儲存失敗，請稍後再試。",
+    "draftSaveFailed": "草稿儲存失敗，請稍後再試。"
+  },
+  "defaultVoicePreview": "你好呀，很高興認識你。",
+  "untitledDraft": "暫未填寫名稱"
+}

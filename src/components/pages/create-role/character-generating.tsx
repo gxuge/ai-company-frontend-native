@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Image, Sparkles } from "lucide-react";
-
-const statusMessages = [
-  "匹配外观风格中",
-  "细化五官特征中",
-  "渲染服装与配色中",
-  "完善最终形象中",
-];
+import { useTranslation } from 'react-i18next';
 
 // Mini Particle logic for the image box
 const generateParticles = (count: number) => {
@@ -22,6 +16,8 @@ const generateParticles = (count: number) => {
 };
 
 export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
+  const { t } = useTranslation();
+  const statusMessages = t('createRole.generating.imageSteps', { returnObjects: true }) as string[];
   const [currentMessage, setCurrentMessage] = useState(0);
   const [progress, setProgress] = useState(0);
   const [scanLine, setScanLine] = useState(0);
@@ -129,7 +125,7 @@ export function CharacterGenerating({ mini = false }: { mini?: boolean }) {
         {/* 4. Text & Progress Info */}
         <div className="mt-4 flex flex-col items-center gap-1">
           <Text className="font-['Noto_Sans_SC'] text-[13px] font-bold text-white tracking-wider">
-            生成形象中
+            {t('createRole.generating.image')}
           </Text>
           
           <div className="h-4 flex items-center">

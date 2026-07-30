@@ -7,6 +7,7 @@ import { DEFAULT_LANGUAGE, resources, SUPPORTED_LANGUAGES } from './resources';
 import { getLanguage } from './utils';
 
 export * from './utils';
+export * from './api-message';
 
 i18n.use(initReactI18next).init({
   resources,

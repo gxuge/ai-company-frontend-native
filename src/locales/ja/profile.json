@@ -1,0 +1,24 @@
+{
+  "fallbackUser": "ユーザー",
+  "stats": {
+    "following": "フォロー",
+    "followers": "フォロワー",
+    "likes": "いいね"
+  },
+  "tabs": {
+    "stories": "ストーリー",
+    "characters": "キャラクター"
+  },
+  "errors": {
+    "userLoadFailed": "ユーザー情報を読み込めませんでした",
+    "storyLoadFailed": "ストーリー一覧を読み込めませんでした",
+    "roleLoadFailed": "キャラクター一覧を読み込めませんでした",
+    "pageLoadFailed": "ページデータを読み込めませんでした"
+  },
+  "empty": {
+    "stories": "公開したストーリーはまだありません",
+    "characters": "公開したキャラクターはまだありません",
+    "description": "みんなの作品を探すか、自分の作品を作ってみましょう。"
+  },
+  "previewClose": "どこかをタップして閉じる"
+}

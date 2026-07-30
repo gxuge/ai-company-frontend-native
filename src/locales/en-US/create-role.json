@@ -1,0 +1,141 @@
+{
+  "title": "Create Character",
+  "tabs": {
+    "basic": "Basic Info",
+    "advanced": "Advanced"
+  },
+  "publicStatus": {
+    "title": "Visibility",
+    "label": "Make character public",
+    "description": "Other users can chat with this character when public"
+  },
+  "tags": {
+    "title": "Character Tags",
+    "custom": "Custom",
+    "addTitle": "Add Custom Tag",
+    "placeholder": "Enter a tag (up to 10 characters)"
+  },
+  "basic": {
+    "image": "Character Image",
+    "addImage": "Tap to add image",
+    "setting": "Character Profile",
+    "name": "Character Name",
+    "namePlaceholder": "Enter character name",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "random": "Random",
+    "occupation": "Occupation / Identity",
+    "occupationPlaceholder": "Enter occupation or identity",
+    "background": "Character Background",
+    "backgroundPlaceholder": "Describe the character background to help generate the profile and story.",
+    "greeting": "Opening Line",
+    "greetingPlaceholder": "Enter the character's first line of dialogue.",
+    "optimizeComingSoon": "Prompt optimization is coming soon...",
+    "changeImage": "Change Image",
+    "back": "Back",
+    "voice": "Character Voice",
+    "selectVoice": "Select character voice",
+    "help": {
+      "imageTitle": "Character Image",
+      "imageDescription": "Upload or generate the character's appearance. It will be used as the avatar and primary visual. More detailed gender, occupation, and background settings produce more accurate results.",
+      "settingTitle": "Character Profile",
+      "settingDescription": "Detailed name, occupation, and background information helps AI generate a more suitable image, voice, and story.",
+      "voiceTitle": "Character Voice",
+      "voiceDescription": "Choose or generate a distinctive voice for dialogue and narration. More detailed character settings produce a more suitable voice."
+    },
+    "confirm": {
+      "title": "Complete Character Profile",
+      "description": "Several character details are missing, which may reduce the accuracy of the generated {{target}}. Complete the gender, occupation, and background first, or continue anyway.",
+      "image": "image",
+      "voice": "voice",
+      "improve": "Complete Details",
+      "continue": "Continue"
+    }
+  },
+  "generating": {
+    "image": "Generating image",
+    "imageSteps": [
+      "Matching visual style",
+      "Refining facial features",
+      "Rendering clothing and colors",
+      "Finishing the character"
+    ],
+    "voice": "Generating voice",
+    "voiceEllipsis": "Generating voice...",
+    "voiceMatching": "Matching character voice"
+  },
+  "dialogStyle": {
+    "title": "Dialogue Style",
+    "preview": "Dialogue Preview",
+    "previewPlaceholder": "Hmph, don't think that made me happy. But since you're being sincere, I suppose I can help this once.",
+    "length": "Response Length",
+    "tone": "Tone",
+    "interactivity": "Interaction",
+    "selectTone": "Select Tone",
+    "values": {
+      "default": "Default",
+      "short": "Short",
+      "detailed": "Detailed",
+      "active": "Proactive",
+      "passive": "Reactive",
+      "gentle": "Soft-spoken",
+      "concise": "Reserved",
+      "talkative": "Talkative",
+      "casual": "Relaxed",
+      "literary": "Literary",
+      "decisive": "Decisive",
+      "bold": "Bold"
+    }
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "saving": "Saving...",
+    "save": "Save Character"
+  },
+  "generateModal": {
+    "title": "AI Generate",
+    "description": "Some details are already filled in. How should AI continue?",
+    "continueTitle": "Continue:",
+    "continueDescription": "Polish and expand on your current ideas.",
+    "overwriteTitle": "Replace all:",
+    "overwriteDescription": "Clear all input and generate a complete character from scratch.",
+    "continue": "Continue",
+    "overwrite": "Replace All"
+  },
+  "messages": {
+    "draftLoadFailed": "Failed to load the character draft. Please try again.",
+    "settingGeneratedFull": "A complete character profile was generated.",
+    "settingGenerated": "The character profile was completed.",
+    "settingGenerateFailed": "Failed to generate the character profile. Please try again.",
+    "backgroundOptimized": "Character background optimized.",
+    "backgroundEmpty": "No usable character background was generated. Please try again.",
+    "backgroundOptimizeFailed": "Failed to optimize the character background. Please try again.",
+    "greetingOptimized": "Opening line optimized.",
+    "greetingEmpty": "No usable opening line was generated. Please try again.",
+    "greetingOptimizeFailed": "Failed to optimize the opening line. Please try again.",
+    "imageUrlMissing": "The image was generated, but no image URL was returned.",
+    "imageGenerated": "Character image generated.",
+    "imageGenerateFailed": "Failed to generate the character image. Please try again.",
+    "voiceGenerated": "Character voice generated.",
+    "voiceGenerateFailed": "Failed to generate the voice. Please try again.",
+    "previewUnsupported": "The preview audio is ready, but playback is not supported here.",
+    "previewPlayFailed": "Failed to play the preview. Please try again.",
+    "generateVoiceFirst": "Generate a voice before previewing it.",
+    "previewUrlMissing": "The preview was generated, but no audio URL was returned.",
+    "previewGeneratedUnsupported": "The preview is ready, but playback is not supported here.",
+    "previewGenerateFailed": "Failed to generate the preview. Please try again.",
+    "nameRequired": "Enter a character name first.",
+    "genderRequired": "Choose a specific gender before saving.",
+    "settingRequired": "Generate or enter the character profile first.",
+    "imageRequired": "Generate or upload a character image first.",
+    "voiceRequired": "Generate or select a character voice first.",
+    "imageSaveFailed": "Failed to save the character image. Please try again.",
+    "saved": "Character saved.",
+    "saveFailed": "Failed to save. Please try again.",
+    "draftSaveFailed": "Failed to save the draft. Please try again."
+  },
+  "defaultVoicePreview": "Hello, it's nice to meet you.",
+  "untitledDraft": "Untitled character"
+}

@@ -1,5 +1,6 @@
-import React from 'react';
 import { router } from 'expo-router';
+import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { View, Text, Pressable, Image, Platform } from 'react-native';
 import { styles } from './styles';
 
@@ -36,17 +37,20 @@ interface ChatHeaderProps {
 // ─── Main Component ───
 
 export function ChatHeader({
-  title = 'Top Roommate',
+  title,
   fanCount = '16.6w',
   onBookPress,
   onVolumePress,
 }: ChatHeaderProps) {
+  const { t } = useTranslation();
+  const displayTitle = title || t('chat.main.defaultStoryTitle');
+
   if (Platform.OS === 'web') {
     return (
       <div style={webStyles.container}>
         <div style={webStyles.left}>
           <div style={webStyles.titleRow}>
-            <div style={webStyles.title}>{title}</div>
+            <div style={webStyles.title}>{displayTitle}</div>
             <button type="button" style={webStyles.iconButton} onClick={onBookPress ?? (() => router.push('/pages/conversation-detail'))}>
               <img src={toAssetUri(imgBookIcon)} style={{ width: 20, height: 19 }} />
             </button>
@@ -70,7 +74,7 @@ export function ChatHeader({
         {/* Title + book icon */}
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={1}>
-            {title}
+            {displayTitle}
           </Text>
           <Pressable style={styles.bookIconWrapper} onPress={onBookPress ?? (() => router.push('/pages/conversation-detail'))}>
             <BookIcon />

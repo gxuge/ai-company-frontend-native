@@ -2,6 +2,8 @@
 
 ## 背景
 
+> 2026-07-30 更新：本文原“正式角色/故事表 status 草稿”方案已废弃。当前使用统一 `/sys/ts-drafts`，列表直接返回完整 `content`；`/pages/draft` 已完成列表、卡片映射、删除和 `draftId` 恢复接入。本文其余内容仅保留为历史分析。
+
 `/pages/draft` 用于展示两类草稿：
 
 - `/pages/create-role` 创建中的角色草稿

@@ -2,6 +2,7 @@ import { AiHeader } from '@/components/ai-company/ai-header';
 import { useSelectedLanguage } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n/resources';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 // Reusable SectionCard component (could be extracted later)
 function SectionCard({ children }: { children: React.ReactNode }) {
@@ -23,10 +24,10 @@ const LANGUAGES: { code: Language; name: string }[] = [
   { code: 'zh-TW', name: '繁體中文' },
   { code: 'en-US', name: 'English' },
   { code: 'ja', name: '日本語' },
-  { code: 'ar', name: 'العربية' },
 ];
 
 export function LanguagePage() {
+  const { t } = useTranslation();
   const { language, setLanguage } = useSelectedLanguage();
   const router = useRouter();
 
@@ -84,7 +85,7 @@ export function LanguagePage() {
       <div className="relative z-10 max-w-md mx-auto">
         {/* Header */}
         <div className="px-5" style={{ paddingTop: 12, paddingBottom: 12 }}>
-          <AiHeader title="语言设置" />
+          <AiHeader title={t('settings.languagePage.title')} />
         </div>
 
         {/* Sections */}

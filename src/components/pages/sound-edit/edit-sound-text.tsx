@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AiGenerateBtn } from '@/components/ai-company/ai-generate-btn';
 
 type EditSoundTextProps = {
@@ -8,6 +9,7 @@ type EditSoundTextProps = {
 };
 
 export default function EditSoundText(props: EditSoundTextProps) {
+  const { t } = useTranslation();
   const { initialText, onCancel, onConfirm } = props;
   const [text, setText] = useState(initialText);
   const maxLen = 500;
@@ -19,8 +21,8 @@ export default function EditSoundText(props: EditSoundTextProps) {
         
         {/* 标题行 */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[18px] leading-[28px] font-bold text-white tracking-[-0.4px]">编辑试听文本</h2>
-          <AiGenerateBtn />
+          <h2 className="text-[18px] leading-[28px] font-bold tracking-[-0.4px] text-white">{t('settings.sound.editTextTitle')}</h2>
+          <AiGenerateBtn text={t('settings.sound.generate')} />
         </div>
 
         {/* 文本输入区 */}
@@ -48,14 +50,14 @@ export default function EditSoundText(props: EditSoundTextProps) {
             onClick={onCancel}
             className="flex-1 rounded-[10px] border border-[rgba(255,255,255,0.1)] bg-transparent text-[14px] font-medium text-[#d1d5db]"
           >
-            取消
+            {t('settings.sound.cancel')}
           </button>
           <button
             type="button"
             onClick={() => onConfirm(text)}
             className="flex-1 rounded-[10px] bg-brand-green/90 text-[14px] font-bold text-[#3b3f34]"
           >
-            确认
+            {t('settings.sound.confirm')}
           </button>
         </div>
 

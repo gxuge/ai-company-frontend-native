@@ -1,0 +1,126 @@
+{
+  "title": "建立原創故事",
+  "tabs": {
+    "basic": "基本資訊",
+    "advanced": "進階設定"
+  },
+  "optional": "（選填）",
+  "publicStatus": {
+    "title": "公開狀態",
+    "label": "是否公開故事",
+    "description": "公開後其他使用者可以體驗此故事"
+  },
+  "storySetting": {
+    "title": "故事設定",
+    "placeholder": "例：寫下故事背景、世界規則、使用者身分和主要目標。比如：午夜後的城市會出現異常街區，使用者需要探索規則並收集線索。"
+  },
+  "roles": {
+    "title": "角色列表",
+    "user": "使用者",
+    "add": "新增",
+    "unknown": "未知角色",
+    "fallback": "角色{{id}}",
+    "addFirst": "請先在角色列表中新增角色。"
+  },
+  "sceneImage": {
+    "title": "場景圖片",
+    "loading": "取得中...",
+    "add": "點擊新增圖片"
+  },
+  "sceneSetting": {
+    "title": "場景設定",
+    "placeholder": "例：寫下目前場景的時間、地點、氛圍和可互動線索。比如：凌晨的舊車站空無一人，站牌顯示不存在的班次。"
+  },
+  "outline": {
+    "title": "劇情大綱",
+    "normal": "普通劇情",
+    "chapter": "章節劇情",
+    "placeholder": "輸入劇情大綱...",
+    "chapterTitle": "第{{number}}章",
+    "chapterDescription": "描述主要情節，包括使用者在故事中與其他角色的互動",
+    "opening": "開場白",
+    "selectRole": "選擇角色",
+    "openingPlaceholder": ">> 輸入開場白內容，開啟本故事...",
+    "mission": "任務目標",
+    "missionPlaceholder": ">> 請輸入任務目標...",
+    "addChapter": "新增下一章"
+  },
+  "actions": {
+    "saving": "儲存中...",
+    "next": "下一步",
+    "cancel": "取消",
+    "confirm": "確定"
+  },
+  "generateModal": {
+    "title": "AI 一鍵生成",
+    "description": "您希望 AI 如何為您擴寫？",
+    "currentTitle": "僅目前：",
+    "currentDescription": "只針對剛點擊的模組進行擴寫。",
+    "allTitle": "全部生成：",
+    "allDescription": "依序自動補全故事、場景和大綱。",
+    "current": "僅目前",
+    "all": "全部生成"
+  },
+  "overwrite": {
+    "warningTitle": "覆蓋警告",
+    "noticeTitle": "覆蓋提醒",
+    "all": "選擇全部生成將由 AI 重新生成並覆蓋目前除角色以外的所有內容，包括故事設定、場景設定和劇情大綱。",
+    "setting": "選擇僅目前後，AI 將重新生成故事設定，並可能覆蓋已填寫的標題、簡介、設定與背景。",
+    "scene": "選擇僅目前後，AI 將重新生成場景設定，並可能覆蓋目前已填寫的場景內容。",
+    "outline": "選擇僅目前後，AI 將重新生成劇情大綱，並可能覆蓋目前已填寫的大綱內容。",
+    "continue": "是否繼續？",
+    "confirmAll": "確認覆蓋並生成",
+    "confirm": "確認並生成"
+  },
+  "userRole": {
+    "title": "使用者角色設定",
+    "name": "角色名稱",
+    "namePlaceholder": "請輸入您的角色名稱",
+    "setting": "角色設定",
+    "settingPlaceholder": "例如性格、外貌特徵等"
+  },
+  "help": {
+    "storyTitle": "故事設定提示",
+    "storyDescription": "用簡短文字描述故事主題、世界觀或起因。AI 將依照設定生成更完整的劇情大綱和章節細節。",
+    "roleTitle": "角色列表提示",
+    "roleDescription": "選擇或建立參與故事的角色。使用者預設作為主角參與互動，其他角色將作為 NPC 推動劇情。",
+    "sceneImageTitle": "場景圖片提示",
+    "sceneImageDescription": "點擊場景圖片框進入故事背景圖庫，選擇圖片後會自動回填到目前故事。",
+    "sceneTitle": "場景設定提示",
+    "sceneDescription": "設定故事發生的地點與環境氛圍。明確的場景有助於 AI 描繪更生動的畫面。",
+    "outlineTitle": "劇情大綱提示",
+    "outlineDescription": "劇情大綱規劃故事整體發展。您可以手動編寫，也可以讓 AI 根據現有設定自動擴寫。"
+  },
+  "messages": {
+    "alertTitle": "提示",
+    "configIncomplete": "故事生成設定未完成：{{message}}",
+    "draftLoadFailed": "載入故事草稿失敗，請稍後再試。",
+    "detailLoadFailed": "載入故事詳情失敗，請稍後再試。",
+    "settingEmpty": "未生成有效故事設定，請稍後再試。",
+    "settingGenerated": "故事設定已生成並回填。",
+    "settingGenerateFailed": "故事設定生成失敗，請稍後再試。",
+    "sceneEmpty": "未生成有效場景設定，請稍後再試。",
+    "sceneGenerated": "場景設定已生成並回填。",
+    "sceneGenerateFailed": "場景設定生成失敗，請稍後再試。",
+    "outlineEmpty": "未生成有效劇情大綱，請稍後再試。",
+    "chapterOutlineEmpty": "章節劇情未生成有效章節大綱，請稍後再試。",
+    "outlineGenerated": "劇情大綱生成成功。",
+    "outlineGenerateFailed": "劇情大綱生成失敗，請稍後再試。",
+    "settingOptimizeEmpty": "未優化出有效故事設定，請稍後再試。",
+    "settingOptimized": "故事設定已優化。",
+    "settingOptimizeFailed": "故事設定優化失敗，請稍後再試。",
+    "sceneOptimizeEmpty": "未優化出有效場景設定，請稍後再試。",
+    "sceneOptimized": "場景設定已優化。",
+    "sceneOptimizeFailed": "場景設定優化失敗，請稍後再試。",
+    "outlineOptimizeEmpty": "未優化出有效劇情大綱，請稍後再試。",
+    "outlineOptimized": "劇情大綱已優化。",
+    "outlineOptimizeFailed": "劇情大綱優化失敗，請稍後再試。",
+    "allGenerated": "已為您生成所有可用的設定內容。",
+    "allGenerateFailed": "全部生成失敗，請稍後再試。",
+    "saveFailed": "故事儲存失敗，請稍後再試。",
+    "saved": "故事儲存成功。",
+    "draftSaveFailed": "草稿儲存失敗，請稍後再試。"
+  },
+  "untitledStory": "未命名故事-{{timestamp}}",
+  "untitledDraft": "暫未填寫標題"
+}

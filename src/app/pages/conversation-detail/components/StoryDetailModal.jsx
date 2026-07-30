@@ -1,3 +1,5 @@
+/* eslint-disable unicorn/filename-case */
+import { useTranslation } from 'react-i18next';
 import svgPaths from '../../../../assets/images/story-detail/svg-m13tfs0op9';
 
 function GlowText({ children }) {
@@ -66,32 +68,33 @@ function normalizeText(value, fallback) {
   return normalized.length > 0 ? normalized : fallback;
 }
 
-function buildChapterTitle(chapter, index) {
+function buildChapterTitle(chapter, index, t) {
   const chapterNo = typeof chapter?.chapterNo === 'number' && Number.isFinite(chapter.chapterNo)
     ? chapter.chapterNo
     : index + 1;
   const title = normalizeText(chapter?.chapterTitle, '');
-  return title || `第${chapterNo}章`;
+  return title || t('chat.conversation.modal.chapterTitle', { number: chapterNo });
 }
 
-function buildChapterContent(chapter) {
+function buildChapterContent(chapter, t) {
   const chapterDesc = normalizeText(chapter?.chapterDesc, '');
   const openingContent = normalizeText(chapter?.openingContent, '');
   const missionTarget = normalizeText(chapter?.missionTarget, '');
-  return chapterDesc || openingContent || missionTarget || '暂无章节内容';
+  return chapterDesc || openingContent || missionTarget || t('chat.conversation.modal.chapterEmpty');
 }
 
 export default function StoryDetailModal({
   onClose = () => {},
-  storyTitle = '故事详情',
+  storyTitle = '',
   storySetting = '',
   storyBackground = '',
   chapters = [],
   loading = false,
   loadError = null,
 }) {
-  const settingText = normalizeText(storySetting, '暂无故事设定');
-  const backgroundText = normalizeText(storyBackground, '暂无背景补充');
+  const { t } = useTranslation();
+  const settingText = normalizeText(storySetting, t('chat.conversation.modal.storySettingEmpty'));
+  const backgroundText = normalizeText(storyBackground, t('chat.conversation.modal.backgroundEmpty'));
   const chapterList = Array.isArray(chapters) ? chapters : [];
 
   return (
@@ -139,10 +142,10 @@ export default function StoryDetailModal({
           <h2
             className="font-['Noto_Sans_SC',sans-serif] text-[24px] font-bold leading-[34px] text-white md:text-[38px] md:leading-[54px]"
           >
-            故事详情
+            {t('chat.conversation.storyDetails')}
           </h2>
           <p className="mt-1 font-['Noto_Sans_SC',sans-serif] text-[14px] text-[#9ca3af] md:text-[18px]">
-            {normalizeText(storyTitle, '未命名故事')}
+            {normalizeText(storyTitle, t('chat.conversation.modal.untitledStory'))}
           </p>
         </div>
 
@@ -150,14 +153,14 @@ export default function StoryDetailModal({
           <div className="px-5 pt-[100px] md:px-[30px] md:pt-[148px]">
             <div className="flex flex-col gap-8 md:gap-[46px]">
               <div className="flex flex-col gap-4 md:gap-[23px]">
-                <SectionHeading title="故事设定" />
+                <SectionHeading title={t('chat.conversation.modal.storySetting')} />
                 <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                   {settingText}
                 </div>
               </div>
 
               <div className="flex flex-col gap-4 md:gap-[23px]">
-                <SectionHeading title="背景补充" />
+                <SectionHeading title={t('chat.conversation.modal.background')} />
                 <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
                   {backgroundText}
                 </div>
@@ -166,30 +169,34 @@ export default function StoryDetailModal({
               {chapterList.length === 0
                 ? (
                     <div className="flex flex-col gap-4 md:gap-[23px]">
-                      <SectionHeading title="章节详情" />
+                      <SectionHeading title={t('chat.conversation.modal.chapterDetails')} />
                       <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
-                        <GlowText>暂无章节内容</GlowText>
+                        <GlowText>{t('chat.conversation.modal.chapterEmpty')}</GlowText>
                       </div>
                     </div>
                   )
                 : chapterList.slice(0, 6).map((chapter, index) => (
                     <div key={chapter?.id || index} className="flex flex-col gap-4 md:gap-[23px]">
-                      <SectionHeading title={buildChapterTitle(chapter, index)} />
+                      <SectionHeading title={buildChapterTitle(chapter, index, t)} />
                       <div className="font-['Noto_Sans_SC',sans-serif] text-[15px] leading-[26px] text-[#d1d5db] md:text-[27px] md:leading-[44px]">
-                        <BoldWhite>{buildChapterContent(chapter)}</BoldWhite>
+                        <BoldWhite>{buildChapterContent(chapter, t)}</BoldWhite>
                       </div>
                     </div>
                   ))}
 
-              {loading ? <div className="text-[13px] text-[#9ca3af]">章节加载中...</div> : null}
+              {loading
+                ? <div className="text-[13px] text-[#9ca3af]">{t('chat.conversation.modal.chapterLoading')}</div>
+                : null}
               {loadError ? <div className="text-[13px] text-[#fca5a5]">{loadError}</div> : null}
 
               <div className="font-['Noto_Sans_SC',sans-serif] text-[14px] leading-[24px] text-[#9ca3af] md:text-[18px] md:leading-[32px]">
-                <TagPill>提示</TagPill>
+                <TagPill>{t('chat.conversation.modal.tip')}</TagPill>
                 <span className="ml-2">
-                  可以在聊天页点击
-                  <GlowText>故事详情</GlowText>
-                  持续查看设定与章节。
+                  {t('chat.conversation.modal.tipPrefix')}
+                  {' '}
+                  <GlowText>{t('chat.conversation.storyDetails')}</GlowText>
+                  {' '}
+                  {t('chat.conversation.modal.tipSuffix')}
                 </span>
               </div>
             </div>

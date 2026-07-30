@@ -1,0 +1,84 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "loadingMore": "Loading more...",
+    "done": "Done",
+    "manage": "Manage",
+    "use": "Use",
+    "deleting": "Deleting..."
+  },
+  "browse": {
+    "storyTab": "Stories",
+    "characterTab": "Characters",
+    "searchStory": "Search stories",
+    "searchCharacter": "Search characters",
+    "storyLoadFailed": "Failed to load stories",
+    "characterLoadFailed": "Failed to load characters",
+    "noStories": "No stories yet",
+    "noCharacters": "No characters yet",
+    "tryDifferentKeyword": "Try searching with a different keyword",
+    "categories": {
+      "recommended": "Recommended",
+      "subscribed": "Subscribed",
+      "liked": "Liked",
+      "anime": "Anime",
+      "urban": "Urban",
+      "ancient": "Historical",
+      "sciFi": "Sci-Fi"
+    }
+  },
+  "roleDetail": {
+    "follow": "Follow",
+    "authorLabel": "Author:",
+    "connections": "Connections",
+    "followers": "Followers",
+    "chats": "Chats",
+    "aboutTab": "About",
+    "storyTab": "Story",
+    "roleFallback": "Character",
+    "authorFallback": "Author",
+    "noStory": "No story content yet",
+    "roleLoadFailed": "Failed to load character details",
+    "authorLoadFailed": "Failed to load author details",
+    "pageLoadFailed": "Failed to load page data"
+  },
+  "selectRole": {
+    "title": "Select Character",
+    "search": "Search characters",
+    "roleFallback": "Character {{id}}",
+    "loadFailed": "Failed to load characters. Please try again.",
+    "noSelectable": "No characters available",
+    "noData": "No data"
+  },
+  "gallery": {
+    "sourceTypes": {
+      "reference": "Reference",
+      "generated": "Generated",
+      "favorite": "Favorite"
+    },
+    "uncategorized": "Uncategorized",
+    "imageFallback": "Image {{id}}",
+    "role": {
+      "title": "My Gallery",
+      "emptyTitle": "No character images yet",
+      "emptyDescription": "Generated or saved character images will appear here.",
+      "emptyAction": "Back to Character"
+    },
+    "story": {
+      "title": "Story Backgrounds",
+      "emptyTitle": "No story backgrounds yet",
+      "emptyDescription": "Saved story background images will appear here.",
+      "emptyAction": "Back to Story"
+    },
+    "default": {
+      "title": "My Gallery",
+      "emptyTitle": "No images yet",
+      "emptyDescription": "Uploaded references and saved results will appear here.",
+      "emptyAction": "Back to Character"
+    },
+    "loadFailed": "Failed to load the gallery. Please try again.",
+    "unavailable": "This image is unavailable and cannot be used.",
+    "deleteFailed": "Failed to delete {{count}} images. Please try again.",
+    "deleteCount": "Delete {{count}} images"
+  }
+}

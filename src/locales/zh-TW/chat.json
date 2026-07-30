@@ -1,0 +1,81 @@
+{
+  "common": {
+    "alertTitle": "提示",
+    "loading": "載入中...",
+    "systemName": "系統"
+  },
+  "main": {
+    "defaultAiMessage": "你好，我在這裡。",
+    "defaultUserMessage": "你好",
+    "defaultReply": "我收到你的訊息了。",
+    "defaultStoryTitle": "故事對話",
+    "defaultRoleName": "角色",
+    "sendFailed": "訊息傳送失敗，請稍後重試。",
+    "sessionInvalid": "對話不存在，請返回對話列表重試。",
+    "roleUnavailable": "目前對話尚未載入可發言角色，請稍後再試。",
+    "suggestionEmpty": "目前沒有可用建議。",
+    "suggestionLoadFailed": "取得建議失敗，請稍後重試。",
+    "agentSuggestionUnsupported": "目前 Agent 對話尚未支援候選回覆。",
+    "micUnsupported": "語音辨識尚未支援，請先輸入文字後傳送。",
+    "agentAudioUnsupported": "目前 Agent 對話尚未支援語音播放。",
+    "audioDeviceUnsupported": "目前裝置尚未支援語音播放，請先使用 Web 版。",
+    "audioFetchFailed": "取得語音失敗，請稍後重試。",
+    "autoVoiceEnabled": "已開啟自動準備語音。後續角色回覆會預先生成可播放語音。",
+    "autoVoiceDisabled": "已關閉自動準備語音。後續角色回覆只返回文字，播放時再取得語音。",
+    "features": {
+      "camera": "相機",
+      "image": "圖片",
+      "file": "檔案",
+      "call": "通話"
+    }
+  },
+  "input": {
+    "placeholder": "傳送訊息...",
+    "holdToTalk": "按住說話"
+  },
+  "sessionList": {
+    "tabs": {
+      "messages": "訊息",
+      "following": "關注"
+    },
+    "categories": {
+      "following": "關注",
+      "subscribed": "訂閱",
+      "liked": "按讚",
+      "comments": "評論"
+    },
+    "sessionFallback": "對話{{id}}",
+    "noMessage": "暫無訊息",
+    "loadFailed": "對話列表載入失敗",
+    "emptyTitle": "暫無對話",
+    "emptyDescription": "這裡還沒有任何對話記錄"
+  },
+  "conversation": {
+    "fallbackDescription": "暫無故事簡介",
+    "fallbackTitle": "故事詳情",
+    "fallbackAuthor": "匿名作者",
+    "roleFallback": "角色{{id}}",
+    "dataMissing": "找不到可顯示的故事資料",
+    "storyLoadFailed": "故事詳情載入失敗",
+    "chapterLoadFailed": "章節列表載入失敗",
+    "detailLoadFailed": "對話詳情載入失敗",
+    "follow": "關注",
+    "storyDetails": "故事詳情",
+    "characterList": "角色列表",
+    "impressions": "觀感",
+    "modal": {
+      "untitledStory": "未命名故事",
+      "storySetting": "故事設定",
+      "storySettingEmpty": "暫無故事設定",
+      "background": "背景補充",
+      "backgroundEmpty": "暫無背景補充",
+      "chapterDetails": "章節詳情",
+      "chapterTitle": "第{{number}}章",
+      "chapterEmpty": "暫無章節內容",
+      "chapterLoading": "章節載入中...",
+      "tip": "提示",
+      "tipPrefix": "可以在聊天頁點擊",
+      "tipSuffix": "持續查看設定與章節。"
+    }
+  }
+}

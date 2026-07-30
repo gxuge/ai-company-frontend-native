@@ -1,6 +1,8 @@
+import type { TFunction } from 'i18next';
 import type { TsAgentChatMessage, TsChatMessage } from '@/lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, View, Platform } from 'react-native';
 import Animated, { interpolate, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import AiBottomTabs from '@/components/ai-company/ai-bottom-tabs';
@@ -25,7 +27,6 @@ const imgFeatureImage = require('@/assets/images/admin-chat/feature_image.svg');
 const FEATURE_EXPANDED_HEIGHT = 92;
 const TIP_HINT_EMPTY_ID = '__tip_hint_empty__';
 const TIP_HINT_ERROR_ID = '__tip_hint_error__';
-const AGENT_AUDIO_TODO_TEXT = '当前 Agent 会话暂未接入语音播放。';
 
 type ChatListItem = {
   id: string;
@@ -62,31 +63,25 @@ type ChatHeaderState = {
 
 type ChatSessionMode = 'chat' | 'agent';
 
-const SEND_ERROR_TEXT = '消息发送失败，请稍后重试。';
-const SESSION_INVALID_TEXT = '会话不存在，请返回会话列表重试。';
-const DEFAULT_AI_REPLY_TEXT = '我收到了你的消息。';
-const SUGGESTION_EMPTY_TEXT = '当前暂无可用建议。';
-const SUGGESTION_ERROR_TEXT = '获取建议失败，请稍后重试。';
-const MIC_TODO_TEXT = '语音识别暂未接入，请先输入文本后发送。';
-const AUDIO_PLAY_UNSUPPORTED_TEXT = '当前设备暂未接入语音播放，请先在 Web 端使用。';
-const AUDIO_FETCH_ERROR_TEXT = '语音获取失败，请稍后重试。';
 const AUDIO_AUTO_FETCH_STORAGE_KEY = 'chat:auto-voice-fetch-enabled';
 
-const DEFAULT_MESSAGES: ChatListItem[] = [
-  {
-    id: '1',
-    type: 'ai',
-    name: '系统',
-    actionText: '',
-    speechText: '你好，我在这里。',
-    audioDuration: '',
-  },
-  {
-    id: '2',
-    type: 'user',
-    segments: [{ text: '你好', type: 'speech' }],
-  },
-];
+function buildDefaultMessages(t: TFunction): ChatListItem[] {
+  return [
+    {
+      id: '1',
+      type: 'ai',
+      name: t('chat.common.systemName'),
+      actionText: '',
+      speechText: t('chat.main.defaultAiMessage'),
+      audioDuration: '',
+    },
+    {
+      id: '2',
+      type: 'user',
+      segments: [{ text: t('chat.main.defaultUserMessage'), type: 'speech' }],
+    },
+  ];
+}
 
 const DEFAULT_HEADER_STATE: ChatHeaderState = {
   mode: 'story',
@@ -113,7 +108,7 @@ function parseSessionId(value?: string | string[]) {
   return Math.trunc(parsed);
 }
 
-function mapAgentBackendMessages(records?: TsAgentChatMessage[]): ChatListItem[] {
+function mapAgentBackendMessages(records: TsAgentChatMessage[] | undefined, systemName: string): ChatListItem[] {
   const source = Array.isArray(records) ? [...records].reverse() : [];
   return source.map((item, index) => {
     const id = typeof item.id === 'number' && Number.isFinite(item.id) ? String(item.id) : String(index + 1);
@@ -132,7 +127,7 @@ function mapAgentBackendMessages(records?: TsAgentChatMessage[]): ChatListItem[]
       id,
       messageId: typeof item.id === 'number' && Number.isFinite(item.id) ? item.id : undefined,
       type: 'ai',
-      name: roleType === 'assistant' ? 'Agent' : '系统',
+      name: roleType === 'assistant' ? 'Agent' : systemName,
       speechText: content,
       audioDuration: '',
       audioStatus: 'idle',
@@ -161,7 +156,7 @@ function formatAudioDuration(durationSec?: number | null) {
   return `${Math.max(1, Math.round(durationSec))}"`;
 }
 
-function mapBackendMessages(records?: TsChatMessage[]): ChatListItem[] {
+function mapBackendMessages(records: TsChatMessage[] | undefined, systemName: string): ChatListItem[] {
   const source = Array.isArray(records) ? [...records].reverse() : [];
   return source.map((item, index) => {
     const id = typeof item.id === 'number' && Number.isFinite(item.id) ? String(item.id) : String(index + 1);
@@ -180,7 +175,7 @@ function mapBackendMessages(records?: TsChatMessage[]): ChatListItem[] {
       id,
       messageId: typeof item.id === 'number' && Number.isFinite(item.id) ? item.id : undefined,
       type: 'ai',
-      name: item.senderName || '系统',
+      name: item.senderName || systemName,
       actionText: '',
       speechText: content,
       audioDuration: formatAudioDuration(typeof audioMeta?.durationSec === 'number' ? audioMeta.durationSec : undefined),
@@ -286,7 +281,8 @@ function formatCompactCount(value?: number) {
 }
 
 function useChatMessages(sessionMode: ChatSessionMode, sessionId: number | null) {
-  const [messages, setMessages] = React.useState<ChatListItem[]>(DEFAULT_MESSAGES);
+  const { t } = useTranslation();
+  const [messages, setMessages] = React.useState<ChatListItem[]>(() => buildDefaultMessages(t));
 
   React.useEffect(() => {
     let alive = true;
@@ -305,8 +301,8 @@ function useChatMessages(sessionMode: ChatSessionMode, sessionId: number | null)
         return;
       }
       setMessages(sessionMode === 'agent'
-        ? mapAgentBackendMessages(page?.records as TsAgentChatMessage[])
-        : mapBackendMessages(page?.records));
+        ? mapAgentBackendMessages(page?.records as TsAgentChatMessage[], t('chat.common.systemName'))
+        : mapBackendMessages(page?.records, t('chat.common.systemName')));
     }).catch(() => {
       if (!alive) {
         return;
@@ -317,9 +313,12 @@ function useChatMessages(sessionMode: ChatSessionMode, sessionId: number | null)
     return () => {
       alive = false;
     };
-  }, [sessionId, sessionMode]);
+  }, [sessionId, sessionMode, t]);
 
-  return { messages, setMessages };
+  return {
+    messages: sessionId ? messages : buildDefaultMessages(t),
+    setMessages,
+  };
 }
 
 async function resolveChatHeaderState(sessionMode: ChatSessionMode, sessionId: number): Promise<ChatHeaderState> {
@@ -597,6 +596,7 @@ function ChatView({
   onDismissTips: () => void;
   onVolumePress?: () => void;
 }) {
+  const { t } = useTranslation();
   const featureExpandProgress = useSharedValue(isFeatureExpanded ? 1 : 0);
   const tipsExpandProgress = useSharedValue(tipsExpanded ? 1 : 0);
   const roleBackgroundSource = headerState.mode === 'role' && headerState.roleBackground
@@ -739,19 +739,19 @@ function ChatView({
             <View style={styles.featureCardsRow}>
               <View style={styles.featureCard}>
                 <Image source={imgFeatureCamera} style={styles.featureIcon} resizeMode="contain" />
-                <Text style={styles.featureLabel}>相机</Text>
+                <Text style={styles.featureLabel}>{t('chat.main.features.camera')}</Text>
               </View>
               <View style={styles.featureCard}>
                 <Image source={imgFeatureImage} style={styles.featureIcon} resizeMode="contain" />
-                <Text style={styles.featureLabel}>图片</Text>
+                <Text style={styles.featureLabel}>{t('chat.main.features.image')}</Text>
               </View>
               <View style={styles.featureCard}>
                 <Image source={imgFeatureFile} style={styles.featureIcon} resizeMode="contain" />
-                <Text style={styles.featureLabel}>文件</Text>
+                <Text style={styles.featureLabel}>{t('chat.main.features.file')}</Text>
               </View>
               <View style={styles.featureCard}>
                 <Image source={imgFeatureCall} style={styles.featureIcon} resizeMode="contain" />
-                <Text style={styles.featureLabel}>通话</Text>
+                <Text style={styles.featureLabel}>{t('chat.main.features.call')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -766,6 +766,7 @@ function ChatView({
 }
 
 export default function Chat() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ sessionId?: string | string[]; agentSessionId?: string | string[] }>();
   const sessionId = parseSessionId(params.sessionId);
   const agentSessionId = parseSessionId(params.agentSessionId);
@@ -901,20 +902,20 @@ export default function Chat() {
     catch (error) {
       updateMessageAudioState(messageId, { audioStatus: 'failed' });
       if (!options?.silent) {
-        Alert.alert('提示', AUDIO_FETCH_ERROR_TEXT);
+        Alert.alert(t('chat.common.alertTitle'), t('chat.main.audioFetchFailed'));
       }
       console.error('Fetch message audio error:', error);
       return null;
     }
-  }, [activeSessionId, cacheMessageAudioForWeb, sessionMode, updateMessageAudioState]);
+  }, [activeSessionId, cacheMessageAudioForWeb, sessionMode, t, updateMessageAudioState]);
 
   const playMessageAudio = React.useCallback(async (message: ChatListItem) => {
     if (sessionMode === 'agent') {
-      Alert.alert('提示', AGENT_AUDIO_TODO_TEXT);
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.agentAudioUnsupported'));
       return;
     }
     if (Platform.OS !== 'web') {
-      Alert.alert('提示', AUDIO_PLAY_UNSUPPORTED_TEXT);
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.audioDeviceUnsupported'));
       return;
     }
     if (!message.messageId) {
@@ -964,7 +965,7 @@ export default function Chat() {
         audioRef.current = null;
       }
       setPlayingMessageId(current => current === message.id ? null : current);
-      Alert.alert('提示', AUDIO_FETCH_ERROR_TEXT);
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.audioFetchFailed'));
     };
 
     try {
@@ -977,9 +978,9 @@ export default function Chat() {
       }
       setPlayingMessageId(current => current === message.id ? null : current);
       console.error('Play audio error:', error);
-      Alert.alert('提示', AUDIO_FETCH_ERROR_TEXT);
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.audioFetchFailed'));
     }
-  }, [cacheMessageAudioForWeb, fetchMessageAudio, playingMessageId, sessionMode, stopCurrentAudio, updateMessageAudioState]);
+  }, [cacheMessageAudioForWeb, fetchMessageAudio, playingMessageId, sessionMode, stopCurrentAudio, t, updateMessageAudioState]);
 
   const handlePlayMessageAudio = React.useCallback((id: string) => {
     const target = messages.find(item => item.id === id && item.type === 'ai');
@@ -993,12 +994,13 @@ export default function Chat() {
     setAutoVoiceFetchEnabled(prev => {
       const next = !prev;
       storage.set(AUDIO_AUTO_FETCH_STORAGE_KEY, next);
-      Alert.alert('提示', next
-        ? '已开启自动准备语音。后续角色回复会提前生成可播放语音。'
-        : '已关闭自动准备语音。后续角色回复仅返回文字，点播放时再获取语音。');
+      Alert.alert(
+        t('chat.common.alertTitle'),
+        next ? t('chat.main.autoVoiceEnabled') : t('chat.main.autoVoiceDisabled'),
+      );
       return next;
     });
-  }, []);
+  }, [t]);
 
   const sendMessage = React.useCallback(async (rawText: string) => {
     const text = rawText.trim();
@@ -1006,11 +1008,11 @@ export default function Chat() {
       return;
     }
     if (!activeSessionId) {
-      Alert.alert('提示', SESSION_INVALID_TEXT);
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.sessionInvalid'));
       return;
     }
     if (sessionMode === 'chat' && !headerState.activeRoleId) {
-      Alert.alert('提示', '当前会话还未加载可发言角色，请稍后再试。');
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.roleUnavailable'));
       return;
     }
 
@@ -1042,10 +1044,10 @@ export default function Chat() {
         });
       const aiText = typeof reply?.contentText === 'string' && reply.contentText.trim()
         ? reply.contentText.trim()
-        : DEFAULT_AI_REPLY_TEXT;
+        : t('chat.main.defaultReply');
       const assistantName = sessionMode === 'agent'
         ? headerState.storyTitle || headerState.descTitle || 'Agent'
-        : reply?.activeRoleName || headerState.roleName || '系统';
+        : reply?.activeRoleName || headerState.roleName || t('chat.common.systemName');
 
       appendMessage({
         id: typeof reply?.assistantMessageId === 'number' && Number.isFinite(reply.assistantMessageId)
@@ -1070,11 +1072,11 @@ export default function Chat() {
         id: `local-ai-${Date.now() + 1}`,
         messageId: undefined,
         type: 'ai',
-        name: '系统',
-        speechText: SEND_ERROR_TEXT,
+        name: t('chat.common.systemName'),
+        speechText: t('chat.main.sendFailed'),
         audioDuration: '',
         audioStatus: 'idle',
-        segments: splitMessageSegments(SEND_ERROR_TEXT),
+        segments: splitMessageSegments(t('chat.main.sendFailed')),
       });
     }
     finally {
@@ -1092,6 +1094,7 @@ export default function Chat() {
     lastAssistantMessageId,
     sending,
     sessionMode,
+    t,
   ]);
 
   const handleSubmit = React.useCallback(() => {
@@ -1104,7 +1107,7 @@ export default function Chat() {
       return;
     }
     if (sessionMode === 'agent') {
-      Alert.alert('提示', '当前 Agent 会话暂未接入候选回复。');
+      Alert.alert(t('chat.common.alertTitle'), t('chat.main.agentSuggestionUnsupported'));
       return;
     }
 
@@ -1135,7 +1138,7 @@ export default function Chat() {
       if (tipsRequestIdRef.current !== requestId) {
         return;
       }
-      const newTips = toTipItems(result?.suggestions, SUGGESTION_EMPTY_TEXT);
+      const newTips = toTipItems(result?.suggestions, t('chat.main.suggestionEmpty'));
       if (newTips.length === 0 || newTips[0].id === TIP_HINT_EMPTY_ID) {
         setIsTipsExpanded(false);
         setTipsData([]);
@@ -1156,7 +1159,7 @@ export default function Chat() {
         setIsTipsLoading(false);
       }
     }
-  }, [activeSessionId, inputValue, isTipsExpanded, isTipsLoading, lastAssistantMessageId, sessionMode, tipsData.length]);
+  }, [activeSessionId, inputValue, isTipsExpanded, isTipsLoading, lastAssistantMessageId, sessionMode, t, tipsData.length]);
 
   const handleTipPress = React.useCallback((item: ChatTipItem) => {
     if (isTipHintItem(item)) {
@@ -1181,8 +1184,8 @@ export default function Chat() {
       void sendMessage(inputValue);
       return;
     }
-    Alert.alert('提示', MIC_TODO_TEXT);
-  }, [inputValue, sendMessage]);
+    Alert.alert(t('chat.common.alertTitle'), t('chat.main.micUnsupported'));
+  }, [inputValue, sendMessage, t]);
 
   const handleToggleFeature = React.useCallback(() => {
     setIsFeatureExpanded(prev => !prev);

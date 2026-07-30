@@ -1,0 +1,141 @@
+{
+  "title": "キャラクター作成",
+  "tabs": {
+    "basic": "基本情報",
+    "advanced": "詳細設定"
+  },
+  "publicStatus": {
+    "title": "公開設定",
+    "label": "キャラクターを公開する",
+    "description": "公開すると他のユーザーもこのキャラクターと会話できます"
+  },
+  "tags": {
+    "title": "キャラクタータグ",
+    "custom": "カスタム",
+    "addTitle": "カスタムタグを追加",
+    "placeholder": "タグ名を入力（10文字以内）"
+  },
+  "basic": {
+    "image": "キャラクター画像",
+    "addImage": "タップして画像を追加",
+    "setting": "キャラクター設定",
+    "name": "キャラクター名",
+    "namePlaceholder": "キャラクター名を入力",
+    "gender": "性別",
+    "male": "男性",
+    "female": "女性",
+    "random": "ランダム",
+    "occupation": "職業・立場",
+    "occupationPlaceholder": "職業または立場を入力",
+    "background": "背景設定",
+    "backgroundPlaceholder": "人物設定や物語の生成に役立つ背景を入力してください。",
+    "greeting": "最初のセリフ",
+    "greetingPlaceholder": "会話の最初に使うセリフを入力してください。",
+    "optimizeComingSoon": "プロンプト最適化機能は準備中です...",
+    "changeImage": "画像を変更",
+    "back": "戻る",
+    "voice": "キャラクターボイス",
+    "selectVoice": "キャラクターボイスを選択",
+    "help": {
+      "imageTitle": "キャラクター画像について",
+      "imageDescription": "外見画像をアップロードまたは AI で生成します。アバターとメインビジュアルとして使用されます。性別、職業、背景を詳しく設定するほど結果が正確になります。",
+      "settingTitle": "キャラクター設定について",
+      "settingDescription": "名前、職業、背景を詳しく設定すると、AI がより適切な画像、音声、物語を生成できます。",
+      "voiceTitle": "キャラクターボイスについて",
+      "voiceDescription": "会話や物語で使用する声を選択または生成します。キャラクター設定が詳しいほど、より適切な声になります。"
+    },
+    "confirm": {
+      "title": "キャラクター設定を充実させる",
+      "description": "設定が不足しているため、{{target}}生成の精度が下がる可能性があります。性別、職業、背景を追加するか、このまま続行してください。",
+      "image": "画像",
+      "voice": "音声",
+      "improve": "設定を追加",
+      "continue": "続行"
+    }
+  },
+  "generating": {
+    "image": "画像を生成中",
+    "imageSteps": [
+      "外見スタイルを調整中",
+      "顔立ちを調整中",
+      "衣装と配色を描画中",
+      "最終仕上げ中"
+    ],
+    "voice": "音声を生成中",
+    "voiceEllipsis": "音声を生成中...",
+    "voiceMatching": "声質を調整中"
+  },
+  "dialogStyle": {
+    "title": "会話スタイル設定",
+    "preview": "会話プレビュー",
+    "previewPlaceholder": "ふん、そんなことを言っても喜ばないよ。でも、そこまで真剣なら今回だけ手伝ってあげる。",
+    "length": "返答の長さ",
+    "tone": "口調",
+    "interactivity": "対話性",
+    "selectTone": "口調を選択",
+    "values": {
+      "default": "標準",
+      "short": "短め",
+      "detailed": "詳しく",
+      "active": "積極的",
+      "passive": "受け身",
+      "gentle": "穏やか",
+      "concise": "寡黙",
+      "talkative": "話し好き",
+      "casual": "気まま",
+      "literary": "文学的",
+      "decisive": "きっぱり",
+      "bold": "豪快"
+    }
+  },
+  "actions": {
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "saving": "保存中...",
+    "save": "保存して完了"
+  },
+  "generateModal": {
+    "title": "AI 一括生成",
+    "description": "入力済みの設定があります。AI にどのように生成させますか？",
+    "continueTitle": "続きを生成：",
+    "continueDescription": "現在のアイデアをもとに整えて拡張します。",
+    "overwriteTitle": "すべて置換：",
+    "overwriteDescription": "入力を消去し、新しいキャラクターを一から生成します。",
+    "continue": "続きを生成",
+    "overwrite": "すべて置換"
+  },
+  "messages": {
+    "draftLoadFailed": "キャラクターの下書きを読み込めませんでした。",
+    "settingGeneratedFull": "キャラクター設定を一括生成しました。",
+    "settingGenerated": "キャラクター設定を補完しました。",
+    "settingGenerateFailed": "キャラクター設定を生成できませんでした。",
+    "backgroundOptimized": "背景設定を最適化しました。",
+    "backgroundEmpty": "有効な背景設定を生成できませんでした。",
+    "backgroundOptimizeFailed": "背景設定を最適化できませんでした。",
+    "greetingOptimized": "最初のセリフを最適化しました。",
+    "greetingEmpty": "有効な最初のセリフを生成できませんでした。",
+    "greetingOptimizeFailed": "最初のセリフを最適化できませんでした。",
+    "imageUrlMissing": "画像は生成されましたが、URL が返されませんでした。",
+    "imageGenerated": "キャラクター画像を生成しました。",
+    "imageGenerateFailed": "キャラクター画像を生成できませんでした。",
+    "voiceGenerated": "キャラクターボイスを生成しました。",
+    "voiceGenerateFailed": "音声を生成できませんでした。",
+    "previewUnsupported": "試聴音声を取得しましたが、この環境では再生できません。",
+    "previewPlayFailed": "試聴音声を再生できませんでした。",
+    "generateVoiceFirst": "先に音声を生成してください。",
+    "previewUrlMissing": "試聴音声は生成されましたが、URL が返されませんでした。",
+    "previewGeneratedUnsupported": "試聴音声は生成されましたが、この環境では再生できません。",
+    "previewGenerateFailed": "試聴音声を生成できませんでした。",
+    "nameRequired": "キャラクター名を入力してください。",
+    "genderRequired": "保存する前に性別を選択してください。",
+    "settingRequired": "キャラクター設定を入力または生成してください。",
+    "imageRequired": "キャラクター画像を追加または生成してください。",
+    "voiceRequired": "キャラクターボイスを選択または生成してください。",
+    "imageSaveFailed": "キャラクター画像を保存できませんでした。",
+    "saved": "キャラクターを保存しました。",
+    "saveFailed": "保存できませんでした。",
+    "draftSaveFailed": "下書きを保存できませんでした。"
+  },
+  "defaultVoicePreview": "こんにちは、お会いできてうれしいです。",
+  "untitledDraft": "名前未設定"
+}

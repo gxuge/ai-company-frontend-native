@@ -23,5 +23,98 @@
   },
   "title": "Settings",
   "version": "Version",
-  "website": "Website"
+  "website": "Website",
+  "general": {
+    "title": "General Settings",
+    "language": "Language",
+    "feedback": "Feedback",
+    "about": "About Tanshi",
+    "account": "Account Settings",
+    "verification": "Identity Verification",
+    "verified": "Verified",
+    "privacy": "Privacy Settings",
+    "logout": "Log Out",
+    "version": "App Version {{version}}",
+    "appName": "Tanshi AI Companion",
+    "logoutDialog": {
+      "title": "Log Out",
+      "message": "Are you sure you want to log out? You will need to verify your identity again.",
+      "cancel": "Cancel",
+      "confirm": "Log Out"
+    }
+  },
+  "languagePage": {
+    "title": "Language"
+  },
+  "account": {
+    "title": "Account Settings",
+    "cancel": "Cancel",
+    "save": "Save",
+    "avatarAlt": "User avatar",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Enter nickname",
+    "gender": "Gender",
+    "birthday": "Birthday",
+    "preferences": "Content Preferences",
+    "genderOptions": {
+      "male": "Male",
+      "female": "Female",
+      "secret": "Prefer not to say"
+    },
+    "preferenceTags": {
+      "urban": "Urban",
+      "workplace": "Workplace",
+      "companionship": "Companionship"
+    }
+  },
+  "sound": {
+    "defaultPreviewText": "This is a voice preview. Play it using the selected voice settings.",
+    "unnamedVoice": "Unnamed Voice",
+    "chooseVoice": "Select a voice",
+    "rename": "Rename",
+    "delete": "Delete",
+    "editPreviewText": "Edit preview text",
+    "cancelSelection": "Clear selection",
+    "parameterAdjustment": "Voice Settings",
+    "reset": "Reset",
+    "pitch": "Pitch",
+    "speed": "Speed",
+    "listening": "Playing...",
+    "listenVoice": "Preview Voice",
+    "recommendedLibrary": "Recommended",
+    "myLibrary": "My Voices",
+    "gender": "Gender",
+    "genderOptions": {
+      "all": "All",
+      "male": "Male",
+      "female": "Female"
+    },
+    "knownTags": {
+      "male": "Male",
+      "female": "Female",
+      "child": "Child",
+      "teen": "Teen",
+      "adult": "Adult",
+      "senior": "Senior"
+    },
+    "emptyTitle": "No voices yet",
+    "emptyDescription": "Choose a recommended voice or start creating your own.",
+    "done": "Done",
+    "generate": "Generate",
+    "editTextTitle": "Edit Preview Text",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "errors": {
+      "objectUrlUnsupported": "Audio object URLs are not supported in this environment.",
+      "missingAudioUrl": "The preview was generated, but no audio URL was returned.",
+      "downloadFailed": "Failed to download the audio. Please try again.",
+      "selectVoiceFirst": "Select a voice first.",
+      "missingVoiceId": "This voice has no valid identifier and cannot be previewed.",
+      "playbackUnsupported": "Audio preview is not supported in this environment.",
+      "playbackFailed": "Failed to play the preview. Please try again.",
+      "previewFailed": "Voice preview failed. Please try again.",
+      "renamePending": "Voice ID {{id}}: rename support is awaiting a backend API.",
+      "deletePending": "Voice ID {{id}}: delete support is awaiting a backend API."
+    }
+  }
 }

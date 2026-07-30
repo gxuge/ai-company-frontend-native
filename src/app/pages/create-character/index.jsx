@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { CharacterGenerationEditor } from '@/components/pages/create-character/character-generation-editor';
@@ -7,6 +8,8 @@ import { useCharacterGenerationStore } from '@/features/character-generation/use
 const GALLERY_ICON_PATH = 'M23.6508 0C29.2431 0 33 3.92389 33 9.76259V23.2374C33 29.0761 29.2431 33 23.6491 33H9.3492C3.75688 33 0 29.0761 0 23.2374V9.76259C0 3.92389 3.75688 0 9.3492 0H23.6508ZM25.4704 17.4076C23.7017 16.3042 22.3361 17.8537 21.9678 18.3492C21.6127 18.8277 21.3074 19.3556 20.9856 19.8834C20.1991 21.1861 19.2981 22.6879 17.7385 23.5615C15.472 24.8164 13.7514 23.6602 12.5137 22.819C12.0491 22.5057 11.5978 22.2094 11.1481 22.0119C10.0398 21.5334 9.04262 22.0783 7.56261 23.9582C6.78611 24.9407 6.01624 25.9147 5.23641 26.8853C4.77018 27.4659 4.88134 28.3616 5.51018 28.7498C6.514 29.368 7.73849 29.7 9.12226 29.7H23.028C23.8128 29.7 24.5993 29.5927 25.3493 29.3475C27.0383 28.7958 28.379 27.5324 29.0791 25.8636C29.6698 24.4605 29.9569 22.7577 29.4043 21.341C29.2202 20.8711 28.9447 20.4334 28.5582 20.0486C27.5444 19.0423 26.597 18.1023 25.4704 17.4076ZM10.7231 6.6C8.44835 6.6 6.6 8.45085 6.6 10.725C6.6 12.9991 8.44835 14.85 10.7231 14.85C12.9962 14.85 14.8462 12.9991 14.8462 10.725C14.8462 8.45085 12.9962 6.6 10.7231 6.6Z';
 
 function MyGalleryButton() {
+  const { t } = useTranslation();
+
   return (
     <div className="mb-4 flex justify-end px-4">
       <button
@@ -17,19 +20,20 @@ function MyGalleryButton() {
         <svg className="size-5" fill="none" viewBox="0 0 33 33">
           <path d={GALLERY_ICON_PATH} fill="#6B7280" />
         </svg>
-        <span className="text-sm font-medium whitespace-nowrap text-white">我的图库</span>
+        <span className="text-sm font-medium whitespace-nowrap text-white">{t('createCharacter.gallery')}</span>
       </button>
     </div>
   );
 }
 
 export default function CreateCharacterPage() {
+  const { t } = useTranslation();
   const draft = useCharacterGenerationStore.use.draft();
   const setDraft = useCharacterGenerationStore.use.setDraft();
 
   return (
     <div className="min-h-screen w-full bg-black">
-      <AiHeader title="创建形象" className="h-16 bg-black px-4" />
+      <AiHeader title={t('createCharacter.title')} className="h-16 bg-black px-4" />
       <MyGalleryButton />
       <CharacterGenerationEditor
         initialDraft={draft}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { brandGreenRgba } from '@/components/ui/brand';
 import { tsRoleApi, userApi } from '@/lib/api';
@@ -16,21 +17,21 @@ const SVG_PATHS = {
 };
 
 const STYLE_OPTIONS = [
-  { image: generalStyleImage, label: '通用', value: '通用' },
-  { image: animeStyleImage, label: '动漫插画', value: '动漫插画' },
-  { image: realisticStyleImage, label: '写实摄影', value: '写实摄影' },
-  { image: semiRealisticStyleImage, label: '半写实风', value: '半写实风' },
-  { image: generalStyleImage, label: '国风古韵', value: '国风古韵' },
-  { image: generalStyleImage, label: '赛博科幻', value: '赛博科幻' },
-  { image: generalStyleImage, label: '奇幻史诗', value: '奇幻史诗' },
-  { image: animeStyleImage, label: '像素复古', value: '像素复古' },
-  { image: generalStyleImage, label: '卡通萌系', value: '卡通萌系' },
-  { image: semiRealisticStyleImage, label: '厚涂原画', value: '厚涂原画' },
-  { image: generalStyleImage, label: '水彩绘本', value: '水彩绘本' },
-  { image: generalStyleImage, label: '日系轻漫', value: '日系轻漫' },
-  { image: generalStyleImage, label: '暗黑哥特', value: '暗黑哥特' },
-  { image: generalStyleImage, label: '蒸汽朋克', value: '蒸汽朋克' },
-  { image: generalStyleImage, label: '梦幻超现实', value: '梦幻超现实' },
+  { image: generalStyleImage, labelKey: 'general', value: '通用' },
+  { image: animeStyleImage, labelKey: 'anime', value: '动漫插画' },
+  { image: realisticStyleImage, labelKey: 'realistic', value: '写实摄影' },
+  { image: semiRealisticStyleImage, labelKey: 'semiRealistic', value: '半写实风' },
+  { image: generalStyleImage, labelKey: 'chinese', value: '国风古韵' },
+  { image: generalStyleImage, labelKey: 'cyber', value: '赛博科幻' },
+  { image: generalStyleImage, labelKey: 'fantasy', value: '奇幻史诗' },
+  { image: animeStyleImage, labelKey: 'pixel', value: '像素复古' },
+  { image: generalStyleImage, labelKey: 'cute', value: '卡通萌系' },
+  { image: semiRealisticStyleImage, labelKey: 'painted', value: '厚涂原画' },
+  { image: generalStyleImage, labelKey: 'watercolor', value: '水彩绘本' },
+  { image: generalStyleImage, labelKey: 'manga', value: '日系轻漫' },
+  { image: generalStyleImage, labelKey: 'gothic', value: '暗黑哥特' },
+  { image: generalStyleImage, labelKey: 'steampunk', value: '蒸汽朋克' },
+  { image: generalStyleImage, labelKey: 'surreal', value: '梦幻超现实' },
 ];
 
 function extractErrorMessage(error, fallback) {
@@ -42,12 +43,14 @@ function extractErrorMessage(error, fallback) {
 function EditorDialog({
   title,
   message,
-  confirmLabel = '我知道了',
+  confirmLabel,
   cancelLabel,
   danger = false,
   onConfirm,
   onClose,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 px-6 backdrop-blur-sm"
@@ -78,7 +81,7 @@ function EditorDialog({
             }`}
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel || t('createCharacter.acknowledge')}
           </button>
         </div>
       </div>
@@ -87,6 +90,8 @@ function EditorDialog({
 }
 
 function ImagePreviewModal({ src, onClose }) {
+  const { t } = useTranslation();
+
   if (!src) {
     return null;
   }
@@ -97,13 +102,13 @@ function ImagePreviewModal({ src, onClose }) {
     >
       <img
         src={src}
-        alt="参考图预览"
+        alt={t('createCharacter.referencePreview')}
         className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
         onClick={event => event.stopPropagation()}
       />
       <button
         type="button"
-        aria-label="关闭预览"
+        aria-label={t('createCharacter.closePreview')}
         onClick={onClose}
         className="absolute top-5 right-5 flex size-9 items-center justify-center rounded-full bg-white/15 text-xl text-white"
       >
@@ -126,6 +131,7 @@ function InputCard({
   optimizing,
   disabled,
 }) {
+  const { t } = useTranslation();
   const [focused, setFocused] = useState(false);
   const textareaRef = useRef(null);
   const showHint = !focused && value.trim() === '';
@@ -151,9 +157,9 @@ function InputCard({
                     window.setTimeout(() => textareaRef.current?.focus(), 0);
                   }}
                 >
-                  <span className="text-center text-xl font-bold text-[#e7e7e7]">输入你想要的形象</span>
+                  <span className="text-center text-xl font-bold text-[#e7e7e7]">{t('createCharacter.inputTitle')}</span>
                   <span className="px-2 text-center text-sm/relaxed text-white/60">
-                    如性别、外貌、性格、身材、衣着以及其他特征
+                    {t('createCharacter.inputHint')}
                   </span>
                 </button>
               )
@@ -161,7 +167,7 @@ function InputCard({
                 <textarea
                   ref={textareaRef}
                   className="min-h-[160px] flex-1 resize-none border-none bg-transparent text-sm/relaxed text-white/85 outline-none placeholder:text-white/30"
-                  placeholder="描述你想要的形象..."
+                  placeholder={t('createCharacter.inputPlaceholder')}
                   value={value}
                   disabled={disabled}
                   onChange={event => onChange(event.target.value)}
@@ -185,7 +191,7 @@ function InputCard({
                     <span className="relative">
                       <img
                         src={referenceImageUrl}
-                        alt="参考图"
+                        alt={t('createCharacter.reference')}
                         className="size-[22px] rounded-sm object-cover"
                         onClick={(event) => {
                           event.stopPropagation();
@@ -208,7 +214,7 @@ function InputCard({
                       <path d={SVG_PATHS.addImage} fill="#6B7280" />
                     </svg>
                   )}
-              <span className="text-sm font-medium whitespace-nowrap text-white">参考图</span>
+              <span className="text-sm font-medium whitespace-nowrap text-white">{t('createCharacter.reference')}</span>
             </button>
             <button
               type="button"
@@ -223,7 +229,7 @@ function InputCard({
                 <path d={SVG_PATHS.optimize} fill="currentColor" />
               </svg>
               <span className="text-sm font-bold whitespace-nowrap text-brand-green">
-                {optimizing ? '润色中...' : 'AI 润色'}
+                {optimizing ? t('createCharacter.optimizing') : t('createCharacter.optimize')}
               </span>
             </button>
           </div>
@@ -234,12 +240,14 @@ function InputCard({
 }
 
 function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mx-4 rounded-3xl border border-[#b2b2b2] bg-[#1d1d1d] p-5 shadow-[0_4px_4px_rgba(0,0,0,0.25)]">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-base font-bold text-[#b3b3b3]">风格</h3>
+        <h3 className="text-base font-bold text-[#b3b3b3]">{t('createCharacter.style')}</h3>
         <span className="rounded-lg border border-[#b2b2b2] bg-[#b2b2b2]/20 px-3 py-1 text-xs font-medium text-[#b3b3b3]">
-          更多
+          {t('createCharacter.more')}
         </span>
       </div>
       <div
@@ -260,13 +268,13 @@ function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
               selectedStyle === style.value ? 'border-2 border-white' : 'border border-white/10'
             }`}
             >
-              <img src={style.image} alt={style.label} className="size-full object-cover" />
+              <img src={style.image} alt={t(`createCharacter.styles.${style.labelKey}`)} className="size-full object-cover" />
             </span>
             <span className={`text-xs whitespace-nowrap ${
               selectedStyle === style.value ? 'font-bold text-white' : 'font-medium text-white/80'
             }`}
             >
-              {style.label}
+              {t(`createCharacter.styles.${style.labelKey}`)}
             </span>
           </button>
         ))}
@@ -279,11 +287,12 @@ function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
 // eslint-disable-next-line max-lines-per-function
 export function CharacterGenerationEditor({
   initialDraft,
-  submitLabel = '创建形象',
-  submittingLabel = '创建中...',
+  submitLabel,
+  submittingLabel,
   disabled = false,
   onSubmit,
 }) {
+  const { t } = useTranslation();
   const [promptText, setPromptText] = useState(() => initialDraft?.promptText || '');
   const [selectedStyle, setSelectedStyle] = useState(
     () => initialDraft?.styleName || STYLE_OPTIONS[0]?.value || '',
@@ -314,14 +323,14 @@ export function CharacterGenerationEditor({
       const result = await tsRoleApi.optimizeImagePrompt({ promptText: promptText.trim() });
       const optimizedPrompt = result?.visualPrompt?.trim();
       if (!optimizedPrompt) {
-        throw new Error('AI 未返回可用的提示词');
+        throw new Error(t('createCharacter.dialogs.optimizeNoResult'));
       }
       setPromptText(optimizedPrompt);
     }
     catch (error) {
       setDialog({
-        title: 'AI 润色失败',
-        message: extractErrorMessage(error, 'AI 生成失败，请重试'),
+        title: t('createCharacter.dialogs.optimizeFailedTitle'),
+        message: extractErrorMessage(error, t('createCharacter.dialogs.optimizeFailed')),
       });
     }
     finally {
@@ -332,7 +341,7 @@ export function CharacterGenerationEditor({
   const handleSubmit = async () => {
     const normalizedPrompt = promptText.trim();
     if (!referenceImageUrl && normalizedPrompt.length < 15) {
-      setDialog({ title: '提示', message: '请上传参考图或输入至少 15 个字符。' });
+      setDialog({ title: t('createCharacter.dialogs.notice'), message: t('createCharacter.dialogs.validation') });
       return;
     }
     setSubmitting(true);
@@ -341,7 +350,7 @@ export function CharacterGenerationEditor({
       if (!uploadedReferenceImageUrl && referenceImageFile) {
         uploadedReferenceImageUrl = await userApi.uploadFile(referenceImageFile, 'reference');
         if (!uploadedReferenceImageUrl) {
-          throw new Error('参考图上传失败');
+          throw new Error(t('createCharacter.dialogs.uploadFailed'));
         }
         setReferenceImageServerUrl(uploadedReferenceImageUrl);
       }
@@ -353,8 +362,8 @@ export function CharacterGenerationEditor({
     }
     catch (error) {
       setDialog({
-        title: '操作失败',
-        message: extractErrorMessage(error, '创建形象失败，请重试'),
+        title: t('createCharacter.dialogs.operationFailed'),
+        message: extractErrorMessage(error, t('createCharacter.dialogs.createFailed')),
       });
     }
     finally {
@@ -387,10 +396,10 @@ export function CharacterGenerationEditor({
         onPickReference={() => fileInputRef.current?.click()}
         onPreviewReference={() => setPreviewSrc(referenceImageUrl)}
         onDeleteReference={() => setDialog({
-          title: '删除参考图',
-          message: '确定要删除当前的参考图吗？',
-          confirmLabel: '删除',
-          cancelLabel: '取消',
+          title: t('createCharacter.dialogs.deleteTitle'),
+          message: t('createCharacter.dialogs.deleteConfirm'),
+          confirmLabel: t('createCharacter.delete'),
+          cancelLabel: t('createCharacter.cancel'),
           danger: true,
           action: () => {
             setReferenceImageFile(null);
@@ -400,14 +409,14 @@ export function CharacterGenerationEditor({
         })}
         onOptimize={() => {
           if (!promptText.trim()) {
-            setDialog({ title: '提示', message: '请先填写内容，以便 AI 更好地为您润色提示词。' });
+            setDialog({ title: t('createCharacter.dialogs.notice'), message: t('createCharacter.dialogs.optimizeEmpty') });
             return;
           }
           setDialog({
-            title: 'AI 润色',
-            message: 'AI 将根据您当前的内容优化提示词，是否继续？',
-            confirmLabel: '继续',
-            cancelLabel: '取消',
+            title: t('createCharacter.dialogs.optimizeTitle'),
+            message: t('createCharacter.dialogs.optimizeConfirm'),
+            confirmLabel: t('createCharacter.continue'),
+            cancelLabel: t('createCharacter.cancel'),
             action: executeOptimize,
           });
         }}
@@ -428,7 +437,9 @@ export function CharacterGenerationEditor({
           disabled={controlsDisabled}
           className="flex h-14 w-full items-center justify-center rounded-2xl border-2 border-brand-green bg-transparent text-base font-bold tracking-widest text-brand-green active:bg-brand-green/10 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {submitting ? submittingLabel : submitLabel}
+          {submitting
+            ? (submittingLabel || t('createCharacter.creating'))
+            : (submitLabel || t('createCharacter.create'))}
         </button>
       </div>
       <input

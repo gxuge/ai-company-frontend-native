@@ -1,0 +1,31 @@
+{
+  "title": "Image Generation",
+  "edit": "Edit Image",
+  "closeEdit": "Close editor",
+  "apply": "Apply and Regenerate",
+  "applying": "Applying...",
+  "defaultStyle": "General",
+  "errors": {
+    "generate": "Failed to generate the image. Please try again.",
+    "download": "Failed to download the image.",
+    "missingUrl": "Generation failed: no image URL was returned.",
+    "emptyDescription": "Image description cannot be empty."
+  },
+  "downloadName": "character-{{timestamp}}.png",
+  "previewAlt": "Generated character image",
+  "generating": "Generating image...",
+  "failed": "Image Generation Failed",
+  "selectAnother": "Select another image",
+  "description": "Image Description",
+  "editDescription": "Edit image description",
+  "emptyDescription": "No image description",
+  "selectCandidate": "Select image {{index}}",
+  "candidateFailed": "Failed",
+  "addCandidates": "Generate four more character images",
+  "collapse": "Collapse controls",
+  "expand": "Expand controls",
+  "download": "Download",
+  "complete": "Done",
+  "expandMore": "Expand more controls",
+  "swipeUp": "Swipe up for more options"
+}

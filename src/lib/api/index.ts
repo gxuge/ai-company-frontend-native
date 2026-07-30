@@ -1,4 +1,5 @@
 export * from './axios';
+export * from './api-error';
 export * from './client';
 export * from './def-http';
 export * from './http-enum';
@@ -6,9 +7,10 @@ export * from './http-types';
 export * from './provider';
 export * from './request';
 export * from './stream';
-export * from './ts-chat';
 export * from './ts-agent-chat';
 export * from './ts-agent-chat-stream';
+export * from './ts-chat';
+export * from './ts-draft';
 export * from './ts-image';
 export * from './ts-role';
 export * from './ts-role-image';

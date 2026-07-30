@@ -3,6 +3,9 @@ import type { ApiRequestConfig, AxiosTransform, CreateAxiosOptions, RequestOptio
 import type { ApiResult } from './types';
 import Env from 'env';
 import { getAccessToken, getRefreshToken, removeToken, updateTokenPair } from '@/lib/auth/utils';
+import { localizeApiError, resolveApiSuccessMessage } from '@/lib/i18n/api-message';
+import { getLanguage } from '@/lib/i18n/utils';
+import { ApiError, toApiError } from './api-error';
 import { VAxios } from './axios';
 import { ConfigEnum, ContentTypeEnum, RequestEnum, ResultEnum } from './http-enum';
 
@@ -53,6 +56,7 @@ async function refreshAccessToken(): Promise<string> {
   const resp = await fetch(`${Env.EXPO_PUBLIC_API_URL}${REFRESH_URL}`, {
     method: 'POST',
     headers: {
+      'Accept-Language': getLanguage(),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ refreshToken }),
@@ -63,7 +67,7 @@ async function refreshAccessToken(): Promise<string> {
   const data = (await resp.json()) as ApiResult<RefreshResult>;
   const ok = data?.success || data?.code === ResultEnum.SUCCESS || data?.code === ResultEnum.HTTP_SUCCESS;
   if (!ok || !data?.result?.token) {
-    throw new Error(data?.message || 'refresh token failed');
+    throw localizeApiError(ApiError.fromResult(data, 'Refresh token failed'));
   }
   updateTokenPair(data.result.token, data.result.refreshToken || refreshToken);
   return data.result.token;
@@ -83,11 +87,14 @@ const transform: AxiosTransform = {
     const hasSuccess = success || code === ResultEnum.SUCCESS || code === ResultEnum.HTTP_SUCCESS;
     if (hasSuccess) {
       if (successMessageMode === 'success' && message) {
-        console.log(message);
+        console.log(resolveApiSuccessMessage(res.data, message));
       }
       return result;
     }
-    throw new Error(message || 'Request failed');
+    throw localizeApiError(
+      ApiError.fromResult(res.data || {}, message || 'Request failed'),
+      message || 'Request failed',
+    );
   },
 
   beforeRequestHook: (config: ApiRequestConfig, options: RequestOptions) => {
@@ -117,6 +124,7 @@ const transform: AxiosTransform = {
     const shouldAttachToken = config.withToken ?? config.requestOptions?.withToken ?? true;
     const token = getAccessToken();
     next.headers = next.headers || {};
+    next.headers['Accept-Language'] = getLanguage();
     next.headers[ConfigEnum.VERSION] = 'v3';
     if (shouldAttachToken && token) {
       next.headers.Authorization = options.authenticationScheme ? `${options.authenticationScheme} ${token}` : token;
@@ -131,14 +139,14 @@ const transform: AxiosTransform = {
     const status = error?.response?.status;
     const originalRequest = error?.config as ApiRequestConfig | undefined;
     if (status !== 401 || !originalRequest) {
-      return Promise.reject(error);
+      return Promise.reject(localizeApiError(toApiError(error)));
     }
 
     const refreshToken = getRefreshToken();
     const isRefreshRequest = (originalRequest.url || '').includes(REFRESH_URL);
     if (!refreshToken || isRefreshRequest || originalRequest._refreshRetried) {
       removeToken();
-      return Promise.reject(error);
+      return Promise.reject(localizeApiError(toApiError(error)));
     }
 
     if (isRefreshing) {
@@ -164,7 +172,7 @@ const transform: AxiosTransform = {
     }
     catch (refreshError) {
       removeToken();
-      return Promise.reject(refreshError);
+      return Promise.reject(localizeApiError(refreshError, 'Refresh token failed'));
     }
     finally {
       isRefreshing = false;

@@ -1,5 +1,9 @@
+import type { ApiResult } from './types';
 import Env from 'env';
 import { getAccessToken } from '@/lib/auth/utils';
+import { localizeApiError } from '@/lib/i18n/api-message';
+import { getLanguage } from '@/lib/i18n/utils';
+import { ApiError, toApiError } from './api-error';
 import { ConfigEnum, ContentTypeEnum } from './http-enum';
 
 const apiBase = (Env.EXPO_PUBLIC_API_URL || '').replace(/\/$/, '');
@@ -26,6 +30,7 @@ export const buildApiUrl = (path: string) => {
 
 const buildRequestHeaders = (initHeaders: HeadersInit | undefined, withToken: boolean) => {
   const headers = new Headers(initHeaders);
+  headers.set('Accept-Language', getLanguage());
   headers.set('Content-Type', ContentTypeEnum.JSON);
   headers.set('Accept', 'text/event-stream');
   headers.set(ConfigEnum.VERSION, 'v3');
@@ -41,18 +46,23 @@ const buildRequestHeaders = (initHeaders: HeadersInit | undefined, withToken: bo
   return headers;
 };
 
-const parseErrorDetail = async (response: Response) => {
+const parseErrorResponse = async (response: Response) => {
   const text = await response.text();
   if (!text) {
-    return response.statusText || 'unknown error';
+    return localizeApiError(new ApiError(response.statusText || 'Request failed', {
+      code: response.status,
+    }));
   }
 
   try {
-    const parsed = JSON.parse(text) as { detail?: string; message?: string };
-    return parsed.detail || parsed.message || text;
+    const parsed = JSON.parse(text) as Partial<ApiResult> & { detail?: string };
+    return localizeApiError(ApiError.fromResult(
+      parsed,
+      parsed.detail || response.statusText || 'Request failed',
+    ));
   }
   catch {
-    return text;
+    return localizeApiError(new ApiError(text, { code: response.status }));
   }
 };
 
@@ -74,7 +84,7 @@ export const requestStream = async (
       headers,
     });
   }
-  catch (error) {
+  catch {
     await wait(250);
     try {
       response = await fetch(buildApiUrl(path), {
@@ -83,21 +93,17 @@ export const requestStream = async (
       });
     }
     catch (retryError) {
-      throw new Error(
-        retryError instanceof Error ? retryError.message : String(retryError),
-      );
+      throw localizeApiError(toApiError(retryError));
     }
   }
 
   if (!response.ok) {
-    const detail = await parseErrorDetail(response);
-    throw new Error(`Request failed (${response.status} ${response.statusText}): ${detail}`);
+    throw await parseErrorResponse(response);
   }
 
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
-    const detail = await parseErrorDetail(response);
-    throw new Error(detail);
+    throw await parseErrorResponse(response);
   }
 
   if (!response.body) {

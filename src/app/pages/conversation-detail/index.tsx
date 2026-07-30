@@ -1,6 +1,8 @@
+import type { TFunction } from 'i18next';
 import type { ImageSourcePropType } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
@@ -36,9 +38,6 @@ type ConversationDetailState = {
   loadError: string | null;
 };
 
-const FALLBACK_DESCRIPTION = '暂无故事简介';
-const FALLBACK_TITLE = '故事详情';
-const FALLBACK_AUTHOR = '匿名作者';
 const FALLBACK_CHARACTER_SOURCES: ImageSourcePropType[] = [
   imgCharacter1,
   imgCharacter2,
@@ -92,19 +91,19 @@ function toAssetUri(source: ImageSourcePropType) {
   return '';
 }
 
-function buildFallbackCharacters() {
+function buildFallbackCharacters(t: TFunction) {
   return [
-    { id: 1, name: '角色1', avatarSource: imgCharacter1 },
-    { id: 2, name: '角色2', avatarSource: imgCharacter2 },
-    { id: 3, name: '角色3', avatarSource: imgCharacter3 },
-    { id: 4, name: '角色4', avatarSource: imgCharacter4 },
-    { id: 5, name: '角色5', avatarSource: imgCharacter5 },
+    { id: 1, name: t('chat.conversation.roleFallback', { id: 1 }), avatarSource: imgCharacter1 },
+    { id: 2, name: t('chat.conversation.roleFallback', { id: 2 }), avatarSource: imgCharacter2 },
+    { id: 3, name: t('chat.conversation.roleFallback', { id: 3 }), avatarSource: imgCharacter3 },
+    { id: 4, name: t('chat.conversation.roleFallback', { id: 4 }), avatarSource: imgCharacter4 },
+    { id: 5, name: t('chat.conversation.roleFallback', { id: 5 }), avatarSource: imgCharacter5 },
   ] satisfies CharacterCard[];
 }
 
-function buildDescription(story: TsStory | null) {
+function buildDescription(story: TsStory | null, t: TFunction) {
   const text = buildStoryDescriptionText(story);
-  return text || FALLBACK_DESCRIPTION;
+  return text || t('chat.conversation.fallbackDescription');
 }
 
 async function resolveStoryId(params: {
@@ -144,11 +143,11 @@ async function resolveStoryId(params: {
   return null;
 }
 
-async function buildCharacterCards(story: TsStory | null) {
+async function buildCharacterCards(story: TsStory | null, t: TFunction) {
   const roleIds = extractStoryRoleIds(story);
 
   if (roleIds.length === 0) {
-    return buildFallbackCharacters();
+    return buildFallbackCharacters(t);
   }
 
   const roleResults = await Promise.allSettled(roleIds.map(roleId => tsRoleApi.getRoleDetail(roleId)));
@@ -160,7 +159,7 @@ async function buildCharacterCards(story: TsStory | null) {
     if (result.status !== 'fulfilled') {
       cards.push({
         id: fallbackRoleId,
-        name: `角色${fallbackRoleId}`,
+        name: t('chat.conversation.roleFallback', { id: fallbackRoleId }),
         avatarSource: fallbackSource,
       });
       return;
@@ -169,19 +168,20 @@ async function buildCharacterCards(story: TsStory | null) {
     const role = result.value;
     cards.push({
       id: role.id,
-      name: role.roleName || role.roleSubtitle || `角色${role.id}`,
+      name: role.roleName || role.roleSubtitle || t('chat.conversation.roleFallback', { id: role.id }),
       avatarSource: toRemoteSource(pickTsImageUrl(role, 'character_avatar', 'character_image')) ?? fallbackSource,
     });
   });
 
-  return cards.length > 0 ? cards : buildFallbackCharacters();
+  return cards.length > 0 ? cards : buildFallbackCharacters(t);
 }
 
 function useConversationDetailData(storyIdParam?: string | string[], idParam?: string | string[], sessionIdParam?: string | string[]) {
+  const { t } = useTranslation();
   const [state, setState] = React.useState<ConversationDetailState>(() => ({
     story: null,
     chapters: [],
-    characterCards: buildFallbackCharacters(),
+    characterCards: buildFallbackCharacters(t),
     loading: false,
     loadError: null,
   }));
@@ -203,7 +203,7 @@ function useConversationDetailData(storyIdParam?: string | string[], idParam?: s
         setState(prev => ({
           ...prev,
           loading: false,
-          loadError: '未找到可展示的故事数据',
+          loadError: t('chat.conversation.dataMissing'),
         }));
         return;
       }
@@ -219,17 +219,17 @@ function useConversationDetailData(storyIdParam?: string | string[], idParam?: s
 
       const story = storyResult.status === 'fulfilled' ? storyResult.value : null;
       const chapters = chapterResult.status === 'fulfilled' ? (chapterResult.value?.records || []) : [];
-      const characterCards = await buildCharacterCards(story);
+      const characterCards = await buildCharacterCards(story, t);
       if (!alive) {
         return;
       }
 
       const failedMessages: string[] = [];
       if (storyResult.status !== 'fulfilled') {
-        failedMessages.push('故事详情加载失败');
+        failedMessages.push(t('chat.conversation.storyLoadFailed'));
       }
       if (chapterResult.status !== 'fulfilled') {
-        failedMessages.push('章节列表加载失败');
+        failedMessages.push(t('chat.conversation.chapterLoadFailed'));
       }
 
       setState({
@@ -245,19 +245,20 @@ function useConversationDetailData(storyIdParam?: string | string[], idParam?: s
       if (!alive) {
         return;
       }
-      const message = error instanceof Error ? error.message : '会话详情加载失败';
+      const message = error instanceof Error ? error.message : t('chat.conversation.detailLoadFailed');
       setState(prev => ({ ...prev, loading: false, loadError: message }));
     });
 
     return () => {
       alive = false;
     };
-  }, [idParam, sessionIdParam, storyIdParam]);
+  }, [idParam, sessionIdParam, storyIdParam, t]);
 
   return state;
 }
 
 export default function Body() {
+  const { t } = useTranslation();
   const [storyDetailVisible, setStoryDetailVisible] = React.useState(false);
   const params = useLocalSearchParams<{ storyId?: string | string[]; id?: string | string[]; sessionId?: string | string[] }>();
   const { story, chapters, characterCards, loading, loadError } = useConversationDetailData(
@@ -266,9 +267,9 @@ export default function Body() {
     params.sessionId,
   );
 
-  const title = story?.title || FALLBACK_TITLE;
-  const creatorName = story?.createdName || story?.updatedName || FALLBACK_AUTHOR;
-  const description = buildDescription(story);
+  const title = story?.title || t('chat.conversation.fallbackTitle');
+  const creatorName = story?.createdName || story?.updatedName || t('chat.conversation.fallbackAuthor');
+  const description = buildDescription(story, t);
   const storyBackgroundSource = toRemoteSource(pickTsImageUrl(story, 'story_scene')) ?? imgGrandAtmosphericPalaceInteriorWithChandelier;
 
   return (
@@ -305,7 +306,7 @@ export default function Body() {
               </div>
               <button type="button" style={debugStyles.followButton}>
                 <img src={toAssetUri(imgFluentAdd12Filled)} style={debugStyles.addIcon} />
-                <span style={debugStyles.followText}>关注</span>
+                <span style={debugStyles.followText}>{t('chat.conversation.follow')}</span>
               </button>
             </div>
 
@@ -314,16 +315,16 @@ export default function Body() {
             </div>
 
             <button type="button" style={debugStyles.storyDetailButton} onClick={() => setStoryDetailVisible(true)}>
-              <span style={debugStyles.storyDetailText}>故事详情</span>
+              <span style={debugStyles.storyDetailText}>{t('chat.conversation.storyDetails')}</span>
               <img src={toAssetUri(imgIcon)} style={debugStyles.chevronIcon} />
             </button>
 
-            {loading ? <div style={debugStyles.dataHintText}>加载中...</div> : null}
+            {loading ? <div style={debugStyles.dataHintText}>{t('chat.common.loading')}</div> : null}
             {loadError ? <div style={debugStyles.dataErrorText}>{loadError}</div> : null}
           </div>
 
           <div style={debugStyles.card}>
-            <div style={debugStyles.cardTitle}>角色列表</div>
+            <div style={debugStyles.cardTitle}>{t('chat.conversation.characterList')}</div>
             <div style={debugStyles.characterRow}>
               {characterCards.map(character => (
                 <div key={character.id} style={debugStyles.characterItem}>
@@ -341,7 +342,7 @@ export default function Body() {
               <div style={debugStyles.impressionIconContainer}>
                 <img src={toAssetUri(imgGroup1)} style={debugStyles.impressionIcon} />
               </div>
-              <div style={debugStyles.cardTitle}>观感</div>
+              <div style={debugStyles.cardTitle}>{t('chat.conversation.impressions')}</div>
             </div>
             <img src={toAssetUri(imgContainer)} style={debugStyles.chevronIconLight} />
           </div>

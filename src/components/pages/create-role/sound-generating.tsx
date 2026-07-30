@@ -1,8 +1,12 @@
+import { useTranslation } from 'react-i18next';
+
 /**
  * SoundGenerating — 声音生成中的覆盖组件
  * 合并自 pages/sound-generating 页面及其 VoiceLoadingInput 子组件
  */
 export function SoundGenerating({ mini = false }: { mini?: boolean }) {
+  const { t } = useTranslation();
+
   if (mini) {
     return (
       <div className="flex h-full w-full items-center gap-3 bg-black px-4">
@@ -31,7 +35,7 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
 
         {/* Text Content */}
         <span className="text-[14px] font-medium text-brand-green/90 font-['Noto_Sans_SC',sans-serif]">
-          正在生成声音...
+          {t('createRole.generating.voiceEllipsis')}
         </span>
 
         <style>{`
@@ -79,10 +83,10 @@ export function SoundGenerating({ mini = false }: { mini?: boolean }) {
         {/* Middle: Text Content */}
         <div className="flex-1 flex flex-col gap-1">
           <p className="text-[15px] leading-tight text-brand-green/90 font-['Noto_Sans_SC',sans-serif]">
-            正在生成声音
+            {t('createRole.generating.voice')}
           </p>
           <p className="text-[13px] leading-tight text-[#9ca3af] font-['Noto_Sans_SC',sans-serif]">
-            匹配角色声线中
+            {t('createRole.generating.voiceMatching')}
           </p>
           {/* Thin progress bar */}
           <div className="relative w-[120px] h-[2px] bg-brand-green/10 rounded-full mt-2 overflow-hidden">

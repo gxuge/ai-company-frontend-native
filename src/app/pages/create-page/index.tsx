@@ -1,10 +1,11 @@
-import { router } from 'expo-router';
-import { motion } from 'motion/react';
-
-import { useEffect, useState } from 'react';
-import { Bot, Inbox } from 'lucide-react';
 import Env from 'env';
+import { router, useIsFocused } from 'expo-router';
+import { Bot, Inbox } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
+import { tsDraftApi } from '@/lib/api';
 
 const imgFes5 = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/ccea1aa2c0a290c2a877e1aa8cb2442ad7ddffc6.png'));
 const imgN4Yr = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/1292df4b4fcdb338c5b00f0f75a95168864a6fba.png'));
@@ -14,17 +15,36 @@ const imgBookScript = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../
 // The Figma canvas is 682px wide (spacer divs confirm this)
 const DESIGN_WIDTH = 682;
 
+function useCreatePageTypography() {
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage || i18n.language;
+  const isEnglish = language === 'en-US' || language.startsWith('en');
+  const isJapanese = language === 'ja' || language.startsWith('ja');
+
+  return {
+    headingLine1FontSize: isEnglish ? 60 : isJapanese ? 64 : 92.308,
+    headingLine2FontSize: isEnglish ? 44 : isJapanese ? 48 : 92.308,
+    subtitleFontSize: isEnglish ? 30 : isJapanese ? 25 : 34.615,
+    cardTitleFontSize: isEnglish ? 26 : isJapanese ? 20 : 38.462,
+    descriptionFontSize: isEnglish ? 23 : isJapanese ? 22 : 27,
+    actionFontSize: isEnglish || isJapanese ? 24 : 28,
+  };
+}
+
 /* ────────────────────────────────────────────
    Header
 ──────────────────────────────────────────── */
 function Frame1() {
+  const { t } = useTranslation();
+  const { headingLine1FontSize } = useCreatePageTypography();
+
   return (
     <div className="absolute top-0 left-[9.85px] h-[204px] w-[372px]">
       <div
         className="absolute top-[102px] left-[9.85px] flex h-[204px] w-[372px] -translate-y-1/2 flex-col justify-center text-[92.308px] leading-[101.538px] font-black tracking-[-2.3077px] text-white"
-        style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+        style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: headingLine1FontSize }}
       >
-        <p className="mb-0">开启你的</p>
+        <p className="mb-0">{t('createPage.headingLine1')}</p>
         <p>&nbsp;</p>
       </div>
     </div>
@@ -32,15 +52,18 @@ function Frame1() {
 }
 
 function Frame2() {
+  const { t } = useTranslation();
+  const { headingLine2FontSize } = useCreatePageTypography();
+
   return (
     <div className="absolute top-0 left-[195.85px] h-[204px] w-[372px]">
       <div
         className="absolute top-[102px] left-0 flex h-[204px] w-[372px] -translate-y-1/2 flex-col justify-center text-[92.308px] leading-[101.538px] font-black tracking-[-2.3077px]"
-        style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+        style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: headingLine2FontSize }}
       >
         <p className="mb-0">&nbsp;</p>
         <p className="bg-linear-to-r from-brand-green to-white bg-clip-text text-transparent">
-          创作之旅
+          {t('createPage.headingLine2')}
         </p>
       </div>
     </div>
@@ -57,6 +80,9 @@ function Heading() {
 }
 
 function VerticalBorder() {
+  const { t } = useTranslation();
+  const { subtitleFontSize } = useCreatePageTypography();
+
   return (
     <div className="relative w-full shrink-0">
       <div
@@ -66,9 +92,9 @@ function VerticalBorder() {
       <div className="relative flex w-full flex-col items-start pl-[11.538px]">
         <div
           className="relative flex h-[53.846px] w-[434.519px] shrink-0 flex-col justify-center text-[34.615px] leading-0 font-light tracking-[0.8654px] text-[rgba(255,255,255,0.5)]"
-          style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: subtitleFontSize }}
         >
-          <p className="leading-[53.846px]">Advanced AI Creative Suite</p>
+          <p className="leading-[53.846px]">{t('createPage.subtitle')}</p>
         </div>
       </div>
     </div>
@@ -105,6 +131,9 @@ function Card1Background() {
 }
 
 function Card1Content() {
+  const { t } = useTranslation();
+  const { cardTitleFontSize, descriptionFontSize, actionFontSize } = useCreatePageTypography();
+
   return (
     <div className="relative h-[236px] w-[393.058px] max-w-[457.692px] shrink-0">
       {/* Top: icon + title */}
@@ -125,9 +154,9 @@ function Card1Content() {
           {/* Title */}
           <div
             className="relative flex h-[53.846px] w-[190.442px] shrink-0 flex-col justify-center text-[38.462px] leading-0 text-white"
-            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
+            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: cardTitleFontSize, fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新角色</p>
+            <p className="leading-[53.846px]">{t('createPage.character.title')}</p>
           </div>
         </div>
       </div>
@@ -136,10 +165,10 @@ function Card1Content() {
       <div className="absolute top-1/2 right-[2.23px] left-[-2.23px] mt-[24.78px] flex -translate-y-1/2 flex-col items-start">
         <div
           className="relative flex h-[111.538px] w-[367px] shrink-0 flex-col justify-center text-[27px] leading-[40px] text-[#94a3b8]"
-          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 400 }}
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: descriptionFontSize, fontWeight: 400 }}
         >
-          <p className="mb-0">给世界添个新面孔</p>
-          <p>写下人物特质, 开始塑造吧</p>
+          <p className="mb-0">{t('createPage.character.descriptionLine1')}</p>
+          <p>{t('createPage.character.descriptionLine2')}</p>
         </div>
       </div>
 
@@ -148,9 +177,9 @@ function Card1Content() {
         <div className="relative flex w-full shrink-0 items-center gap-1">
           <div
             className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-brand-green"
-            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
+            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: actionFontSize, fontWeight: 700 }}
           >
-            <p className="leading-[28px]">开始创建</p>
+            <p className="leading-[28px]">{t('createPage.character.action')}</p>
           </div>
           <div className="relative h-[24px] w-[25px] shrink-0">
             <img src={imgArrowRight} alt="" className="absolute block size-full object-contain" />
@@ -207,6 +236,9 @@ function Card2Background() {
 }
 
 function Card2Content() {
+  const { t } = useTranslation();
+  const { cardTitleFontSize, descriptionFontSize, actionFontSize } = useCreatePageTypography();
+
   return (
     <div className="relative h-[236px] w-[393.058px] max-w-[457.692px] shrink-0">
       {/* Top: icon + title */}
@@ -225,9 +257,9 @@ function Card2Content() {
           {/* Title */}
           <div
             className="relative flex h-[53.846px] w-[190.442px] shrink-0 flex-col justify-center text-[38.462px] leading-0 text-white"
-            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
+            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: cardTitleFontSize, fontWeight: 700 }}
           >
-            <p className="leading-[53.846px]">新剧本</p>
+            <p className="leading-[53.846px]">{t('createPage.story.title')}</p>
           </div>
         </div>
       </div>
@@ -236,10 +268,10 @@ function Card2Content() {
       <div className="absolute top-1/2 right-[0.23px] left-[-0.23px] mt-[22.41px] flex -translate-y-1/2 flex-col items-start">
         <div
           className="relative flex h-[111.538px] w-[367px] shrink-0 flex-col justify-center text-[27px] leading-[40px] text-[#94a3b8]"
-          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 400 }}
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: descriptionFontSize, fontWeight: 400 }}
         >
-          <p className="mb-0">打造引人入胜的互动叙事</p>
-          <p>开启全新篇章</p>
+          <p className="mb-0">{t('createPage.story.descriptionLine1')}</p>
+          <p>{t('createPage.story.descriptionLine2')}</p>
         </div>
       </div>
 
@@ -248,9 +280,9 @@ function Card2Content() {
         <div className="relative flex w-full shrink-0 items-center gap-1">
           <div
             className="relative flex h-[39px] w-[117px] shrink-0 flex-col justify-center text-[28px] leading-0 text-brand-green"
-            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontWeight: 700 }}
+            style={{ fontFamily: '\'Noto Sans SC\', sans-serif', fontSize: actionFontSize, fontWeight: 700 }}
           >
-            <p className="leading-[28px]">开始创作</p>
+            <p className="leading-[28px]">{t('createPage.story.action')}</p>
           </div>
           <div className="relative h-[24px] w-[25px] shrink-0">
             <img src={imgArrowRight} alt="" className="absolute block size-full object-contain" />
@@ -353,25 +385,73 @@ function CloseButton() {
 /* ────────────────────────────────────────────
    Draft Box Button
 ──────────────────────────────────────────── */
-function DraftBoxButton() {
+type DraftBoxButtonProps = {
+  count: number;
+  loading: boolean;
+  onPress: () => void;
+};
+
+function DraftBoxButton({ count, loading, onPress }: DraftBoxButtonProps) {
+  const { t } = useTranslation();
+
   return (
     <div className="absolute top-[46.15px] right-[46.15px] z-10">
       <button
         type="button"
-        onClick={() => router.push('/pages/draft')}
-        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)] px-[24px] backdrop-blur-[10px] active:bg-[rgba(255,255,255,0.1)] transition-colors cursor-pointer"
+        disabled={loading}
+        onClick={onPress}
+        className="flex h-[64px] cursor-pointer items-center gap-[9px] rounded-[32px] border-2 border-solid border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.05)] px-[18px] backdrop-blur-[10px] transition-colors active:bg-[rgba(255,255,255,0.1)] disabled:cursor-wait disabled:opacity-70"
       >
-        <Inbox size={32} color="#9ca3af" />
+        <Inbox size={26} color="#9ca3af" />
         <span
-          className="text-[26px] font-bold text-white tracking-[1px]"
+          className="text-[22px] font-bold tracking-[1px] text-white"
           style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
         >
-          草稿箱
+          {t('createPage.drafts')}
         </span>
-        <span className="flex h-[36px] min-w-[36px] items-center justify-center rounded-full bg-brand-green px-[10px] text-[20px] font-bold text-black">
-          0
+        <span className="flex h-[30px] min-w-[30px] items-center justify-center rounded-full bg-brand-green px-[8px] text-[16px] font-bold text-black">
+          {loading ? '...' : count}
         </span>
       </button>
+    </div>
+  );
+}
+
+type DraftNoticeProps = {
+  message: string | null;
+  onClose: () => void;
+};
+
+function DraftNotice({ message, onClose }: DraftNoticeProps) {
+  const { t } = useTranslation();
+
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 px-[46px] backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[500px] rounded-[24px] border-2 border-white/10 bg-[#17171d] px-[36px] py-[34px] shadow-[0_24px_80px_rgba(0,0,0,0.55)]"
+        onClick={event => event.stopPropagation()}
+      >
+        <p
+          className="text-center text-[26px] leading-[40px] font-bold text-white"
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+        >
+          {message}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-[28px] flex h-[58px] w-full items-center justify-center rounded-[18px] bg-brand-green text-[22px] font-bold text-black transition-opacity active:opacity-80"
+        >
+          {t('createPage.acknowledge')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -380,6 +460,7 @@ function DraftBoxButton() {
    AI Assistant Button
 ──────────────────────────────────────────── */
 function AiAssistantButton() {
+  const { t } = useTranslation();
   const appId = Env.EXPO_PUBLIC_AIRAG_PROMPT_CHAT_APP_ID?.trim() || '';
   const agentCode = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || 'admin_chat';
 
@@ -396,12 +477,12 @@ function AiAssistantButton() {
         })}
         className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-brand-green bg-brand-green/10 px-[24px] backdrop-blur-[10px] active:bg-brand-green/20 transition-colors cursor-pointer shadow-[0_0_15px_rgba(var(--color-brand-green-rgb),0.3)]"
       >
-        <Bot size={32} color='var(--color-brand-green)' />
+        <Bot size={32} color="var(--color-brand-green)" />
         <span
           className="text-[26px] font-bold text-brand-green tracking-[1px]"
           style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
         >
-          AI 助手
+          {t('createPage.aiAssistant')}
         </span>
       </button>
     </div>
@@ -412,7 +493,34 @@ function AiAssistantButton() {
    Root ?handles proportional scaling
 ──────────────────────────────────────────── */
 export default function App() {
+  const { t } = useTranslation();
+  const isFocused = useIsFocused();
   const [scale, setScale] = useState(1);
+  const [draftCount, setDraftCount] = useState(0);
+  const [loadingDraftCount, setLoadingDraftCount] = useState(false);
+  const [draftNotice, setDraftNotice] = useState<string | null>(null);
+
+  const loadDraftCount = useCallback(async (isActive: () => boolean) => {
+    setLoadingDraftCount(true);
+    try {
+      const page = await tsDraftApi.getDraftList({ pageNo: 1, pageSize: 1 });
+      if (isActive()) {
+        setDraftCount(page.total ?? page.records?.length ?? 0);
+      }
+    }
+    catch (error) {
+      console.warn('Failed to load draft count', error);
+      if (isActive()) {
+        setDraftCount(0);
+        setDraftNotice(t('createPage.draftLoadFailed'));
+      }
+    }
+    finally {
+      if (isActive()) {
+        setLoadingDraftCount(false);
+      }
+    }
+  }, [t]);
 
   useEffect(() => {
     const update = () => {
@@ -422,6 +530,30 @@ export default function App() {
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, []);
+
+  useEffect(() => {
+    if (!isFocused) {
+      return;
+    }
+
+    let active = true;
+    void loadDraftCount(() => active);
+
+    return () => {
+      active = false;
+    };
+  }, [isFocused, loadDraftCount]);
+
+  const handleDraftPress = () => {
+    if (loadingDraftCount) {
+      return;
+    }
+    if (draftCount <= 0) {
+      setDraftNotice(t('createPage.draftEmpty'));
+      return;
+    }
+    router.push('/pages/draft');
+  };
 
   return (
     // Outer shell: full viewport, clips horizontal overflow
@@ -444,10 +576,15 @@ export default function App() {
         <div className="relative flex flex-col items-start bg-[#0d0d11]">
           <Main />
           <CloseButton />
-          <DraftBoxButton />
+          <DraftBoxButton
+            count={draftCount}
+            loading={loadingDraftCount}
+            onPress={handleDraftPress}
+          />
           <AiAssistantButton />
         </div>
       </div>
+      <DraftNotice message={draftNotice} onClose={() => setDraftNotice(null)} />
     </div>
   );
 }

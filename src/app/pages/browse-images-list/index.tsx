@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import type {
   TsRolePublicBrowse,
@@ -38,11 +39,6 @@ const PAGE_SIZE = 24;
 const FALLBACK_CHARACTER_CARDS: CharacterCardItem[] = Array.from({ length: 8 }, (_, index) => ({
   id: `fallback-${index}`,
 }));
-
-const TAB_OPTIONS = [
-  { label: '故事', value: 'story' as TabValue },
-  { label: '角色', value: 'character' as TabValue },
-];
 
 function buildInitialState<T>(): PageState<T> {
   return {
@@ -98,6 +94,7 @@ function computeHasMore(params: {
 }
 
 export default function BrowseImagesList() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabValue>('story');
   const [activeCategory, setActiveCategory] = useState(0);
   const [searchInput, setSearchInput] = useState('');
@@ -179,7 +176,9 @@ export default function BrowseImagesList() {
       if (seq !== requestSeqRef.current) {
         return;
       }
-      const message = error instanceof Error ? error.message : '故事列表加载失败';
+      const message = error instanceof Error
+        ? error.message
+        : t('contentBrowse.browse.storyLoadFailed');
       setStoryState(prev => ({
         ...prev,
         loading: false,
@@ -263,7 +262,9 @@ export default function BrowseImagesList() {
       if (seq !== requestSeqRef.current) {
         return;
       }
-      const message = error instanceof Error ? error.message : '角色列表加载失败';
+      const message = error instanceof Error
+        ? error.message
+        : t('contentBrowse.browse.characterLoadFailed');
       setCharacterState(prev => ({
         ...prev,
         loading: false,
@@ -330,14 +331,19 @@ export default function BrowseImagesList() {
 
       <View style={{ paddingHorizontal: 12, paddingTop: 16, paddingBottom: 12 }}>
         <AiNavigateTabs
-          options={TAB_OPTIONS}
+          options={[
+            { label: t('contentBrowse.browse.storyTab'), value: 'story' as TabValue },
+            { label: t('contentBrowse.browse.characterTab'), value: 'character' as TabValue },
+          ]}
           activeValue={activeTab}
           onChange={setActiveTab}
         />
       </View>
 
       <SearchBar
-        placeholder={activeTab === 'story' ? '搜索故事' : '搜索角色'}
+        placeholder={activeTab === 'story'
+          ? t('contentBrowse.browse.searchStory')
+          : t('contentBrowse.browse.searchCharacter')}
         value={searchInput}
         onChangeText={setSearchInput}
         onSubmitEditing={() => setSearchKeyword(searchInput.trim())}
@@ -376,8 +382,8 @@ export default function BrowseImagesList() {
             )}
             {!storyState.loading && !storyState.error && storyState.items.length === 0 ? (
               <AiEmpty
-                title="No stories yet"
-                description="Try searching with a different keyword"
+                title={t('contentBrowse.browse.noStories')}
+                description={t('contentBrowse.browse.tryDifferentKeyword')}
                 style={{ marginTop: 60 }}
               />
             ) : null}
@@ -405,8 +411,8 @@ export default function BrowseImagesList() {
             )}
             {!characterState.loading && !characterState.error && characterState.items.length === 0 ? (
               <AiEmpty
-                title="No characters yet"
-                description="Try searching with a different keyword"
+                title={t('contentBrowse.browse.noCharacters')}
+                description={t('contentBrowse.browse.tryDifferentKeyword')}
                 style={{ marginTop: 60 }}
               />
             ) : null}
@@ -414,7 +420,9 @@ export default function BrowseImagesList() {
         )}
 
         {currentState.loadingMore ? (
-          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 6 }}>加载更多...</Text>
+          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 6 }}>
+            {t('contentBrowse.common.loadingMore')}
+          </Text>
         ) : null}
       </ScrollView>
 

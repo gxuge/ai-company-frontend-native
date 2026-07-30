@@ -23,5 +23,98 @@
   },
   "title": "設定",
   "version": "バージョン",
-  "website": "ウェブサイト"
+  "website": "ウェブサイト",
+  "general": {
+    "title": "一般設定",
+    "language": "言語設定",
+    "feedback": "ご意見・フィードバック",
+    "about": "探拾について",
+    "account": "アカウント設定",
+    "verification": "本人確認",
+    "verified": "確認済み",
+    "privacy": "プライバシー設定",
+    "logout": "ログアウト",
+    "version": "アプリバージョン {{version}}",
+    "appName": "探拾AIコンパニオン",
+    "logoutDialog": {
+      "title": "ログアウト",
+      "message": "現在のアカウントからログアウトしますか？再度本人確認が必要になります。",
+      "cancel": "キャンセル",
+      "confirm": "ログアウト"
+    }
+  },
+  "languagePage": {
+    "title": "言語設定"
+  },
+  "account": {
+    "title": "アカウント設定",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "avatarAlt": "ユーザーアバター",
+    "nickname": "ニックネーム",
+    "nicknamePlaceholder": "ニックネームを入力",
+    "gender": "性別",
+    "birthday": "生年月日",
+    "preferences": "コンテンツの好み",
+    "genderOptions": {
+      "male": "男性",
+      "female": "女性",
+      "secret": "回答しない"
+    },
+    "preferenceTags": {
+      "urban": "都会",
+      "workplace": "仕事",
+      "companionship": "心のパートナー"
+    }
+  },
+  "sound": {
+    "defaultPreviewText": "これは試聴用テキストです。選択した音声設定で再生してください。",
+    "unnamedVoice": "名前のない音声",
+    "chooseVoice": "音声を選択",
+    "rename": "名前を変更",
+    "delete": "削除",
+    "editPreviewText": "試聴テキストを編集",
+    "cancelSelection": "選択を解除",
+    "parameterAdjustment": "音声設定",
+    "reset": "リセット",
+    "pitch": "ピッチ",
+    "speed": "速度",
+    "listening": "再生中...",
+    "listenVoice": "音声を試聴",
+    "recommendedLibrary": "おすすめ音声",
+    "myLibrary": "マイ音声",
+    "gender": "性別",
+    "genderOptions": {
+      "all": "すべて",
+      "male": "男性",
+      "female": "女性"
+    },
+    "knownTags": {
+      "male": "男性",
+      "female": "女性",
+      "child": "子ども",
+      "teen": "少年",
+      "adult": "大人",
+      "senior": "シニア"
+    },
+    "emptyTitle": "録音はまだありません",
+    "emptyDescription": "おすすめ音声を選ぶか、新しい音声を作成してください。",
+    "done": "完了",
+    "generate": "自動生成",
+    "editTextTitle": "試聴テキストを編集",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "errors": {
+      "objectUrlUnsupported": "この環境では音声オブジェクト URL を利用できません。",
+      "missingAudioUrl": "試聴音声は生成されましたが、音声 URL を取得できませんでした。",
+      "downloadFailed": "音声のダウンロードに失敗しました。後でもう一度お試しください。",
+      "selectVoiceFirst": "先に音声を選択してください。",
+      "missingVoiceId": "この音声には有効な識別子がないため試聴できません。",
+      "playbackUnsupported": "この環境では音声を試聴できません。",
+      "playbackFailed": "試聴の再生に失敗しました。後でもう一度お試しください。",
+      "previewFailed": "音声の試聴に失敗しました。後でもう一度お試しください。",
+      "renamePending": "音声 ID {{id}}：名前変更用のバックエンド API は未実装です。",
+      "deletePending": "音声 ID {{id}}：削除用のバックエンド API は未実装です。"
+    }
+  }
 }

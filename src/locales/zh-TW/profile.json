@@ -1,0 +1,24 @@
+{
+  "fallbackUser": "使用者",
+  "stats": {
+    "following": "關注",
+    "followers": "粉絲",
+    "likes": "按讚"
+  },
+  "tabs": {
+    "stories": "故事",
+    "characters": "角色"
+  },
+  "errors": {
+    "userLoadFailed": "使用者資訊載入失敗",
+    "storyLoadFailed": "故事列表載入失敗",
+    "roleLoadFailed": "角色列表載入失敗",
+    "pageLoadFailed": "頁面資料載入失敗"
+  },
+  "empty": {
+    "stories": "還沒有發布故事",
+    "characters": "還沒有發布角色",
+    "description": "去發現頁看看大家的創作，或自己動筆試試吧！"
+  },
+  "previewClose": "點擊任意區域關閉"
+}

@@ -1,19 +1,14 @@
 import type { FC } from 'react';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
+import { useTranslation } from 'react-i18next';
 import { Image, Text, View } from 'react-native';
 import { isAgentChatConfirmationToolStep } from '@/lib/api';
+import { resolveApiErrorMessage } from '@/lib/i18n';
 import AdminChatMarkdownContent from './admin-chat-markdown-content';
 
 export type AdminChatThinkingPanelProps = {
   state: AgentChatStreamState;
   fallbackContent?: string;
-};
-
-const statusLabel: Record<AgentChatStepStatus, string> = {
-  idle: '待开始',
-  running: '生成中',
-  done: '已完成',
-  error: '失败',
 };
 
 const statusAccent: Record<AgentChatStepStatus, string> = {
@@ -41,10 +36,17 @@ function StepBadge({ text, color }: { text: string; color: string }) {
 }
 
 function ToolStepCard({ step }: { step: AgentChatStep }) {
+  const { t } = useTranslation();
   const accent = statusAccent[step.status];
-  const title = step.toolName || step.name || '工具调用';
+  const title = step.toolName || step.name || t('adminChat.thinking.toolCall');
+  const statusLabel: Record<AgentChatStepStatus, string> = {
+    idle: t('adminChat.thinking.statusIdle'),
+    running: t('adminChat.thinking.statusRunning'),
+    done: t('adminChat.thinking.statusDone'),
+    error: t('adminChat.thinking.statusError'),
+  };
   const statusText = step.asynchronous && step.status === 'running'
-    ? '执行中'
+    ? t('adminChat.thinking.executing')
     : statusLabel[step.status];
 
   return (
@@ -79,7 +81,7 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
           >
             {title}
           </Text>
-          {step.asynchronous ? <StepBadge text="异步" color="#38bdf8" /> : null}
+          {step.asynchronous ? <StepBadge text={t('adminChat.thinking.async')} color="#38bdf8" /> : null}
         </View>
         <StepBadge text={statusText} color={accent} />
       </View>
@@ -120,6 +122,15 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
 }
 
 const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallbackContent }) => {
+  const localizedError = state.error
+    ? resolveApiErrorMessage({
+        message: state.error,
+        errorCode: state.errorCode || undefined,
+        errorCategory: state.errorCategory || undefined,
+        retryable: state.retryable ?? undefined,
+        errorArgs: state.errorArgs || undefined,
+      })
+    : null;
   const timelineSteps = state.steps.filter(
     step => step.kind === 'llm'
       || (step.kind === 'tool' && !isAgentChatConfirmationToolStep(step, state)),
@@ -172,7 +183,7 @@ const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallba
               }}
             >
               <Text style={{ color: '#fecaca', fontSize: 13, lineHeight: 20 }}>
-                {state.error}
+                {localizedError}
               </Text>
             </View>
           )

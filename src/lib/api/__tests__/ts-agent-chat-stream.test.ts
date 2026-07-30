@@ -271,6 +271,68 @@ describe('async tool history and late completion', () => {
       },
     })).toBeNull();
   });
+
+});
+
+describe('structured agent errors', () => {
+  it('preserves structured errors for realtime and history tool events', () => {
+    const realtime = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'tool.error',
+      {
+        async: false,
+        content: 'Tool execution failed',
+        errorCode: 'AGENT.TOOL.COMMON.EXECUTION_FAILED',
+        errorCategory: 'TOOL',
+        retryable: true,
+        errorArgs: {
+          toolName: 'role_generate_complete',
+        },
+        eventId: 'tool-error-event',
+        toolName: 'role_generate_complete',
+      },
+    );
+
+    expect(realtime).toMatchObject({
+      errorCode: 'AGENT.TOOL.COMMON.EXECUTION_FAILED',
+      errorCategory: 'TOOL',
+      retryable: true,
+      errorArgs: {
+        toolName: 'role_generate_complete',
+      },
+    });
+    expect(realtime.steps[0]).toMatchObject({
+      errorCode: 'AGENT.TOOL.COMMON.EXECUTION_FAILED',
+      errorCategory: 'TOOL',
+      retryable: true,
+    });
+
+    const history = createAsyncToolHistoryState({
+      id: 'history-error-event',
+      type: 'tool',
+      name: 'story_generate_complete',
+      status: 0,
+      content: 'Story generation failed',
+      data: {
+        async: true,
+        errorCode: 'AGENT.TOOL.STORY_GENERATION.EXECUTION_FAILED',
+        errorCategory: 'TOOL',
+        retryable: true,
+        errorArgs: {
+          stage: 'scene_image',
+        },
+      },
+    });
+
+    expect(history?.steps[0]).toMatchObject({
+      errorCode: 'AGENT.TOOL.STORY_GENERATION.EXECUTION_FAILED',
+      errorCategory: 'TOOL',
+      retryable: true,
+      errorArgs: {
+        stage: 'scene_image',
+      },
+    });
+  });
 });
 
 describe('image tool realtime and history', () => {

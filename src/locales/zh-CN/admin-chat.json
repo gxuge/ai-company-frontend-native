@@ -2,16 +2,54 @@
   "confirm": {
     "accept": "满意，继续生成",
     "regenerate": "不满意，重新生成",
-    "roleQuestion": "你对这版角色满意吗？"
+    "roleQuestion": "你对这版角色满意吗？",
+    "selectNext": "请选择下一步操作。"
   },
   "errors": {
     "createSession": "创建会话失败，请稍后重试。",
     "deleteSession": "删除失败，请稍后重试。",
     "loadSession": "加载会话失败，请稍后重试。",
-    "renameSession": "重命名失败，请稍后重试。"
+    "renameSession": "重命名失败，请稍后重试。",
+    "sendMessage": "消息发送失败，请稍后重试。"
+  },
+  "brand": "AI创作",
+  "cancel": "取消",
+  "confirmAction": "确定",
+  "deleteConfirm": "确定删除这个会话吗？",
+  "defaultReply": "我收到了您的消息。",
+  "defaultSessionSummary": "内容由AI生成",
+  "defaultSessionTitle": "Agent 会话",
+  "features": {
+    "call": "通话",
+    "camera": "相机",
+    "file": "文件",
+    "image": "图片"
   },
   "greeting": "嗨～灵感工坊开张啦！✨ 你想先创造一个让人心动的角色，还是搭建一段超有戏的故事？把脑海里的小火花告诉我，我们一起让它活起来吧！",
-  "inputPlaceholder": "输入消息...",
+  "inputPlaceholder": "发消息或按住说话...",
+  "menu": "菜单",
   "newConversation": "新建会话",
-  "send": "发送"
+  "rename": {
+    "placeholder": "请输入会话标题",
+    "title": "重命名会话",
+    "titleRequired": "会话标题不能为空。"
+  },
+  "send": "发送",
+  "sessionActions": {
+    "delete": "删除",
+    "rename": "重命名"
+  },
+  "sessionList": "会话列表",
+  "sessionState": {
+    "creating": "创建中..."
+  },
+  "thinking": {
+    "async": "异步",
+    "executing": "执行中",
+    "statusDone": "已完成",
+    "statusError": "失败",
+    "statusIdle": "待开始",
+    "statusRunning": "生成中",
+    "toolCall": "工具调用"
+  }
 }

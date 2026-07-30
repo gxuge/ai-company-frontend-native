@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, Platform, Pressable, SafeAreaView, Text, View } from 'react-native';
 import { AiCloseBtn } from '@/components/ai-company/ai-close-btn';
 import { AiMoreBtn } from '@/components/ai-company/ai-more-btn';
@@ -55,6 +56,7 @@ function toAssetUri(source?: ImageSourcePropType | null) {
 }
 
 function useRoleDetailData(roleId: number | null): RoleDetailDataState {
+  const { t } = useTranslation();
   const [state, setState] = React.useState<RoleDetailDataState>({
     role: null,
     author: null,
@@ -82,10 +84,10 @@ function useRoleDetailData(roleId: number | null): RoleDetailDataState {
 
       const failedMessages: string[] = [];
       if (roleResult.status !== 'fulfilled') {
-        failedMessages.push('角色信息加载失败');
+        failedMessages.push(t('contentBrowse.roleDetail.roleLoadFailed'));
       }
       if (authorResult.status !== 'fulfilled') {
-        failedMessages.push('作者信息加载失败');
+        failedMessages.push(t('contentBrowse.roleDetail.authorLoadFailed'));
       }
 
       setState(prev => ({
@@ -100,14 +102,16 @@ function useRoleDetailData(roleId: number | null): RoleDetailDataState {
       if (!alive) {
         return;
       }
-      const fallbackMessage = error instanceof Error ? error.message : '页面数据加载失败';
+      const fallbackMessage = error instanceof Error
+        ? error.message
+        : t('contentBrowse.roleDetail.pageLoadFailed');
       setState(prev => ({ ...prev, loading: false, loadError: fallbackMessage }));
     });
 
     return () => {
       alive = false;
     };
-  }, [roleId]);
+  }, [roleId, t]);
 
   return state;
 }
@@ -125,6 +129,7 @@ type BottomSectionProps = {
 };
 
 function RoleDetailBottomSection(props: BottomSectionProps) {
+  const { t } = useTranslation();
   const {
     activeTab,
     author,
@@ -154,12 +159,12 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
               src={toAssetUri(imgAddUser)}
               style={webStyles.followIcon}
             />
-            <div style={webStyles.followText}>关注</div>
+            <div style={webStyles.followText}>{t('contentBrowse.roleDetail.follow')}</div>
           </button>
         </div>
 
         <div style={webStyles.authorRow}>
-          <div style={webStyles.authorLabel}>作者：</div>
+          <div style={webStyles.authorLabel}>{t('contentBrowse.roleDetail.authorLabel')}</div>
           <img
             src={toAssetUri(authorAvatarSource)}
             style={webStyles.authorAvatar}
@@ -178,23 +183,23 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
         <div style={webStyles.statsRow}>
           <div style={webStyles.statItem}>
             <div style={webStyles.statValue}>--</div>
-            <div style={webStyles.statLabel}>连接者</div>
+            <div style={webStyles.statLabel}>{t('contentBrowse.roleDetail.connections')}</div>
           </div>
           <div style={webStyles.statItem}>
             <div style={webStyles.statValue}>--</div>
-            <div style={webStyles.statLabel}>粉丝</div>
+            <div style={webStyles.statLabel}>{t('contentBrowse.roleDetail.followers')}</div>
           </div>
           <div style={webStyles.statItem}>
             <div style={webStyles.statValue}>--</div>
-            <div style={webStyles.statLabel}>对话数</div>
+            <div style={webStyles.statLabel}>{t('contentBrowse.roleDetail.chats')}</div>
           </div>
         </div>
 
         <div style={webStyles.tabsWrap}>
           <AiNavigateTabs
             options={[
-              { label: '关于 TA', value: 'about' },
-              { label: '故事', value: 'story' },
+              { label: t('contentBrowse.roleDetail.aboutTab'), value: 'about' },
+              { label: t('contentBrowse.roleDetail.storyTab'), value: 'story' },
             ]}
             activeValue={activeTab}
             onChange={val => onTabChange(val as TabKey)}
@@ -207,7 +212,7 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
 
         <div style={webStyles.contentWrap}>
           <div style={webStyles.contentText}>{tabContent}</div>
-          {loading ? <div style={webStyles.loadingText}>加载中...</div> : null}
+          {loading ? <div style={webStyles.loadingText}>{t('contentBrowse.common.loading')}</div> : null}
           {loadError ? <div style={webStyles.errorText}>{loadError}</div> : null}
         </div>
       </div>
@@ -232,12 +237,12 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
             style={styles.followIcon}
             resizeMode="contain"
           />
-          <Text style={styles.followText}>关注</Text>
+          <Text style={styles.followText}>{t('contentBrowse.roleDetail.follow')}</Text>
         </Pressable>
       </View>
 
       <View style={styles.authorRow}>
-        <Text style={styles.authorLabel}>作者：</Text>
+        <Text style={styles.authorLabel}>{t('contentBrowse.roleDetail.authorLabel')}</Text>
         <Image
           source={authorAvatarSource}
           style={styles.authorAvatar}
@@ -257,23 +262,23 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>--</Text>
-          <Text style={styles.statLabel}>连接者</Text>
+          <Text style={styles.statLabel}>{t('contentBrowse.roleDetail.connections')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>--</Text>
-          <Text style={styles.statLabel}>粉丝</Text>
+          <Text style={styles.statLabel}>{t('contentBrowse.roleDetail.followers')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>--</Text>
-          <Text style={styles.statLabel}>对话数</Text>
+          <Text style={styles.statLabel}>{t('contentBrowse.roleDetail.chats')}</Text>
         </View>
       </View>
 
       <View style={{ marginBottom: 14 }}>
         <AiNavigateTabs
           options={[
-            { label: '关于 TA', value: 'about' },
-            { label: '故事', value: 'story' },
+            { label: t('contentBrowse.roleDetail.aboutTab'), value: 'about' },
+            { label: t('contentBrowse.roleDetail.storyTab'), value: 'story' },
           ]}
           activeValue={activeTab}
           onChange={val => onTabChange(val as TabKey)}
@@ -287,7 +292,13 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
         <Text style={{ color: '#E7E7E7', fontSize: 14, lineHeight: 22 }}>
           {tabContent}
         </Text>
-        {loading ? <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 8 }}>加载中...</Text> : null}
+        {loading
+          ? (
+              <Text style={{ color: '#9CA3AF', fontSize: 12, marginTop: 8 }}>
+                {t('contentBrowse.common.loading')}
+              </Text>
+            )
+          : null}
         {loadError ? <Text style={{ color: '#FCA5A5', fontSize: 12, marginTop: 8 }}>{loadError}</Text> : null}
       </View>
     </View>
@@ -295,6 +306,7 @@ function RoleDetailBottomSection(props: BottomSectionProps) {
 }
 
 export default function RoleDetail() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabKey>('about');
   const params = useLocalSearchParams<{ roleId?: string | string[]; id?: string | string[] }>();
   const roleId = useMemo(() => {
@@ -309,11 +321,11 @@ export default function RoleDetail() {
   const { role, author, loading, loadError } = useRoleDetailData(roleId);
   const backgroundSource = toRemoteSource(pickTsImageUrl(role, 'character_image', 'character_avatar')) ?? imgBg;
   const authorAvatarSource = toRemoteSource(author?.avatar) ?? imgAuthorAvatarFallback;
-  const displayRoleName = role?.roleName || '角色';
-  const displayAuthorName = author?.displayName || '作者';
+  const displayRoleName = role?.roleName || t('contentBrowse.roleDetail.roleFallback');
+  const displayAuthorName = author?.displayName || t('contentBrowse.roleDetail.authorFallback');
   const tabContent = activeTab === 'about'
     ? (role?.greeting?.trim() || '')
-    : (role?.backgroundStory || '暂无故事内容');
+    : (role?.backgroundStory || t('contentBrowse.roleDetail.noStory'));
 
   if (Platform.OS === 'web') {
     return (

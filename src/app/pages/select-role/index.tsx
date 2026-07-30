@@ -1,7 +1,9 @@
+import type { TFunction } from 'i18next';
 import type { TsRoleDetail } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Check, Inbox, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter } from 'react-native';
 import { AiHeader } from '@/components/ai-company/ai-header';
 import { pickTsImageUrl, tsRoleApi } from '../../../lib/api';
@@ -53,7 +55,7 @@ function normalizeRoleImageUrl(url?: string | null) {
   return `/jeecg-boot/sys/common/static/${trimmed.replace(/^\/+/, '')}`;
 }
 
-function mapRoleToItem(role: TsRoleDetail): SelectRoleItem {
+function mapRoleToItem(role: TsRoleDetail, t: TFunction): SelectRoleItem {
   const avatarParam = (
     pickTsImageUrl(role, 'character_avatar', 'character_image')
     || normalizeRoleImageUrl(role.avatarUrl)
@@ -62,7 +64,7 @@ function mapRoleToItem(role: TsRoleDetail): SelectRoleItem {
   ).trim();
   return {
     id: role.id,
-    name: (role.roleName || `角色${role.id}`).trim(),
+    name: (role.roleName || t('contentBrowse.selectRole.roleFallback', { id: role.id })).trim(),
     avatar: avatarParam || imgImage,
     avatarParam,
   };
@@ -70,6 +72,7 @@ function mapRoleToItem(role: TsRoleDetail): SelectRoleItem {
 
 // eslint-disable-next-line max-lines-per-function
 export default function App() {
+  const { t } = useTranslation();
   const {
     from,
     mode,
@@ -118,7 +121,7 @@ export default function App() {
         }
         const mapped = (pageData.records || [])
           .filter((role): role is TsRoleDetail => Boolean(role?.id))
-          .map(mapRoleToItem);
+          .map(role => mapRoleToItem(role, t));
         const availableRoles = isChapterOpeningMode
           ? mapped.filter(role => candidateRoleIdSet.has(role.id))
           : mapped;
@@ -143,7 +146,7 @@ export default function App() {
         console.warn('load role list failed', error);
         setItems([]);
         setSelectedId(null);
-        setLoadError('角色加载失败，请稍后重试');
+        setLoadError(t('contentBrowse.selectRole.loadFailed'));
       }
       finally {
         if (alive) {
@@ -156,7 +159,7 @@ export default function App() {
     return () => {
       alive = false;
     };
-  }, [candidateRoleIdSet, currentSelectedRoleId, isChapterOpeningMode]);
+  }, [candidateRoleIdSet, currentSelectedRoleId, isChapterOpeningMode, t]);
 
   const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -217,7 +220,7 @@ export default function App() {
       <div className="relative z-10 flex flex-col items-center size-full max-w-[750px] mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="w-full pt-[50px] pb-4">
-          <AiHeader title="选择角色" />
+          <AiHeader title={t('contentBrowse.selectRole.title')} />
         </div>
 
         {/* Search bar */}
@@ -227,7 +230,7 @@ export default function App() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="搜索角色"
+              placeholder={t('contentBrowse.selectRole.search')}
               className="w-full h-[56px] sm:h-[68px] bg-gradient-to-br from-[#222] to-[#1a1a1a] rounded-full pl-[56px] sm:pl-[72px] pr-6 sm:pr-8 text-white text-[18px] sm:text-[24px] placeholder-[#707070] outline-none border-2 border-white/10 transition-all duration-300"
             />
             <div className="absolute left-[20px] sm:left-[28px] top-1/2 -translate-y-1/2 transition-all duration-300 group-focus-within:scale-110">
@@ -295,7 +298,11 @@ export default function App() {
                 <div className="flex flex-col items-center justify-center text-[#707070] py-[60px] gap-4">
                   <Inbox className="w-16 h-16 opacity-50" strokeWidth={1} />
                   <div className="text-[20px] sm:text-[24px]">
-                    {isLoading ? '加载中...' : (loadError || (isChapterOpeningMode ? '暂无可选角色' : '暂无数据'))}
+                    {isLoading
+                      ? t('contentBrowse.common.loading')
+                      : (loadError || (isChapterOpeningMode
+                          ? t('contentBrowse.selectRole.noSelectable')
+                          : t('contentBrowse.selectRole.noData')))}
                   </div>
                 </div>
               )}
@@ -311,7 +318,9 @@ export default function App() {
             disabled={!selectedRole}
             className="flex h-[50px] w-full items-center justify-center rounded-[16px] border-2 border-solid border-brand-green bg-transparent shadow-[0_4px_20px_rgba(var(--color-brand-green-rgb),0.3)] active:scale-95 active:bg-brand-green/10 transition-all outline-none disabled:opacity-50 disabled:grayscale"
           >
-            <span className="text-[16px] font-bold text-brand-green">{`\u5B8C\u6210`}</span>
+            <span className="text-[16px] font-bold text-brand-green">
+              {t('contentBrowse.common.done')}
+            </span>
           </button>
         </div>
       )}

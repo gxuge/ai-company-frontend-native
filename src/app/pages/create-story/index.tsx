@@ -1,4 +1,5 @@
 import type {
+  TsDraftContent,
   TsStoryChapter,
   TsStoryFullGenerateResult,
   TsStoryOneClickOutlineChapter,
@@ -6,9 +7,11 @@ import type {
 } from '../../../lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Alert, DeviceEventEmitter, Modal, Platform, ScrollView } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { HelpCircle } from 'lucide-react';
+import { AiDraftExitDialog } from '../../../components/ai-company/ai-draft-exit-dialog';
 import { AiFormInput } from '../../../components/ai-company/ai-form-input';
 import { AiFormTextarea } from '../../../components/ai-company/ai-form-textarea';
 import { AiGenerateBtn } from '../../../components/ai-company/ai-generate-btn';
@@ -19,8 +22,10 @@ import { AiSelectTab } from '../../../components/ai-company/ai-select-tab';
 import { AiSwitch } from '../../../components/ai-company/ai-switch';
 import {
   pickTsImageUrl,
+  tsDraftApi,
   tsStoryApi,
 } from '../../../lib/api';
+import { translate } from '../../../lib/i18n/utils';
 
 const imgChevronRightGray = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-story/chevron_right_gray.svg'));
 const imgChevronRightWhite = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-story/chevron_right_white.svg'));
@@ -55,7 +60,7 @@ function showMessage(message: string) {
     window.alert(message);
     return;
   }
-  Alert.alert('提示', message);
+  Alert.alert(translate('createStory.messages.alertTitle'), message);
 }
 
 function extractErrorMessage(error: unknown, fallback: string) {
@@ -74,7 +79,7 @@ function resolveGenerateErrorMessage(error: unknown, fallback: string) {
     || message.includes('未找到AI应用配置')
     || message.includes('未配置故事模板信息')
   ) {
-    return `故事生成配置未完成：${message}`;
+    return translate('createStory.messages.configIncomplete', { message });
   }
   return message;
 }
@@ -103,19 +108,77 @@ function normalizeStoryMode(mode?: string | null): StoryMode {
   return mode === 'normal' ? 'normal' : 'chapter';
 }
 
+function readDraftString(content: TsDraftContent, keys: string[]) {
+  for (const key of keys) {
+    const value = content[key];
+    if (typeof value === 'string') {
+      return value;
+    }
+  }
+  return '';
+}
+
+function readDraftStoryRoles(content: TsDraftContent): StoryRoleItem[] {
+  if (!Array.isArray(content.selectedRoles)) {
+    return [];
+  }
+  return content.selectedRoles.flatMap((value) => {
+    if (!value || typeof value !== 'object') {
+      return [];
+    }
+    const role = value as Record<string, unknown>;
+    const id = Number(role.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return [];
+    }
+    return [{
+      id,
+      name: typeof role.name === 'string' && role.name.trim()
+        ? role.name
+        : translate('createStory.roles.fallback', { id }),
+      avatar: typeof role.avatar === 'string' ? role.avatar : role.avatarUrl,
+    }];
+  });
+}
+
+function readDraftChapters(content: TsDraftContent): ChapterForm[] {
+  if (!Array.isArray(content.chapters)) {
+    return [];
+  }
+  return content.chapters.flatMap((value, index) => {
+    if (!value || typeof value !== 'object') {
+      return [];
+    }
+    const chapter = value as Record<string, unknown>;
+    const chapterNo = Number(chapter.chapterNo);
+    return [{
+      id: parsePositiveInt(String(chapter.id ?? '')) || undefined,
+      chapterNo: Number.isInteger(chapterNo) && chapterNo > 0 ? chapterNo : index + 1,
+      chapterTitle: typeof chapter.chapterTitle === 'string' ? chapter.chapterTitle : '',
+      chapterDesc: typeof chapter.chapterDesc === 'string' ? chapter.chapterDesc : '',
+      openingContent: typeof chapter.openingContent === 'string' ? chapter.openingContent : '',
+      openingRoleId: parsePositiveInt(String(chapter.openingRoleId ?? '')) || undefined,
+      missionTarget: typeof chapter.missionTarget === 'string' ? chapter.missionTarget : '',
+      forbiddenRoleIds: Array.isArray(chapter.forbiddenRoleIds)
+        ? chapter.forbiddenRoleIds.filter((id): id is number => typeof id === 'number' && Number.isInteger(id) && id > 0)
+        : [],
+    }];
+  });
+}
+
 function buildFallbackTitle(storySetting: string, outlineText: string) {
   const source = (storySetting || outlineText || '').trim();
   if (source) {
     return source.slice(0, 20);
   }
-  return `未命名故事-${Date.now()}`;
+  return translate('createStory.untitledStory', { timestamp: Date.now() });
 }
 
 function createDefaultChapter(chapterNo: number): ChapterForm {
   return {
     chapterNo,
-    chapterTitle: `第${chapterNo}章`,
-    chapterDesc: '描述主要情节，包括用户在故事中和其他角色的互动',
+    chapterTitle: translate('createStory.outline.chapterTitle', { number: chapterNo }),
+    chapterDesc: translate('createStory.outline.chapterDescription'),
     openingContent: '',
     missionTarget: '',
     forbiddenRoleIds: [],
@@ -126,8 +189,8 @@ function mapChapterFromApi(chapter: TsStoryChapter, index: number): ChapterForm 
   return {
     id: chapter.id,
     chapterNo: chapter.chapterNo || index + 1,
-    chapterTitle: chapter.chapterTitle || `第${chapter.chapterNo || index + 1}章`,
-    chapterDesc: chapter.chapterDesc || '描述主要情节，包括用户在故事中和其他角色的互动',
+    chapterTitle: chapter.chapterTitle || translate('createStory.outline.chapterTitle', { number: chapter.chapterNo || index + 1 }),
+    chapterDesc: chapter.chapterDesc || translate('createStory.outline.chapterDescription'),
     openingContent: chapter.openingContent || '',
     openingRoleId: chapter.openingRoleId || undefined,
     missionTarget: chapter.missionTarget || '',
@@ -139,8 +202,8 @@ function mapChapterFromOutline(chapter: TsStoryOneClickOutlineChapter, index: nu
   const chapterNo = chapter.chapterNo || index + 1;
   return {
     chapterNo,
-    chapterTitle: chapter.chapterTitle || `第${chapterNo}章`,
-    chapterDesc: chapter.chapterDesc || '描述主要情节，包括用户在故事中和其他角色的互动',
+    chapterTitle: chapter.chapterTitle || translate('createStory.outline.chapterTitle', { number: chapterNo }),
+    chapterDesc: chapter.chapterDesc || translate('createStory.outline.chapterDescription'),
     openingContent: chapter.openingContent || '',
     missionTarget: chapter.missionTarget || '',
     forbiddenRoleIds: [],
@@ -150,7 +213,7 @@ function mapChapterFromOutline(chapter: TsStoryOneClickOutlineChapter, index: nu
 function buildOutlineTextFromChapters(chapters: TsStoryOneClickOutlineChapter[]) {
   return chapters.map((chapter, index) => {
     const no = chapter.chapterNo || index + 1;
-    const title = chapter.chapterTitle || `第${no}章`;
+    const title = chapter.chapterTitle || translate('createStory.outline.chapterTitle', { number: no });
     const desc = chapter.chapterDesc || '';
     const mission = chapter.missionTarget || '';
     return `${title}\n${desc}${mission ? `\n任务目标：${mission}` : ''}`;
@@ -171,11 +234,14 @@ function ChevronRight({ color = '#9CA3AF' }: { color?: string }) {
 }
 
 /* —— Header —— */
-function Header() {
+function Header({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <AiHeader
-      title="创建原创故事"
+      title={t('createStory.title')}
       className="sticky top-0 z-50 h-[65px] shrink-0 bg-background px-[20px]"
+      onBack={onBack}
     />
   );
 }
@@ -187,15 +253,17 @@ function PublicStatusSection({
   isPublic: boolean;
   onPublicChange: (value: boolean) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="flex flex-col gap-[12px] px-[16px] pt-[16px]">
       <h2 className="text-[16px] font-bold tracking-wide text-white" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>
-        公开状态
+        {t('createStory.publicStatus.title')}
       </h2>
       <div className="flex items-center justify-between rounded-2xl border border-[#494949] bg-black p-5">
         <div>
-          <p className="text-[14px] font-medium text-white" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>是否公开故事</p>
-          <p className="mt-1 text-[12px] text-[#6b7280]" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>公开后其他用户可以体验该故事</p>
+          <p className="text-[14px] font-medium text-white" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>{t('createStory.publicStatus.label')}</p>
+          <p className="mt-1 text-[12px] text-[#6b7280]" style={{ fontFamily: "'Noto Sans SC', sans-serif" }}>{t('createStory.publicStatus.description')}</p>
         </div>
         <AiSwitch checked={isPublic} onCheckedChange={onPublicChange} checkedColorClassName="bg-brand-green/90" />
       </div>
@@ -226,6 +294,8 @@ function SectionHeader({
   onHelpClick?: () => void;
   rightExtra?: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex w-full items-center justify-between pl-[4px]">
       <div className="flex items-center gap-[2px]">
@@ -261,7 +331,7 @@ function SectionHeader({
               fontWeight: 400,
             }}
           >
-            (选填)
+            {t('createStory.optional')}
           </span>
         )}
         {onHelpClick && (
@@ -312,17 +382,19 @@ function StorySettingsSection({
   optimizeLoading: boolean;
   onHelpClick?: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-[12px]">
       <SectionHeader
-        title="故事设定"
+        title={t('createStory.storySetting.title')}
         required
         onGenerate={onGenerate}
         generateLoading={generateLoading}
         onHelpClick={onHelpClick}
       />
       <AiFormTextarea
-        placeholder="例：写下故事背景、世界规则、用户身份和主要目标。比如：午夜后的城市会出现异常街区，用户需要探索规则、收集线索，逐步揭开隐藏真相。"
+        placeholder={t('createStory.storySetting.placeholder')}
         isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
@@ -350,9 +422,11 @@ function CharacterListSection({
   onHelpClick?: () => void;
   onUserClick?: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="角色列表" required showGenerate={false} onHelpClick={onHelpClick} />
+      <SectionHeader title={t('createStory.roles.title')} required showGenerate={false} onHelpClick={onHelpClick} />
       <div className="rounded-[16px] border border-[#494949] bg-black px-[21px] py-[20px]">
         <div className="flex flex-wrap items-start gap-[24px]">
           <button onClick={onUserClick} type="button" className="flex shrink-0 flex-col items-center active:opacity-70 transition-opacity">
@@ -364,7 +438,7 @@ function CharacterListSection({
                 <img src={imgUserEdit} alt="" className="size-[13px] object-contain" />
               </div>
             </div>
-            <span className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">用户</span>
+            <span className="mt-[12px] text-[#9ca3af] text-[12px] font-medium tracking-[0.3px]">{t('createStory.roles.user')}</span>
           </button>
           
           {roles.map((role, idx) => (
@@ -394,7 +468,7 @@ function CharacterListSection({
             >
               <img src={imgAddRoleGray} alt="" className="h-[23px] w-[22px] object-contain" />
             </button>
-            <span className="mt-[12px] text-[#4b5563] text-[12px]">添加</span>
+            <span className="mt-[12px] text-[#4b5563] text-[12px]">{t('createStory.roles.add')}</span>
           </div>
         </div>
       </div>
@@ -414,9 +488,11 @@ function SceneImageSection({
   generating?: boolean;
   onHelpClick?: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-[12px]">
-      <SectionHeader title="场景图片" showGenerate={false} onHelpClick={onHelpClick} />
+      <SectionHeader title={t('createStory.sceneImage.title')} showGenerate={false} onHelpClick={onHelpClick} />
       <div className="my-2 flex w-full justify-center">
         <button
           onClick={generating ? undefined : onAddImage}
@@ -425,7 +501,7 @@ function SceneImageSection({
         >
           {generating ? (
             <div className="flex flex-col items-center gap-2">
-              <span className="text-[13.5px] font-medium text-[#a1a1aa]">获取中...</span>
+              <span className="text-[13.5px] font-medium text-[#a1a1aa]">{t('createStory.sceneImage.loading')}</span>
             </div>
           ) : imageUrl ? (
             <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -437,7 +513,7 @@ function SceneImageSection({
                   <Line x1="5" y1="12" x2="19" y2="12" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" />
                 </Svg>
               </div>
-              <span className="text-[13.5px] font-medium text-[#a1a1aa]">点击添加图片</span>
+              <span className="text-[13.5px] font-medium text-[#a1a1aa]">{t('createStory.sceneImage.add')}</span>
             </>
           )}
         </button>
@@ -464,10 +540,12 @@ function LocationSection({
   optimizeLoading: boolean;
   onHelpClick?: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="flex flex-col gap-[12px]">
       <SectionHeader
-        title="场景设定"
+        title={t('createStory.sceneSetting.title')}
         required
         showGenerate
         onGenerate={onGenerate}
@@ -475,7 +553,7 @@ function LocationSection({
         onHelpClick={onHelpClick}
       />
       <AiFormTextarea
-        placeholder="例：写下当前场景的时间、地点、氛围和可互动线索。比如：凌晨的旧车站空无一人，站牌显示不存在的班次，长椅上放着一张旧车票。"
+        placeholder={t('createStory.sceneSetting.placeholder')}
         isGenerating={generateLoading}
         value={text}
         onChange={e => onChange(e.target.value)}
@@ -513,6 +591,8 @@ function ChapterCard({
   onSelectOpeningRole: () => void;
   onChange: (next: ChapterForm) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="overflow-hidden rounded-[8px] border border-[#494949] bg-black">
       <div className="flex flex-col gap-[15px] p-[20px]">
@@ -527,7 +607,7 @@ function ChapterCard({
               textShadow: '0px 0px 8px rgba(var(--color-brand-green-rgb), 0.5)',
             }}
           >
-            {chapter.chapterTitle || `第${index + 1}章`}
+            {chapter.chapterTitle || t('createStory.outline.chapterTitle', { number: index + 1 })}
           </span>
         </div>
 
@@ -541,7 +621,7 @@ function ChapterCard({
               lineHeight: '20px',
             }}
           >
-            {chapter.chapterDesc || '描述主要情节，包括用户在故事中和其他角色的互动'}
+            {chapter.chapterDesc || t('createStory.outline.chapterDescription')}
           </p>
         </div>
 
@@ -561,7 +641,7 @@ function ChapterCard({
                   textTransform: 'uppercase' as const,
                 }}
               >
-                开场白
+                {t('createStory.outline.opening')}
               </span>
             </div>
             <button
@@ -582,7 +662,7 @@ function ChapterCard({
                   textDecorationSkipInk: 'none',
                 }}
               >
-                {openingRoleName || '选择角色'}
+                {openingRoleName || t('createStory.outline.selectRole')}
               </span>
               <ChevronRight color="white" />
             </button>
@@ -593,7 +673,7 @@ function ChapterCard({
             skeletonPaddingClassName="p-[13px]"
             containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className="min-h-[96px] w-full resize-none border-0 bg-transparent p-[13px] text-white placeholder-[#4b5563] outline-none"
-            placeholder=">> 输入开场白内容，开启本故事..."
+            placeholder={t('createStory.outline.openingPlaceholder')}
             value={chapter.openingContent}
             onChange={e => onChange({ ...chapter, openingContent: e.target.value })}
             showCount={true}
@@ -614,7 +694,7 @@ function ChapterCard({
                 textTransform: 'uppercase' as const,
               }}
             >
-              任务目标
+              {t('createStory.outline.mission')}
             </span>
           </div>
           <AiFormTextarea
@@ -623,7 +703,7 @@ function ChapterCard({
             skeletonPaddingClassName="p-[13px]"
             containerClassName="bg-black rounded-[6px] border-[1px] border-[#494949] overflow-hidden"
             className="min-h-[96px] w-full resize-none border-0 bg-transparent p-[13px] text-white placeholder-[#4b5563] outline-none"
-            placeholder=">> 请输入任务目标..."
+            placeholder={t('createStory.outline.missionPlaceholder')}
             value={chapter.missionTarget}
             onChange={e => onChange({ ...chapter, missionTarget: e.target.value })}
             showCount={true}
@@ -694,11 +774,13 @@ function PlotOutlineSection({
   optimizeLoading: boolean;
   onHelpClick?: () => void;
 }) {
+  const { t } = useTranslation();
+
   const renderModeSelect = () => (
     <AiSelectTab
       options={[
-        { label: '普通剧情', value: 'normal' },
-        { label: '章节剧情', value: 'chapter' },
+        { label: t('createStory.outline.normal'), value: 'normal' },
+        { label: t('createStory.outline.chapter'), value: 'chapter' },
       ]}
       value={activeTab}
       onChange={v => onModeChange(v as StoryMode)}
@@ -715,7 +797,7 @@ function PlotOutlineSection({
     return (
       <div className="flex flex-col gap-[12px]">
         <SectionHeader
-          title="剧情大纲"
+          title={t('createStory.outline.title')}
           large
           onGenerate={onGenerate}
           generateLoading={generateLoading}
@@ -723,7 +805,7 @@ function PlotOutlineSection({
         />
         {renderModeSelect()}
         <AiFormTextarea
-          placeholder="输入剧情大纲..."
+          placeholder={t('createStory.outline.placeholder')}
           isGenerating={generateLoading}
           value={outlineText}
           onChange={e => onOutlineChange(e.target.value)}
@@ -740,7 +822,7 @@ function PlotOutlineSection({
   return (
     <div className="flex w-full flex-col gap-[10px]">
       <SectionHeader
-        title="剧情大纲"
+        title={t('createStory.outline.title')}
         large
         onGenerate={onGenerate}
         generateLoading={generateLoading}
@@ -771,7 +853,7 @@ function PlotOutlineSection({
             fontWeight: 400,
           }}
         >
-          添加下一章
+          {t('createStory.outline.addChapter')}
         </span>
       </button>
     </div>
@@ -786,6 +868,8 @@ function BottomButton({
   loading: boolean;
   onNext: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="sticky bottom-0 z-50 shrink-0">
       <div className="bg-linear-to-t from-black via-[rgba(0,0,0,0.95)] to-transparent px-[16px] pt-[36px] pb-[20px]">
@@ -794,7 +878,7 @@ function BottomButton({
           disabled={loading}
           className={`w-full rounded-full border-2 border-solid border-brand-green bg-transparent py-[15px] text-[18px] text-brand-green font-['Noto_Sans_SC',sans-serif] font-bold tracking-[1.4px] active:bg-brand-green/10 ${loading ? 'opacity-60' : ''}`}
         >
-          {loading ? '保存中...' : '下一步'}
+          {loading ? t('createStory.actions.saving') : t('createStory.actions.next')}
         </button>
       </div>
     </div>
@@ -803,9 +887,11 @@ function BottomButton({
 
 // eslint-disable-next-line max-lines-per-function
 export default function App() {
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ 
     storyId?: string | string[]; 
     id?: string | string[];
+    draftId?: string | string[];
     selectedRoleId?: string;
     selectedRoleName?: string;
     selectedRoleAvatar?: any;
@@ -814,6 +900,7 @@ export default function App() {
     () => parsePositiveInt(params.storyId) ?? parsePositiveInt(params.id),
     [params.id, params.storyId],
   );
+  const routeDraftId = useMemo(() => parsePositiveInt(params.draftId), [params.draftId]);
 
   const [activeTab, setActiveTab] = useState<StoryMode>('normal');
   const [activeTopTab, setActiveTopTab] = useState<'basic' | 'advanced'>('basic');
@@ -845,6 +932,57 @@ export default function App() {
   const [userRoleName, setUserRoleName] = useState('');
   const [userRoleSetting, setUserRoleSetting] = useState('');
   const [sceneImageUrl, setSceneImageUrl] = useState('');
+  const [exitDialogVisible, setExitDialogVisible] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+
+  useEffect(() => {
+    if (!routeDraftId) {
+      return;
+    }
+    let cancelled = false;
+    const loadDraft = async () => {
+      setLoadingDetail(true);
+      try {
+        const draft = await tsDraftApi.getDraftDetail(routeDraftId);
+        if (cancelled) {
+          return;
+        }
+        const content = draft?.content || {};
+        const draftChapters = readDraftChapters(content);
+        setStoryId(draft?.sourceId || null);
+        setActiveTab(normalizeStoryMode(readDraftString(content, ['activeTab', 'storyMode'])));
+        setActiveTopTab(readDraftString(content, ['activeTopTab']) === 'advanced' ? 'advanced' : 'basic');
+        setIsPublic(content.isPublic !== false && content.isPublic !== 0);
+        setStoryTitle(readDraftString(content, ['storyTitle', 'title']));
+        setStoryIntro(readDraftString(content, ['storyIntro']));
+        setStorySettingText(readDraftString(content, ['storySettingText', 'storySetting', 'siteSetting']));
+        setStoryBackground(readDraftString(content, ['storyBackground']));
+        setSceneSettingText(readDraftString(content, ['sceneSettingText', 'sceneNameSnapshot']));
+        setOutlineText(readDraftString(content, ['outlineText', 'plotOutline']));
+        setChapters(draftChapters.length ? draftChapters : [createDefaultChapter(1)]);
+        setSelectedRoles(readDraftStoryRoles(content));
+        setUserRoleName(readDraftString(content, ['userRoleName']));
+        setUserRoleSetting(readDraftString(content, ['userRoleSetting']));
+        setSceneImageUrl(readDraftString(content, ['sceneImageUrl']));
+        setIsAiStorySetting(content.isAiStorySetting === true || content.isAiStorySetting === 1);
+        setIsAiOutline(content.isAiOutline === true || content.isAiOutline === 1);
+      }
+      catch (error) {
+        if (!cancelled) {
+          showMessage(extractErrorMessage(error, t('createStory.messages.draftLoadFailed')));
+        }
+      }
+      finally {
+        if (!cancelled) {
+          setLoadingDetail(false);
+        }
+      }
+    };
+    void loadDraft();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeDraftId, t]);
 
   const hasOverwritableContent = useMemo(() => {
     const commonHasValue = [
@@ -873,6 +1011,42 @@ export default function App() {
       ? outlineText.trim().length > 0
       : chapters.some(chapter => chapter.openingContent.trim().length > 0 || chapter.missionTarget.trim().length > 0),
   }), [activeTab, chapters, outlineText, sceneSettingText, storyBackground, storyIntro, storySettingText, storyTitle]);
+
+  const hasEffectiveContent = useMemo(() => (
+    [
+      storyTitle,
+      storyIntro,
+      storySettingText,
+      storyBackground,
+      sceneSettingText,
+      outlineText,
+      userRoleName,
+      userRoleSetting,
+    ].some(value => value.trim().length > 0)
+    || sceneImageUrl.trim().length > 0
+    || selectedRoles.length > 0
+    || !isPublic
+    || chapters.some(chapter => (
+      chapter.chapterDesc.trim().length > 0
+      || chapter.openingContent.trim().length > 0
+      || chapter.openingRoleId != null
+      || chapter.missionTarget.trim().length > 0
+      || chapter.forbiddenRoleIds.length > 0
+    ))
+  ), [
+    chapters,
+    isPublic,
+    outlineText,
+    sceneImageUrl,
+    sceneSettingText,
+    selectedRoles,
+    storyBackground,
+    storyIntro,
+    storySettingText,
+    storyTitle,
+    userRoleName,
+    userRoleSetting,
+  ]);
   useEffect(() => {
     if (params.selectedRoleId) {
       const roleId = Number(params.selectedRoleId);
@@ -880,12 +1054,12 @@ export default function App() {
         if (prev.find(r => r.id === roleId)) return prev;
         return [...prev, { 
           id: roleId, 
-          name: params.selectedRoleName || '未知角色', 
+          name: params.selectedRoleName || t('createStory.roles.unknown'),
           avatar: params.selectedRoleAvatar 
         }];
       });
     }
-  }, [params.selectedRoleId, params.selectedRoleName, params.selectedRoleAvatar]);
+  }, [params.selectedRoleId, params.selectedRoleName, params.selectedRoleAvatar, t]);
 
   useEffect(() => {
     const roleSelectedSubscription = DeviceEventEmitter.addListener('roleSelected', (role: StoryRoleItem) => {
@@ -901,7 +1075,9 @@ export default function App() {
           ...prev,
           {
             id: roleId,
-            name: typeof role.name === 'string' && role.name.trim() ? role.name.trim() : `角色${roleId}`,
+            name: typeof role.name === 'string' && role.name.trim()
+              ? role.name.trim()
+              : t('createStory.roles.fallback', { id: roleId }),
             avatar: role.avatar,
           },
         ];
@@ -940,11 +1116,11 @@ export default function App() {
       openingRoleSubscription.remove();
       sceneImageSubscription.remove();
     };
-  }, []);
+  }, [t]);
 
   const handleSelectOpeningRole = (chapterIndex: number) => {
     if (!selectedRoles.length) {
-      showMessage('请先在角色列表中添加角色。');
+      showMessage(t('createStory.roles.addFirst'));
       return;
     }
     const chapter = chapters[chapterIndex];
@@ -973,7 +1149,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!routeStoryId) {
+    if (!routeStoryId || routeDraftId) {
       return;
     }
     let cancelled = false;
@@ -1015,7 +1191,7 @@ export default function App() {
       }
       catch (error) {
         if (!cancelled) {
-          showMessage(extractErrorMessage(error, '加载故事详情失败，请稍后重试。'));
+          showMessage(extractErrorMessage(error, t('createStory.messages.detailLoadFailed')));
         }
       }
       finally {
@@ -1028,7 +1204,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [routeStoryId]);
+  }, [routeDraftId, routeStoryId, t]);
 
   const extractStorySettingValue = (result?: TsStoryFullGenerateResult) =>
     (result?.storySetting || '').trim();
@@ -1083,14 +1259,14 @@ export default function App() {
       });
       const nextStorySetting = extractStorySettingValue(result);
       if (!nextStorySetting) {
-        throw new Error('未生成有效故事设定，请稍后重试。');
+        throw new Error(t('createStory.messages.settingEmpty'));
       }
       setStorySettingText(nextStorySetting);
       setIsAiStorySetting(true);
-      showMessage('故事设定已生成并回填。');
+      showMessage(t('createStory.messages.settingGenerated'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '故事设定生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.settingGenerateFailed')));
     }
     finally {
       setGeneratingSetting(false);
@@ -1110,13 +1286,13 @@ export default function App() {
       });
       const nextSiteSetting = extractSiteSettingValue(result);
       if (!nextSiteSetting) {
-        throw new Error('未生成有效场景设定，请稍后重试。');
+        throw new Error(t('createStory.messages.sceneEmpty'));
       }
       setSceneSettingText(nextSiteSetting);
-      showMessage('场景设定已生成并回填。');
+      showMessage(t('createStory.messages.sceneGenerated'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '场景设定生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.sceneGenerateFailed')));
     }
     finally {
       setGeneratingScene(false);
@@ -1145,21 +1321,21 @@ export default function App() {
 
       if (activeTab === 'normal') {
         if (!nextPlotOutline) {
-          throw new Error('未生成有效剧情大纲，请稍后重试。');
+          throw new Error(t('createStory.messages.outlineEmpty'));
         }
         setOutlineText(nextPlotOutline);
       }
       else {
         if (!outlineChapters.length) {
-          throw new Error('章节剧情未生成有效章节大纲，请稍后重试。');
+          throw new Error(t('createStory.messages.chapterOutlineEmpty'));
         }
         setChapters(outlineChapters.map(mapChapterFromOutline));
       }
       setIsAiOutline(true);
-      showMessage('剧情大纲生成成功。');
+      showMessage(t('createStory.messages.outlineGenerated'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '剧情大纲生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.outlineGenerateFailed')));
     }
     finally {
       setGeneratingOutline(false);
@@ -1180,14 +1356,14 @@ export default function App() {
       });
       const nextStorySetting = (result?.storySetting || '').trim();
       if (!nextStorySetting) {
-        throw new Error('未优化出有效故事设定，请稍后重试。');
+        throw new Error(t('createStory.messages.settingOptimizeEmpty'));
       }
       setStorySettingText(nextStorySetting);
       setIsAiStorySetting(result?.generated !== false);
-      showMessage('故事设定已优化。');
+      showMessage(t('createStory.messages.settingOptimized'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '故事设定优化失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.settingOptimizeFailed')));
     }
     finally {
       setOptimizingSetting(false);
@@ -1208,13 +1384,13 @@ export default function App() {
       });
       const nextSceneSetting = (result?.sceneSummary || result?.sceneNameSnapshot || '').trim();
       if (!nextSceneSetting) {
-        throw new Error('未优化出有效场景设定，请稍后重试。');
+        throw new Error(t('createStory.messages.sceneOptimizeEmpty'));
       }
       setSceneSettingText(nextSceneSetting);
-      showMessage('场景设定已优化。');
+      showMessage(t('createStory.messages.sceneOptimized'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '场景设定优化失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.sceneOptimizeFailed')));
     }
     finally {
       setOptimizingScene(false);
@@ -1235,14 +1411,14 @@ export default function App() {
       });
       const nextPlotOutline = (result?.plotOutline || '').trim();
       if (!nextPlotOutline) {
-        throw new Error('未优化出有效剧情大纲，请稍后重试。');
+        throw new Error(t('createStory.messages.outlineOptimizeEmpty'));
       }
       setOutlineText(nextPlotOutline);
       setIsAiOutline(true);
-      showMessage('剧情大纲已优化。');
+      showMessage(t('createStory.messages.outlineOptimized'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '剧情大纲优化失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.outlineOptimizeFailed')));
     }
     finally {
       setOptimizingOutline(false);
@@ -1288,10 +1464,10 @@ export default function App() {
       }
 
       setIsAiStorySetting(!!nextStorySetting);
-      showMessage('已为您生成所有可用的设定内容。');
+      showMessage(t('createStory.messages.allGenerated'));
     }
     catch (error) {
-      showMessage(resolveGenerateErrorMessage(error, '全量生成失败，请稍后重试。'));
+      showMessage(resolveGenerateErrorMessage(error, t('createStory.messages.allGenerateFailed')));
     }
     finally {
       setGeneratingSetting(false);
@@ -1360,7 +1536,7 @@ export default function App() {
         : await tsStoryApi.createStory(payload);
       const currentStoryId = saved?.id;
       if (!currentStoryId) {
-        throw new Error('故事保存失败，请稍后重试。');
+        throw new Error(t('createStory.messages.saveFailed'));
       }
 
       setStoryId(currentStoryId);
@@ -1374,7 +1550,7 @@ export default function App() {
           const chapterPayload = {
             storyId: currentStoryId,
             chapterNo,
-            chapterTitle: (chapter.chapterTitle || `第${chapterNo}章`).trim(),
+            chapterTitle: (chapter.chapterTitle || t('createStory.outline.chapterTitle', { number: chapterNo })).trim(),
             chapterDesc: chapter.chapterDesc.trim() || undefined,
             openingContent: chapter.openingContent.trim() || undefined,
             openingRoleId: chapter.openingRoleId,
@@ -1399,29 +1575,94 @@ export default function App() {
         setChapters(nextChapters);
       }
 
-      showMessage('故事保存成功。');
+      showMessage(t('createStory.messages.saved'));
       router.push({
         pathname: '/pages/conversation-detail',
         params: { storyId: String(currentStoryId) },
       });
     }
     catch (error) {
-      showMessage(extractErrorMessage(error, '故事保存失败，请稍后重试。'));
+      showMessage(extractErrorMessage(error, t('createStory.messages.saveFailed')));
     }
     finally {
       setSaving(false);
     }
   };
 
+  const leaveCreateStory = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/pages/create-page');
+  };
+
+  const handleBack = () => {
+    if (saving || savingDraft) {
+      return;
+    }
+    if (hasEffectiveContent) {
+      setExitDialogVisible(true);
+      return;
+    }
+    leaveCreateStory();
+  };
+
+  const handleSaveDraftAndExit = async () => {
+    if (savingDraft) {
+      return;
+    }
+    setSavingDraft(true);
+    try {
+      const payload = {
+        draftType: 'story' as const,
+        draftName: storyTitle.trim() || t('createStory.untitledDraft'),
+        sourceId: storyId || undefined,
+        content: {
+          activeTab,
+          activeTopTab,
+          isPublic,
+          storyTitle,
+          storyIntro,
+          storySettingText,
+          storyBackground,
+          sceneSettingText,
+          outlineText,
+          chapters,
+          selectedRoles,
+          userRoleName,
+          userRoleSetting,
+          sceneImageUrl,
+          isAiStorySetting,
+          isAiOutline,
+        },
+      };
+      if (routeDraftId) {
+        await tsDraftApi.updateDraft({ ...payload, id: routeDraftId });
+      }
+      else {
+        await tsDraftApi.createDraft(payload);
+      }
+      setExitDialogVisible(false);
+      leaveCreateStory();
+    }
+    catch (error) {
+      showMessage(extractErrorMessage(error, t('createStory.messages.draftSaveFailed')));
+    }
+    finally {
+      setSavingDraft(false);
+    }
+  };
+
   return (
     <div className="flex min-h-full justify-center bg-background">
       <div className="flex min-h-full w-full max-w-[420px] flex-col bg-black">
-        <Header />
+        <Header onBack={handleBack} />
         <div className="sticky top-[65px] z-40 bg-black px-[16px] pb-[10px] border-b border-white/10">
           <AiTopTabs
             tabs={[
-              { id: 'basic', label: '基础信息' },
-              { id: 'advanced', label: '高级设定' },
+              { id: 'basic', label: t('createStory.tabs.basic') },
+              { id: 'advanced', label: t('createStory.tabs.advanced') },
             ]}
             activeTab={activeTopTab}
             onTabChange={setActiveTopTab}
@@ -1495,6 +1736,17 @@ export default function App() {
         <BottomButton loading={saving || loadingDetail} onNext={handleSaveAndNext} />
       </div>
 
+      <AiDraftExitDialog
+        visible={exitDialogVisible}
+        saving={savingDraft}
+        onContinue={() => setExitDialogVisible(false)}
+        onDiscard={() => {
+          setExitDialogVisible(false);
+          leaveCreateStory();
+        }}
+        onSaveAndExit={() => void handleSaveDraftAndExit()}
+      />
+
 
       <Modal
         visible={generateModalTarget !== null}
@@ -1510,16 +1762,26 @@ export default function App() {
             className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-center text-lg font-bold tracking-wide text-white">AI 一键生成</h3>
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">{t('createStory.generateModal.title')}</h3>
             <div className="text-[14px] leading-relaxed text-[#a1a1aa] flex flex-col gap-2">
-              <p>您希望 AI 如何为您扩写？</p>
+              <p>{t('createStory.generateModal.description')}</p>
               <div className="flex items-start gap-1">
                 <span className="text-[rgba(var(--color-brand-green-rgb),0.9)] mt-1">•</span>
-                <p><span className="text-white font-medium">仅当前：</span>只针对您刚点击的模块进行扩写。</p>
+                <p>
+                  <span className="text-white font-medium">
+                    {t('createStory.generateModal.currentTitle')}
+                  </span>
+                  {t('createStory.generateModal.currentDescription')}
+                </p>
               </div>
               <div className="flex items-start gap-1">
                 <span className="text-[rgba(var(--color-brand-green-rgb),0.9)] mt-1">•</span>
-                <p><span className="text-white font-medium">全生成：</span>依次为您自动补全故事、场景和大纲。</p>
+                <p>
+                  <span className="text-white font-medium">
+                    {t('createStory.generateModal.allTitle')}
+                  </span>
+                  {t('createStory.generateModal.allDescription')}
+                </p>
               </div>
             </div>
             <div className="flex flex-row gap-3 mt-4">
@@ -1534,7 +1796,7 @@ export default function App() {
                   }
                 }}
               >
-                仅当前
+                {t('createStory.generateModal.current')}
               </button>
               <button
                 type="button"
@@ -1544,7 +1806,7 @@ export default function App() {
                   triggerGenerateAll();
                 }}
               >
-                全生成
+                {t('createStory.generateModal.all')}
               </button>
             </div>
             <button
@@ -1573,39 +1835,22 @@ export default function App() {
             className="relative w-full max-w-[320px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-center text-lg font-bold tracking-wide text-white">{confirmGenerateTarget === 'all' ? '⚠️ 覆盖警告' : '⚠️ 覆盖提醒'}</h3>
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">
+              {confirmGenerateTarget === 'all'
+                ? t('createStory.overwrite.warningTitle')
+                : t('createStory.overwrite.noticeTitle')}
+            </h3>
             <p className="text-[14px] leading-relaxed text-[#a1a1aa]">
               {confirmGenerateTarget === 'all'
-                ? (
-                    <>
-                      选择全生成将由 AI 重新生成并<span className="text-[#ff4d4f] font-medium">覆盖</span>当前除“角色”以外的所有已有内容（包括故事设定、场景设定、剧情大纲）。
-                      <br /><br />
-                      是否继续？
-                    </>
-                  )
+                ? t('createStory.overwrite.all')
                 : confirmGenerateTarget === 'setting'
-                  ? (
-                      <>
-                        选择仅当前后，AI 将重新生成“故事设定”，并可能<span className="text-[#ff4d4f] font-medium">覆盖</span>你已填写的标题、简介、设定与背景内容。
-                        <br /><br />
-                        是否继续？
-                      </>
-                    )
+                  ? t('createStory.overwrite.setting')
                   : confirmGenerateTarget === 'scene'
-                    ? (
-                        <>
-                          选择仅当前后，AI 将重新生成“场景设定”，并可能<span className="text-[#ff4d4f] font-medium">覆盖</span>你当前已填写的场景内容。
-                          <br /><br />
-                          是否继续？
-                        </>
-                      )
-                    : (
-                        <>
-                          选择仅当前后，AI 将重新生成“剧情大纲”，并可能<span className="text-[#ff4d4f] font-medium">覆盖</span>你当前已填写的大纲内容。
-                          <br /><br />
-                          是否继续？
-                        </>
-                      )}
+                    ? t('createStory.overwrite.scene')
+                    : t('createStory.overwrite.outline')}
+              <br />
+              <br />
+              {t('createStory.overwrite.continue')}
             </p>
             <div className="flex flex-row gap-3 mt-4">
               <button
@@ -1613,7 +1858,7 @@ export default function App() {
                 className="flex-1 rounded-full border border-[#333] bg-transparent py-3 text-center text-base font-bold text-white active:bg-white/5"
                 onClick={() => setConfirmGenerateTarget(null)}
               >
-                取消
+                {t('createStory.actions.cancel')}
               </button>
               <button
                 type="button"
@@ -1626,7 +1871,9 @@ export default function App() {
                   }
                 }}
               >
-                {confirmGenerateTarget === 'all' ? '确认覆盖并生成' : '确认并生成'}
+                {confirmGenerateTarget === 'all'
+                  ? t('createStory.overwrite.confirmAll')
+                  : t('createStory.overwrite.confirm')}
               </button>
             </div>
             <button
@@ -1655,24 +1902,36 @@ export default function App() {
             className="relative w-[90%] max-w-[360px] rounded-[24px] border border-[#333] bg-[#111] p-6 pt-8 shadow-[0_0_40px_rgba(0,0,0,0.5)] flex flex-col gap-[20px]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-center text-lg font-bold tracking-wide text-white">用户角色设定</h3>
+            <h3 className="text-center text-lg font-bold tracking-wide text-white">{t('createStory.userRole.title')}</h3>
             
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-white">角色名称 <span className="text-xs text-[#a1a1aa]">(选填)</span></span>
+              <span className="text-sm text-white">
+                {t('createStory.userRole.name')}
+                {' '}
+                <span className="text-xs text-[#a1a1aa]">
+                  {t('createStory.optional')}
+                </span>
+              </span>
               <AiFormInput
                 value={userRoleName}
                 onChangeText={setUserRoleName}
-                placeholder="请输入您的角色名称"
+                placeholder={t('createStory.userRole.namePlaceholder')}
                 customContainerClass="bg-black rounded-lg border border-[#494949] h-[44px]"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm text-white">角色设定 <span className="text-xs text-[#a1a1aa]">(选填)</span></span>
+              <span className="text-sm text-white">
+                {t('createStory.userRole.setting')}
+                {' '}
+                <span className="text-xs text-[#a1a1aa]">
+                  {t('createStory.optional')}
+                </span>
+              </span>
               <AiFormTextarea
                 value={userRoleSetting}
                 onChangeText={setUserRoleSetting}
-                placeholder="例如性格、外貌特征等"
+                placeholder={t('createStory.userRole.settingPlaceholder')}
                 minHeight={80}
                 customContainerClass="bg-black rounded-lg border border-[#494949]"
               />
@@ -1684,7 +1943,7 @@ export default function App() {
                 className="flex-1 rounded-full border border-[rgba(var(--color-brand-green-rgb),0.9)] bg-brand-green/10 py-3 text-center text-base font-bold text-[rgba(var(--color-brand-green-rgb),0.9)] active:bg-brand-green/20"
                 onClick={() => setUserRoleModalVisible(false)}
               >
-                确定
+                {t('createStory.actions.confirm')}
               </button>
             </div>
 
@@ -1730,41 +1989,41 @@ export default function App() {
             </div>
             {tooltipType === 'story' && (
               <>
-                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">故事设定提示</h3>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">{t('createStory.help.storyTitle')}</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  用简短的语言描述您想要创建的故事的主题、世界观或起因。AI 将根据您的设定，为您生成更丰满的<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">剧情大纲</span>和<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">章节细节</span>。
+                  {t('createStory.help.storyDescription')}
                 </p>
               </>
             )}
             {tooltipType === 'role' && (
               <>
-                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">角色列表提示</h3>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">{t('createStory.help.roleTitle')}</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  选择或创建将要参与到故事中的角色。您（用户）将默认作为主角参与互动，添加的其他角色将作为 NPC 与您发生<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">剧情纠葛</span>。
+                  {t('createStory.help.roleDescription')}
                 </p>
               </>
             )}
             {tooltipType === 'sceneImage' && (
               <>
-                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景图片提示</h3>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">{t('createStory.help.sceneImageTitle')}</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  点击场景图片框可进入故事背景图库，选择已有图片后会自动回填到当前故事。
+                  {t('createStory.help.sceneImageDescription')}
                 </p>
               </>
             )}
             {tooltipType === 'scene' && (
               <>
-                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">场景设定提示</h3>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">{t('createStory.help.sceneTitle')}</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  设定故事发生的具体地点或环境氛围（例如：<span className="text-white font-medium">赛博朋克都市、古典仙侠客栈</span>）。明确的场景有助于 AI 描绘更生动的画面和氛围。
+                  {t('createStory.help.sceneDescription')}
                 </p>
               </>
             )}
             {tooltipType === 'outline' && (
               <>
-                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">剧情大纲提示</h3>
+                <h3 className="mb-3 text-center text-lg font-bold tracking-wide text-white">{t('createStory.help.outlineTitle')}</h3>
                 <p className="text-center text-[14px] leading-relaxed text-[#a1a1aa]">
-                  剧情大纲规划了故事的整体发展脉络。您可以手动编写，也可以点击<span className="text-[rgba(var(--color-brand-green-rgb),0.9)] font-medium">一键生成</span>让 AI 根据已有设定为您自动扩写精彩的故事剧情。
+                  {t('createStory.help.outlineDescription')}
                 </p>
               </>
             )}

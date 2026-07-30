@@ -9,7 +9,7 @@ interface SearchBarProps {
 }
 
 export function SearchBar({
-  placeholder = '搜索',
+  placeholder,
   value,
   onChangeText,
   onSubmitEditing,

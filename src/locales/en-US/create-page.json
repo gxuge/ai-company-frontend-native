@@ -1,0 +1,22 @@
+{
+  "headingLine1": "Start Your",
+  "headingLine2": "Creative Journey",
+  "subtitle": "Advanced AI Creative Suite",
+  "character": {
+    "title": "New Character",
+    "descriptionLine1": "Bring a new face to life",
+    "descriptionLine2": "Describe who they are",
+    "action": "Create"
+  },
+  "story": {
+    "title": "New Story",
+    "descriptionLine1": "Shape an interactive story",
+    "descriptionLine2": "Begin a new chapter",
+    "action": "Start"
+  },
+  "drafts": "Drafts",
+  "draftEmpty": "Your drafts are empty.",
+  "draftLoadFailed": "Failed to load drafts. Please try again.",
+  "acknowledge": "Got it",
+  "aiAssistant": "AI Assistant"
+}

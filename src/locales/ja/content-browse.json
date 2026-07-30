@@ -1,0 +1,84 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "loadingMore": "さらに読み込み中...",
+    "done": "完了",
+    "manage": "管理",
+    "use": "使用",
+    "deleting": "削除中..."
+  },
+  "browse": {
+    "storyTab": "ストーリー",
+    "characterTab": "キャラクター",
+    "searchStory": "ストーリーを検索",
+    "searchCharacter": "キャラクターを検索",
+    "storyLoadFailed": "ストーリー一覧を読み込めませんでした",
+    "characterLoadFailed": "キャラクター一覧を読み込めませんでした",
+    "noStories": "ストーリーはまだありません",
+    "noCharacters": "キャラクターはまだありません",
+    "tryDifferentKeyword": "別のキーワードで検索してください",
+    "categories": {
+      "recommended": "おすすめ",
+      "subscribed": "フォロー中",
+      "liked": "いいね",
+      "anime": "アニメ",
+      "urban": "都市",
+      "ancient": "古風",
+      "sciFi": "SF"
+    }
+  },
+  "roleDetail": {
+    "follow": "フォロー",
+    "authorLabel": "作者：",
+    "connections": "つながり",
+    "followers": "フォロワー",
+    "chats": "会話数",
+    "aboutTab": "紹介",
+    "storyTab": "ストーリー",
+    "roleFallback": "キャラクター",
+    "authorFallback": "作者",
+    "noStory": "ストーリーはまだありません",
+    "roleLoadFailed": "キャラクター情報を読み込めませんでした",
+    "authorLoadFailed": "作者情報を読み込めませんでした",
+    "pageLoadFailed": "ページデータを読み込めませんでした"
+  },
+  "selectRole": {
+    "title": "キャラクターを選択",
+    "search": "キャラクターを検索",
+    "roleFallback": "キャラクター{{id}}",
+    "loadFailed": "キャラクターを読み込めませんでした。もう一度お試しください。",
+    "noSelectable": "選択できるキャラクターがありません",
+    "noData": "データがありません"
+  },
+  "gallery": {
+    "sourceTypes": {
+      "reference": "参考画像",
+      "generated": "生成画像",
+      "favorite": "お気に入り"
+    },
+    "uncategorized": "未分類",
+    "imageFallback": "画像{{id}}",
+    "role": {
+      "title": "マイギャラリー",
+      "emptyTitle": "キャラクター画像はまだありません",
+      "emptyDescription": "生成または保存したキャラクター画像がここに表示されます。",
+      "emptyAction": "キャラクター作成へ戻る"
+    },
+    "story": {
+      "title": "ストーリー背景ギャラリー",
+      "emptyTitle": "ストーリー背景はまだありません",
+      "emptyDescription": "保存したストーリー背景画像がここに表示されます。",
+      "emptyAction": "ストーリー作成へ戻る"
+    },
+    "default": {
+      "title": "マイギャラリー",
+      "emptyTitle": "画像はまだありません",
+      "emptyDescription": "アップロードした参考画像や保存した生成結果がここに表示されます。",
+      "emptyAction": "キャラクター作成へ戻る"
+    },
+    "loadFailed": "ギャラリーを読み込めませんでした。もう一度お試しください。",
+    "unavailable": "この画像は利用できないため、使用できません。",
+    "deleteFailed": "{{count}}枚の画像を削除できませんでした。もう一度お試しください。",
+    "deleteCount": "{{count}}枚の画像を削除"
+  }
+}

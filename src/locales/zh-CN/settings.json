@@ -23,5 +23,98 @@
   },
   "title": "设置",
   "version": "版本",
-  "website": "网站"
+  "website": "网站",
+  "general": {
+    "title": "通用设置",
+    "language": "语言设置",
+    "feedback": "意见与反馈",
+    "about": "关于探拾",
+    "account": "账号设置",
+    "verification": "实名认证",
+    "verified": "已认证",
+    "privacy": "隐私设置",
+    "logout": "退出登录",
+    "version": "应用版本 {{version}}",
+    "appName": "探拾AI伴侣",
+    "logoutDialog": {
+      "title": "退出登录",
+      "message": "确定要退出当前账号吗？退出后将需要重新验证身份。",
+      "cancel": "取消",
+      "confirm": "确定退出"
+    }
+  },
+  "languagePage": {
+    "title": "语言设置"
+  },
+  "account": {
+    "title": "账号设置",
+    "cancel": "取消",
+    "save": "保存",
+    "avatarAlt": "用户头像",
+    "nickname": "昵称",
+    "nicknamePlaceholder": "输入昵称",
+    "gender": "性别",
+    "birthday": "生日",
+    "preferences": "内容偏好",
+    "genderOptions": {
+      "male": "男生",
+      "female": "女生",
+      "secret": "保密"
+    },
+    "preferenceTags": {
+      "urban": "都市",
+      "workplace": "职场",
+      "companionship": "情感陪伴"
+    }
+  },
+  "sound": {
+    "defaultPreviewText": "这是试听文本，请根据音色参数播放。",
+    "unnamedVoice": "未命名音色",
+    "chooseVoice": "请选择",
+    "rename": "重命名",
+    "delete": "删除",
+    "editPreviewText": "编辑试听文案",
+    "cancelSelection": "取消选择",
+    "parameterAdjustment": "参数调整",
+    "reset": "重置",
+    "pitch": "音调",
+    "speed": "语速",
+    "listening": "试听中...",
+    "listenVoice": "试听音色",
+    "recommendedLibrary": "推荐音色库",
+    "myLibrary": "我的音色库",
+    "gender": "性别",
+    "genderOptions": {
+      "all": "全部",
+      "male": "男",
+      "female": "女"
+    },
+    "knownTags": {
+      "male": "男",
+      "female": "女",
+      "child": "儿童",
+      "teen": "少年",
+      "adult": "成人",
+      "senior": "老年"
+    },
+    "emptyTitle": "还没有录音",
+    "emptyDescription": "在推荐音色库中选择音色或开始您的创作",
+    "done": "完成",
+    "generate": "一键生成",
+    "editTextTitle": "编辑试听文本",
+    "cancel": "取消",
+    "confirm": "确认",
+    "errors": {
+      "objectUrlUnsupported": "当前环境不支持音频对象URL",
+      "missingAudioUrl": "试听生成成功，但暂未获取到音频地址",
+      "downloadFailed": "音频下载失败，请稍后重试",
+      "selectVoiceFirst": "请先选择音色",
+      "missingVoiceId": "当前音色缺少可用标识，无法试听",
+      "playbackUnsupported": "当前环境不支持试听播放",
+      "playbackFailed": "试听播放失败，请稍后重试",
+      "previewFailed": "试听失败，请稍后重试",
+      "renamePending": "音色ID {{id}}：重命名能力待后端接口补充",
+      "deletePending": "音色ID {{id}}：删除能力待后端接口补充"
+    }
+  }
 }

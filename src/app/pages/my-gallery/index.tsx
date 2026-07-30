@@ -1,5 +1,7 @@
+import type { TFunction } from 'i18next';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { DeviceEventEmitter, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
 import { AiHeader } from '@/components/ai-company/ai-header';
@@ -18,12 +20,6 @@ const imgFabAddRole = resolveAsset(require('@/assets/images/select-role/fab_add_
 const PAGE_SIZE = 60;
 const ROLE_IMAGE_FILE_NAME_PREFIX = 'role-image-';
 
-const SOURCE_TYPE_LABEL_MAP: Record<string, string> = {
-  reference: '参考图',
-  generated: '生成图',
-  favorite: '收藏图',
-};
-
 type ImageItem = {
   id: number;
   url?: string;
@@ -40,15 +36,20 @@ type ImageCardProps = {
   onPress: () => void;
 };
 
-function resolveSourceTypeLabel(sourceType?: string) {
+function resolveSourceTypeLabel(sourceType: string | undefined, t: TFunction) {
   if (!sourceType) {
-    return '未分类';
+    return t('contentBrowse.gallery.uncategorized');
   }
   const key = sourceType.trim().toLowerCase();
   if (!key) {
-    return '未分类';
+    return t('contentBrowse.gallery.uncategorized');
   }
-  return SOURCE_TYPE_LABEL_MAP[key] || sourceType;
+  const translationKeys: Record<string, string> = {
+    reference: 'contentBrowse.gallery.sourceTypes.reference',
+    generated: 'contentBrowse.gallery.sourceTypes.generated',
+    favorite: 'contentBrowse.gallery.sourceTypes.favorite',
+  };
+  return translationKeys[key] ? t(translationKeys[key]) : sourceType;
 }
 
 function shouldIncludeRoleGalleryAsset(asset: TsUserImageAsset) {
@@ -61,7 +62,7 @@ function shouldIncludeRoleGalleryAsset(asset: TsUserImageAsset) {
   return fileName.startsWith(ROLE_IMAGE_FILE_NAME_PREFIX);
 }
 
-function mapAssetToImageItem(asset: TsUserImageAsset, index: number): ImageItem {
+function mapAssetToImageItem(asset: TsUserImageAsset, index: number, t: TFunction): ImageItem {
   const id = Number(asset.id);
   const imageUrl = typeof asset.thumbnailUrl === 'string' && asset.thumbnailUrl.trim()
     ? asset.thumbnailUrl.trim()
@@ -69,7 +70,9 @@ function mapAssetToImageItem(asset: TsUserImageAsset, index: number): ImageItem 
       ? asset.fileUrl.trim()
       : undefined;
 
-  const fallbackName = Number.isFinite(id) ? `图片${id}` : `图片${index + 1}`;
+  const fallbackName = t('contentBrowse.gallery.imageFallback', {
+    id: Number.isFinite(id) ? id : index + 1,
+  });
   const name = typeof asset.fileName === 'string' && asset.fileName.trim()
     ? asset.fileName.trim()
     : fallbackName;
@@ -78,7 +81,7 @@ function mapAssetToImageItem(asset: TsUserImageAsset, index: number): ImageItem 
     id,
     url: imageUrl,
     name,
-    type: resolveSourceTypeLabel(asset.sourceType),
+    type: resolveSourceTypeLabel(asset.sourceType, t),
   };
 }
 
@@ -89,28 +92,28 @@ function extractErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
-function resolveGalleryPresentation(from?: string) {
+function resolveGalleryPresentation(from: string | undefined, t: TFunction) {
   if (from === 'create-role') {
     return {
-      title: '我的图库',
-      emptyTitle: '你还没有角色图片',
-      emptyDescription: '生成或保存角色图片后，会显示在这里',
-      emptyActionText: '返回创建角色',
+      title: t('contentBrowse.gallery.role.title'),
+      emptyTitle: t('contentBrowse.gallery.role.emptyTitle'),
+      emptyDescription: t('contentBrowse.gallery.role.emptyDescription'),
+      emptyActionText: t('contentBrowse.gallery.role.emptyAction'),
     };
   }
   if (from === 'create-story') {
     return {
-      title: '故事背景图库',
-      emptyTitle: '你还没有故事背景图片',
-      emptyDescription: '保存故事背景图片后，会显示在这里',
-      emptyActionText: '返回创建故事',
+      title: t('contentBrowse.gallery.story.title'),
+      emptyTitle: t('contentBrowse.gallery.story.emptyTitle'),
+      emptyDescription: t('contentBrowse.gallery.story.emptyDescription'),
+      emptyActionText: t('contentBrowse.gallery.story.emptyAction'),
     };
   }
   return {
-    title: '我的图库',
-    emptyTitle: '你还没有图片',
-    emptyDescription: '上传参考图或保存生成结果后，会显示在这里',
-    emptyActionText: '返回创建人物',
+    title: t('contentBrowse.gallery.default.title'),
+    emptyTitle: t('contentBrowse.gallery.default.emptyTitle'),
+    emptyDescription: t('contentBrowse.gallery.default.emptyDescription'),
+    emptyActionText: t('contentBrowse.gallery.default.emptyAction'),
   };
 }
 
@@ -176,10 +179,11 @@ function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, 
 }
 
 export default function MyGallery() {
+  const { i18n, t } = useTranslation();
   const params = useLocalSearchParams<{ from?: string }>();
   const isRoleGallery = params.from === 'create-role';
   const isStoryGallery = params.from === 'create-story';
-  const galleryPresentation = resolveGalleryPresentation(params.from);
+  const galleryPresentation = resolveGalleryPresentation(params.from, t);
   const [images, setImages] = useState<ImageItem[]>([]);
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -243,14 +247,14 @@ export default function MyGallery() {
         const mapped = allAssets
           .filter(item => Number.isFinite(Number(item.id)))
           .filter(item => (isRoleGallery ? shouldIncludeRoleGalleryAsset(item) : true))
-          .map((item, index) => mapAssetToImageItem(item, index));
+          .map((item, index) => mapAssetToImageItem(item, index, t));
 
         setImages(mapped);
       } catch (error) {
         if (!alive) {
           return;
         }
-        setLoadError(extractErrorMessage(error, '图库加载失败，请稍后重试'));
+        setLoadError(extractErrorMessage(error, t('contentBrowse.gallery.loadFailed')));
       } finally {
         if (alive) {
           setLoading(false);
@@ -263,13 +267,13 @@ export default function MyGallery() {
         return;
       }
       setLoading(false);
-      setLoadError(extractErrorMessage(error, '\u56FE\u5E93\u52A0\u8F7D\u5931\u8D25\uFF0C\u8BF7\u7A0D\u540E\u91CD\u8BD5'));
+      setLoadError(extractErrorMessage(error, t('contentBrowse.gallery.loadFailed')));
     });
 
     return () => {
       alive = false;
     };
-  }, []);
+  }, [i18n.resolvedLanguage, isRoleGallery, t]);
 
   const selectedImageItem = useMemo(
     () => images.find(item => item.id === selectedImage) || null,
@@ -288,7 +292,7 @@ export default function MyGallery() {
 
   const handleUseImage = () => {
     if (!selectedImageItem?.url) {
-      setLoadError('当前图片地址不可用，无法回填');
+      setLoadError(t('contentBrowse.gallery.unavailable'));
       return;
     }
 
@@ -345,7 +349,7 @@ export default function MyGallery() {
 
     if (failedIds.length > 0) {
       setSelectedForDelete(failedIds);
-      setLoadError(`有 ${failedIds.length} 张图片删除失败，请重试`);
+      setLoadError(t('contentBrowse.gallery.deleteFailed', { count: failedIds.length }));
     } else {
       setSelectedForDelete([]);
       setIsManageMode(false);
@@ -379,7 +383,7 @@ export default function MyGallery() {
         fontWeight: '500',
         fontFamily: 'Noto Sans SC',
       }}>
-        {isManageMode ? '完成' : '管理'}
+        {isManageMode ? t('contentBrowse.common.done') : t('contentBrowse.common.manage')}
       </Text>
     </Pressable>
   );
@@ -389,7 +393,9 @@ export default function MyGallery() {
       <View style={{ flex: 1, backgroundColor: '#000000' }}>
         <AiHeader title={galleryPresentation.title} className="px-5 py-4" />
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: '#a1a1aa', fontSize: 14 }}>加载中...</Text>
+          <Text style={{ color: '#a1a1aa', fontSize: 14 }}>
+            {t('contentBrowse.common.loading')}
+          </Text>
         </View>
       </View>
     );
@@ -455,7 +461,9 @@ export default function MyGallery() {
               opacity: selectedImageItem?.url ? 1 : 0.6,
             }}
           >
-            <Text style={{ color: brandGreenRgba(0.9), fontSize: 16, fontWeight: '600' }}>使用</Text>
+            <Text style={{ color: brandGreenRgba(0.9), fontSize: 16, fontWeight: '600' }}>
+              {t('contentBrowse.common.use')}
+            </Text>
           </Pressable>
         </Animated.View>
       )}
@@ -477,7 +485,9 @@ export default function MyGallery() {
           >
             <Image source={imgTrashWhite} style={{ width: 20, height: 20 }} resizeMode="contain" />
             <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-              {deleting ? '删除中...' : `删除 ${selectedForDelete.length} 张图片`}
+              {deleting
+                ? t('contentBrowse.common.deleting')
+                : t('contentBrowse.gallery.deleteCount', { count: selectedForDelete.length })}
             </Text>
           </Pressable>
         </Animated.View>

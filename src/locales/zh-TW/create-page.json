@@ -1,0 +1,22 @@
+{
+  "headingLine1": "開啟你的",
+  "headingLine2": "創作之旅",
+  "subtitle": "進階 AI 創作套件",
+  "character": {
+    "title": "新角色",
+    "descriptionLine1": "為世界增添一張新面孔",
+    "descriptionLine2": "寫下人物特質，開始塑造吧",
+    "action": "開始建立"
+  },
+  "story": {
+    "title": "新劇本",
+    "descriptionLine1": "打造引人入勝的互動敘事",
+    "descriptionLine2": "開啟全新篇章",
+    "action": "開始創作"
+  },
+  "drafts": "草稿箱",
+  "draftEmpty": "草稿箱是空的~",
+  "draftLoadFailed": "草稿數量載入失敗，請稍後再試",
+  "acknowledge": "知道了",
+  "aiAssistant": "AI 助手"
+}

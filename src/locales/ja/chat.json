@@ -1,0 +1,81 @@
+{
+  "common": {
+    "alertTitle": "お知らせ",
+    "loading": "読み込み中...",
+    "systemName": "システム"
+  },
+  "main": {
+    "defaultAiMessage": "こんにちは。ここにいます。",
+    "defaultUserMessage": "こんにちは",
+    "defaultReply": "メッセージを受け取りました。",
+    "defaultStoryTitle": "ストーリー会話",
+    "defaultRoleName": "キャラクター",
+    "sendFailed": "メッセージを送信できませんでした。もう一度お試しください。",
+    "sessionInvalid": "この会話は存在しません。会話一覧に戻ってもう一度お試しください。",
+    "roleUnavailable": "発言するキャラクターを読み込み中です。しばらくしてからお試しください。",
+    "suggestionEmpty": "利用できる返信候補はありません。",
+    "suggestionLoadFailed": "返信候補を取得できませんでした。もう一度お試しください。",
+    "agentSuggestionUnsupported": "Agent 会話の返信候補はまだ利用できません。",
+    "micUnsupported": "音声入力はまだ利用できません。文字を入力して送信してください。",
+    "agentAudioUnsupported": "Agent 会話の音声再生はまだ利用できません。",
+    "audioDeviceUnsupported": "この端末では音声を再生できません。Web 版をご利用ください。",
+    "audioFetchFailed": "音声を取得できませんでした。もう一度お試しください。",
+    "autoVoiceEnabled": "音声の自動準備を有効にしました。今後のキャラクター返信は再生用音声を事前に生成します。",
+    "autoVoiceDisabled": "音声の自動準備を無効にしました。今後は文字のみ返し、再生時に音声を取得します。",
+    "features": {
+      "camera": "カメラ",
+      "image": "画像",
+      "file": "ファイル",
+      "call": "通話"
+    }
+  },
+  "input": {
+    "placeholder": "メッセージを送信...",
+    "holdToTalk": "長押しして話す"
+  },
+  "sessionList": {
+    "tabs": {
+      "messages": "メッセージ",
+      "following": "フォロー"
+    },
+    "categories": {
+      "following": "フォロー",
+      "subscribed": "購読",
+      "liked": "いいね",
+      "comments": "コメント"
+    },
+    "sessionFallback": "会話{{id}}",
+    "noMessage": "メッセージはまだありません",
+    "loadFailed": "会話一覧を読み込めませんでした",
+    "emptyTitle": "会話はありません",
+    "emptyDescription": "会話履歴がここに表示されます"
+  },
+  "conversation": {
+    "fallbackDescription": "ストーリー紹介はまだありません",
+    "fallbackTitle": "ストーリー詳細",
+    "fallbackAuthor": "匿名の作者",
+    "roleFallback": "キャラクター{{id}}",
+    "dataMissing": "表示できるストーリーデータがありません",
+    "storyLoadFailed": "ストーリー詳細を読み込めませんでした",
+    "chapterLoadFailed": "チャプター一覧を読み込めませんでした",
+    "detailLoadFailed": "会話詳細を読み込めませんでした",
+    "follow": "フォロー",
+    "storyDetails": "ストーリー詳細",
+    "characterList": "キャラクター",
+    "impressions": "感想",
+    "modal": {
+      "untitledStory": "無題のストーリー",
+      "storySetting": "ストーリー設定",
+      "storySettingEmpty": "ストーリー設定はまだありません",
+      "background": "背景情報",
+      "backgroundEmpty": "背景情報はまだありません",
+      "chapterDetails": "チャプター詳細",
+      "chapterTitle": "第{{number}}章",
+      "chapterEmpty": "チャプター内容はまだありません",
+      "chapterLoading": "チャプターを読み込み中...",
+      "tip": "ヒント",
+      "tipPrefix": "チャット画面で",
+      "tipSuffix": "を開くと、設定とチャプターをいつでも確認できます。"
+    }
+  }
+}

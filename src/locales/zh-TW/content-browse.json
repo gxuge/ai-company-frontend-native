@@ -1,0 +1,84 @@
+{
+  "common": {
+    "loading": "載入中...",
+    "loadingMore": "載入更多...",
+    "done": "完成",
+    "manage": "管理",
+    "use": "使用",
+    "deleting": "刪除中..."
+  },
+  "browse": {
+    "storyTab": "故事",
+    "characterTab": "角色",
+    "searchStory": "搜尋故事",
+    "searchCharacter": "搜尋角色",
+    "storyLoadFailed": "故事列表載入失敗",
+    "characterLoadFailed": "角色列表載入失敗",
+    "noStories": "暫無故事",
+    "noCharacters": "暫無角色",
+    "tryDifferentKeyword": "請嘗試搜尋其他關鍵字",
+    "categories": {
+      "recommended": "推薦",
+      "subscribed": "訂閱",
+      "liked": "按讚",
+      "anime": "二次元",
+      "urban": "都市",
+      "ancient": "古風",
+      "sciFi": "科幻"
+    }
+  },
+  "roleDetail": {
+    "follow": "關注",
+    "authorLabel": "作者：",
+    "connections": "連結者",
+    "followers": "粉絲",
+    "chats": "對話數",
+    "aboutTab": "關於 TA",
+    "storyTab": "故事",
+    "roleFallback": "角色",
+    "authorFallback": "作者",
+    "noStory": "暫無故事內容",
+    "roleLoadFailed": "角色資訊載入失敗",
+    "authorLoadFailed": "作者資訊載入失敗",
+    "pageLoadFailed": "頁面資料載入失敗"
+  },
+  "selectRole": {
+    "title": "選擇角色",
+    "search": "搜尋角色",
+    "roleFallback": "角色{{id}}",
+    "loadFailed": "角色載入失敗，請稍後重試",
+    "noSelectable": "暫無可選角色",
+    "noData": "暫無資料"
+  },
+  "gallery": {
+    "sourceTypes": {
+      "reference": "參考圖",
+      "generated": "生成圖",
+      "favorite": "收藏圖"
+    },
+    "uncategorized": "未分類",
+    "imageFallback": "圖片{{id}}",
+    "role": {
+      "title": "我的圖庫",
+      "emptyTitle": "你還沒有角色圖片",
+      "emptyDescription": "生成或儲存角色圖片後，會顯示在這裡",
+      "emptyAction": "返回建立角色"
+    },
+    "story": {
+      "title": "故事背景圖庫",
+      "emptyTitle": "你還沒有故事背景圖片",
+      "emptyDescription": "儲存故事背景圖片後，會顯示在這裡",
+      "emptyAction": "返回建立故事"
+    },
+    "default": {
+      "title": "我的圖庫",
+      "emptyTitle": "你還沒有圖片",
+      "emptyDescription": "上傳參考圖或儲存生成結果後，會顯示在這裡",
+      "emptyAction": "返回建立人物"
+    },
+    "loadFailed": "圖庫載入失敗，請稍後重試",
+    "unavailable": "目前圖片網址無法使用，不能回填",
+    "deleteFailed": "有 {{count}} 張圖片刪除失敗，請重試",
+    "deleteCount": "刪除 {{count}} 張圖片"
+  }
+}

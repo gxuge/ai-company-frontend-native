@@ -1,4 +1,5 @@
 import type { TsAgentChatMessageEvent } from './ts-agent-chat';
+import i18n from 'i18next';
 
 export type AgentChatStepStatus = 'idle' | 'running' | 'done' | 'error';
 export type AgentChatStepKind = 'agent' | 'llm' | 'tool';
@@ -21,6 +22,10 @@ export type AgentChatStep = {
   eventId?: string;
   taskId?: string;
   asynchronous?: boolean;
+  errorCode?: string;
+  errorCategory?: string;
+  retryable?: boolean;
+  errorArgs?: Record<string, unknown>;
   data?: Record<string, unknown>;
 };
 
@@ -51,6 +56,10 @@ export type AgentChatStreamState = {
   finalPayload?: Record<string, unknown> | null;
   optionPrompt: AgentChatOptionPrompt | null;
   error?: string | null;
+  errorCode?: string | null;
+  errorCategory?: string | null;
+  retryable?: boolean | null;
+  errorArgs?: Record<string, unknown> | null;
   steps: AgentChatStep[];
   currentStepId?: string | null;
 };
@@ -99,7 +108,11 @@ export type AgentChatSsePayload = {
   async?: boolean;
   eventId?: string;
   taskId?: string;
-  error?: string;
+  error?: unknown;
+  errorCode?: string;
+  errorCategory?: string;
+  retryable?: boolean;
+  errorArgs?: Record<string, unknown>;
   data?: unknown;
 };
 
@@ -115,6 +128,10 @@ export const createInitialAgentChatStreamState = (): AgentChatStreamState => ({
   finalPayload: null,
   optionPrompt: null,
   error: null,
+  errorCode: null,
+  errorCategory: null,
+  retryable: null,
+  errorArgs: null,
   steps: [],
   currentStepId: null,
 });
@@ -184,6 +201,12 @@ const readRecord = (value: unknown): Record<string, unknown> | undefined => {
   }
   return value;
 };
+
+const readBoolean = (value: unknown): boolean | undefined =>
+  typeof value === 'boolean' ? value : undefined;
+
+const translateRuntimeText = (key: string, fallback: string) =>
+  i18n.isInitialized && i18n.exists(key) ? i18n.t(key) : fallback;
 
 const readNestedString = (value: unknown, path: string[]): string | undefined => {
   let cursor: unknown = value;
@@ -287,6 +310,30 @@ function getToolTaskId(payload: AgentChatSsePayload) {
     || readNestedString(payload.data, ['taskId']);
 }
 
+function getPayloadErrorMetadata(payload: AgentChatSsePayload) {
+  const errorRecord = readRecord(payload.error);
+  const dataRecord = readRecord(payload.data);
+  const nestedErrorRecord = readRecord(dataRecord?.error);
+  return {
+    errorCode: readString(payload.errorCode)
+      || readString(dataRecord?.errorCode)
+      || readString(errorRecord?.errorCode)
+      || readString(nestedErrorRecord?.errorCode),
+    errorCategory: readString(payload.errorCategory)
+      || readString(dataRecord?.errorCategory)
+      || readString(errorRecord?.errorCategory)
+      || readString(nestedErrorRecord?.errorCategory),
+    retryable: readBoolean(payload.retryable)
+      ?? readBoolean(dataRecord?.retryable)
+      ?? readBoolean(errorRecord?.retryable)
+      ?? readBoolean(nestedErrorRecord?.retryable),
+    errorArgs: readRecord(payload.errorArgs)
+      || readRecord(dataRecord?.errorArgs)
+      || readRecord(errorRecord?.errorArgs)
+      || readRecord(nestedErrorRecord?.errorArgs),
+  };
+}
+
 function isAsyncToolPayload(payload: AgentChatSsePayload) {
   return payload.async === true
     || readRecord(payload.data)?.async === true;
@@ -317,6 +364,7 @@ function getToolStepData(
     async: true,
     eventId: getToolEventId(payload),
     taskId: getToolTaskId(payload),
+    ...getPayloadErrorMetadata(payload),
   };
 }
 
@@ -334,9 +382,13 @@ function getPayloadObject(payload: AgentChatSsePayload) {
 const getPayloadText = (payload: AgentChatSsePayload) =>
   readString(payload.content)
   || readString(payload.error)
+  || readNestedString(payload.error, ['errorMessage'])
+  || readNestedString(payload.error, ['message'])
   || readNestedString(payload.data, ['summary'])
   || readNestedString(payload.data, ['handoffReason'])
   || readNestedString(payload.data, ['error'])
+  || readNestedString(payload.data, ['error', 'errorMessage'])
+  || readNestedString(payload.data, ['error', 'message'])
   || readNestedString(payload.data, ['result'])
   || '';
 
@@ -352,7 +404,9 @@ function getOptionPrompt(payload: AgentChatSsePayload): AgentChatOptionPrompt | 
   return {
     toolName: getToolName(payload),
     interactionId,
-    question: readString(payload.question) || getPayloadText(payload) || '请选择下一步操作。',
+    question: readString(payload.question)
+      || getPayloadText(payload)
+      || translateRuntimeText('adminChat.confirm.selectNext', 'Please choose the next action.'),
     options,
   };
 }
@@ -415,6 +469,7 @@ const createStep = (
   const toolName = kind === 'tool' ? getToolName(payload) : undefined;
   const asynchronous = kind === 'tool' && isAsyncToolPayload(payload);
   const mediaFields = kind === 'tool' ? getToolMediaFields(payload) : {};
+  const errorMetadata = getPayloadErrorMetadata(payload);
   const data = getPayloadObject(payload) || undefined;
   return {
     id: createStepId(kind, name),
@@ -430,6 +485,7 @@ const createStep = (
     eventId: kind === 'tool' ? getToolEventId(payload) : undefined,
     taskId: kind === 'tool' ? getToolTaskId(payload) : undefined,
     asynchronous,
+    ...errorMetadata,
     data: kind === 'tool' ? getToolStepData(payload, data) : data,
   };
 };
@@ -512,7 +568,9 @@ const buildStepSummary = (kind: AgentChatStepKind, payload: AgentChatSsePayload)
     return name;
   }
   const toolName = getToolName(payload);
-  return toolName || name || '工具调用';
+  return toolName
+    || name
+    || translateRuntimeText('adminChat.thinking.toolCall', 'Tool call');
 };
 
 export const reduceAgentChatStreamState = (
@@ -552,6 +610,10 @@ export const reduceAgentChatStreamState = (
       pendingMainText: '',
       finalPayload: null,
       error: null,
+      errorCode: null,
+      errorCategory: null,
+      retryable: null,
+      errorArgs: null,
       steps: [nextStep],
       currentStepId: nextStep.id,
     };
@@ -588,12 +650,14 @@ export const reduceAgentChatStreamState = (
 
   if (normalizedEvent === 'subagent.error') {
     const message = getPayloadText(payload) || readNestedString(data, ['error']) || 'SubAgent step failed';
+    const errorMetadata = getPayloadErrorMetadata(payload);
     const next = updateStep(previous, 'agent', payload, (step) => ({
       ...step,
       title: step.title || buildStepSummary('agent', payload),
       status: 'error',
       text: step.text || message,
       error: message,
+      ...errorMetadata,
       agentType: step.agentType || getAgentType(payload) || 'subagent',
       data: data || step.data,
     }));
@@ -608,6 +672,7 @@ export const reduceAgentChatStreamState = (
       currentStepId: next.currentStepId,
       steps: next.steps,
       error: message,
+      ...errorMetadata,
     };
   }
 
@@ -728,12 +793,14 @@ export const reduceAgentChatStreamState = (
 
     case 'llm.error': {
       const message = getPayloadText(payload) || readNestedString(data, ['errorMessage']) || 'LLM step failed';
+      const errorMetadata = getPayloadErrorMetadata(payload);
       const next = updateStep(previous, 'llm', payload, (step) => ({
         ...step,
         title: step.title || buildStepSummary('llm', payload),
         status: 'error',
         text: step.text || message,
         error: message,
+        ...errorMetadata,
         promptCode: step.promptCode || getPromptCode(payload),
         data: data || step.data,
       }));
@@ -747,6 +814,7 @@ export const reduceAgentChatStreamState = (
         currentStepId: next.currentStepId,
         steps: next.steps,
         error: message,
+        ...errorMetadata,
       };
     }
 
@@ -838,6 +906,7 @@ export const reduceAgentChatStreamState = (
 
     case 'tool.error': {
       const message = getPayloadText(payload) || readNestedString(data, ['errorMessage']) || 'Tool step failed';
+      const errorMetadata = getPayloadErrorMetadata(payload);
       const payloadAsynchronous = isAsyncToolPayload(payload);
       const mediaFields = getToolMediaFields(payload);
       const next = updateStep(previous, 'tool', payload, (step) => ({
@@ -846,6 +915,7 @@ export const reduceAgentChatStreamState = (
         status: 'error',
         text: payloadAsynchronous || step.asynchronous ? '' : step.text || message,
         error: message,
+        ...errorMetadata,
         toolName: step.toolName || getToolName(payload),
         eventId: step.eventId || getToolEventId(payload),
         taskId: step.taskId || getToolTaskId(payload),
@@ -872,6 +942,10 @@ export const reduceAgentChatStreamState = (
         currentStepId: next.currentStepId,
         steps: next.steps,
         error: asynchronous ? previous.error : message,
+        errorCode: asynchronous ? previous.errorCode : errorMetadata.errorCode,
+        errorCategory: asynchronous ? previous.errorCategory : errorMetadata.errorCategory,
+        retryable: asynchronous ? previous.retryable : errorMetadata.retryable,
+        errorArgs: asynchronous ? previous.errorArgs : errorMetadata.errorArgs,
       };
     }
 
@@ -919,6 +993,7 @@ export const reduceAgentChatStreamState = (
 
     case 'agent.end': {
       const nextStatus = getPayloadStatus(payload, 'done');
+      const errorMetadata = getPayloadErrorMetadata(payload);
       const finalPayload = resolveFinalPayload(payload);
       const content = getPayloadText(payload);
       const handoff = isHandoffPayload(payload);
@@ -945,11 +1020,18 @@ export const reduceAgentChatStreamState = (
         currentStepId: previous.currentStepId,
         steps,
         error: nextStatus === 'error' ? (content || previous.error) : previous.error,
+        errorCode: nextStatus === 'error' ? errorMetadata.errorCode || previous.errorCode : previous.errorCode,
+        errorCategory: nextStatus === 'error'
+          ? errorMetadata.errorCategory || previous.errorCategory
+          : previous.errorCategory,
+        retryable: nextStatus === 'error' ? errorMetadata.retryable ?? previous.retryable : previous.retryable,
+        errorArgs: nextStatus === 'error' ? errorMetadata.errorArgs || previous.errorArgs : previous.errorArgs,
       };
     }
 
     case 'run.error': {
       const message = getPayloadText(payload) || readNestedString(data, ['errorMessage']) || 'Agent run failed';
+      const errorMetadata = getPayloadErrorMetadata(payload);
       return {
         ...previous,
         active: false,
@@ -958,6 +1040,7 @@ export const reduceAgentChatStreamState = (
         agentName: previous.agentName || agentName,
         agentType: previous.agentType || getAgentType(payload),
         error: message,
+        ...errorMetadata,
       };
     }
 
@@ -991,6 +1074,7 @@ export function createAsyncToolHistoryState(
     taskId: readString(event.data.taskId),
     status: event.status,
     content: event.content,
+    data: event.data,
   };
   const started = reduceAgentChatStreamState(
     createInitialAgentChatStreamState(),
@@ -1032,6 +1116,7 @@ export function createImageToolHistoryState(
     toolName: event.name,
     status: event.status,
     content: event.content,
+    data: event.data,
     contentType: 'image',
     resourceType: readString(output?.resourceType),
     imageUrl: readString(output?.imageUrl),

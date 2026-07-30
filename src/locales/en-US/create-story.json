@@ -1,0 +1,126 @@
+{
+  "title": "Create Original Story",
+  "tabs": {
+    "basic": "Basic Info",
+    "advanced": "Advanced"
+  },
+  "optional": "(Optional)",
+  "publicStatus": {
+    "title": "Visibility",
+    "label": "Make story public",
+    "description": "Other users can experience this story when public"
+  },
+  "storySetting": {
+    "title": "Story Setting",
+    "placeholder": "Describe the story background, world rules, the user's identity, and the main objective. Example: Strange districts appear after midnight, and the user must investigate the rules and collect clues."
+  },
+  "roles": {
+    "title": "Characters",
+    "user": "User",
+    "add": "Add",
+    "unknown": "Unknown Character",
+    "fallback": "Character {{id}}",
+    "addFirst": "Add a character to the list first."
+  },
+  "sceneImage": {
+    "title": "Scene Image",
+    "loading": "Loading...",
+    "add": "Tap to add image"
+  },
+  "sceneSetting": {
+    "title": "Scene Setting",
+    "placeholder": "Describe the time, place, atmosphere, and interactive clues. Example: An empty old station at dawn displays a route that does not exist."
+  },
+  "outline": {
+    "title": "Plot Outline",
+    "normal": "Standard",
+    "chapter": "Chapter-Based",
+    "placeholder": "Enter the plot outline...",
+    "chapterTitle": "Chapter {{number}}",
+    "chapterDescription": "Describe the main events and the user's interactions with other characters",
+    "opening": "Opening",
+    "selectRole": "Select Character",
+    "openingPlaceholder": ">> Enter the opening content...",
+    "mission": "Objective",
+    "missionPlaceholder": ">> Enter the objective...",
+    "addChapter": "Add Next Chapter"
+  },
+  "actions": {
+    "saving": "Saving...",
+    "next": "Next",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "generateModal": {
+    "title": "AI Generate",
+    "description": "How should AI expand your story?",
+    "currentTitle": "Current section:",
+    "currentDescription": "Expand only the section you selected.",
+    "allTitle": "Generate all:",
+    "allDescription": "Complete the story setting, scene, and outline in sequence.",
+    "current": "Current Only",
+    "all": "Generate All"
+  },
+  "overwrite": {
+    "warningTitle": "Overwrite Warning",
+    "noticeTitle": "Overwrite Notice",
+    "all": "Generate All will regenerate and replace all existing content except the character list, including the story setting, scene setting, and plot outline.",
+    "setting": "Current Only will regenerate the story setting and may replace the title, introduction, setting, and background you entered.",
+    "scene": "Current Only will regenerate the scene setting and may replace the scene content you entered.",
+    "outline": "Current Only will regenerate the plot outline and may replace the outline you entered.",
+    "continue": "Continue?",
+    "confirmAll": "Replace and Generate",
+    "confirm": "Confirm and Generate"
+  },
+  "userRole": {
+    "title": "User Character Settings",
+    "name": "Character Name",
+    "namePlaceholder": "Enter your character name",
+    "setting": "Character Profile",
+    "settingPlaceholder": "For example, personality and appearance"
+  },
+  "help": {
+    "storyTitle": "Story Setting Help",
+    "storyDescription": "Briefly describe the story theme, world, or inciting event. AI will use it to create a richer plot outline and chapter details.",
+    "roleTitle": "Character List Help",
+    "roleDescription": "Choose or create characters for the story. The user participates as the protagonist, while other characters act as NPCs that move the plot forward.",
+    "sceneImageTitle": "Scene Image Help",
+    "sceneImageDescription": "Tap the scene image area to open the background gallery. The selected image will be added to this story.",
+    "sceneTitle": "Scene Setting Help",
+    "sceneDescription": "Define the location and atmosphere. A clear scene helps AI create more vivid imagery and mood.",
+    "outlineTitle": "Plot Outline Help",
+    "outlineDescription": "The outline defines the overall progression of the story. Write it manually or let AI expand it from your existing settings."
+  },
+  "messages": {
+    "alertTitle": "Notice",
+    "configIncomplete": "Story generation is not fully configured: {{message}}",
+    "draftLoadFailed": "Failed to load the story draft. Please try again.",
+    "detailLoadFailed": "Failed to load the story. Please try again.",
+    "settingEmpty": "No usable story setting was generated. Please try again.",
+    "settingGenerated": "Story setting generated.",
+    "settingGenerateFailed": "Failed to generate the story setting. Please try again.",
+    "sceneEmpty": "No usable scene setting was generated. Please try again.",
+    "sceneGenerated": "Scene setting generated.",
+    "sceneGenerateFailed": "Failed to generate the scene setting. Please try again.",
+    "outlineEmpty": "No usable plot outline was generated. Please try again.",
+    "chapterOutlineEmpty": "No usable chapter outline was generated. Please try again.",
+    "outlineGenerated": "Plot outline generated.",
+    "outlineGenerateFailed": "Failed to generate the plot outline. Please try again.",
+    "settingOptimizeEmpty": "No usable story setting was produced. Please try again.",
+    "settingOptimized": "Story setting optimized.",
+    "settingOptimizeFailed": "Failed to optimize the story setting. Please try again.",
+    "sceneOptimizeEmpty": "No usable scene setting was produced. Please try again.",
+    "sceneOptimized": "Scene setting optimized.",
+    "sceneOptimizeFailed": "Failed to optimize the scene setting. Please try again.",
+    "outlineOptimizeEmpty": "No usable plot outline was produced. Please try again.",
+    "outlineOptimized": "Plot outline optimized.",
+    "outlineOptimizeFailed": "Failed to optimize the plot outline. Please try again.",
+    "allGenerated": "All available story settings were generated.",
+    "allGenerateFailed": "Failed to generate all story content. Please try again.",
+    "saveFailed": "Failed to save the story. Please try again.",
+    "saved": "Story saved.",
+    "draftSaveFailed": "Failed to save the draft. Please try again."
+  },
+  "untitledStory": "Untitled Story {{timestamp}}",
+  "untitledDraft": "Untitled story"
+}

@@ -8,6 +8,7 @@ type PageItem = {
 };
 
 const pageItems: PageItem[] = [
+  { label: 'VRM Debug', href: '/pages/vrm-debug' as Extract<Href, string> },
   { label: 'Chat', href: '/pages/chat' },
   { label: 'Quick Login', href: '/pages/quick-login' },
   { label: 'Session List', href: '/pages/session-list' },
