@@ -1,7 +1,15 @@
+import type { AxiosResponse } from 'axios';
+import { defHttp } from './def-http';
+
 export type TsImageType = 'user_avatar'
   | 'character_image'
   | 'character_avatar'
   | 'story_scene';
+
+export type TsImageDownloadPayload = {
+  sourceImageUrl: string;
+  fileName?: string;
+};
 
 export type TsImageResource = {
   imageType?: TsImageType | string;
@@ -58,3 +66,17 @@ export function pickTsImageUrl(
   const resource = pickTsImageResource(source, ...imageTypes);
   return normalizeUrl(resource?.url) || undefined;
 }
+
+export const tsImageApi = {
+  async downloadImage(payload: TsImageDownloadPayload) {
+    return defHttp.post<AxiosResponse<Blob>>({
+      url: '/sys/ts-images/download',
+      data: payload,
+      responseType: 'blob',
+      timeout: 60_000,
+    }, {
+      isReturnNativeResponse: true,
+      isTransformResponse: false,
+    });
+  },
+};

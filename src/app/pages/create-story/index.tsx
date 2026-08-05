@@ -178,7 +178,7 @@ function createDefaultChapter(chapterNo: number): ChapterForm {
   return {
     chapterNo,
     chapterTitle: translate('createStory.outline.chapterTitle', { number: chapterNo }),
-    chapterDesc: translate('createStory.outline.chapterDescription'),
+    chapterDesc: '',
     openingContent: '',
     missionTarget: '',
     forbiddenRoleIds: [],

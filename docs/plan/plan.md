@@ -519,3 +519,112 @@
 - `retryable=true` 保留给页面决定是否展示重试入口。
 - 前端仅支持并发送 `zh-CN`、`zh-TW`、`en-US`、`ja`。
 - Admin Chat 固定文案支持四语言，动态 AI 内容和选项 label 不被二次翻译。
+
+## 创建故事空页面退出误提示
+
+### 背景
+- 目标：新进入 `/pages/create-story` 且未进行任何操作时，返回不弹出保存草稿提示。
+- 边界：不修改页面布局、展示文案或已有草稿保存接口。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 判断条件排查 | 已完成 | 默认章节描述被误判为有效编辑内容 | `createDefaultChapter`、`hasEffectiveContent` |
+| T2 默认数据修复 | 已完成 | 默认章节描述仅作为 UI fallback，不写入表单状态 | `create-story/index.tsx` |
+| T3 验证与记录 | 已完成 | Babel、默认状态断言、差异与编码检查通过；整文件 ESLint 运行 120 秒超时 | 验证命令与修改日志 |
+
+### 验收标准
+- 新建故事页未操作时返回，直接离开页面。
+- 用户填写章节内容或其他故事字段后返回，仍显示草稿提示。
+- 章节描述提示文案的视觉展示保持不变。
+
+## Admin Chat 图片下载与图库保存
+
+### 背景
+- 目标：Agent 生成的角色形象和故事背景图片支持直接下载、幂等保存到用户图库。
+- 边界：不改变 Agent 图片事件结构；下载失败不打开原图兜底；同一用户按 Agent Event ID 只保存一次。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 字段映射 | 已完成 | `eventId -> sourceKey`，`resourceType -> sourceType`，`imageUrl -> sourceImageUrl` | `ts-agent-chat-stream.ts`、`ts-role-image.ts` |
+| T2 后端幂等导入 | 已完成 | 导入前查询、软删除恢复、唯一索引并发兜底，返回 `alreadySaved` | 图片素材 Service、Mapper、SQL |
+| T3 图片操作 UI | 已完成 | 图片底部增加下载和保存按钮，保存状态在卡片内反馈 | `admin-chat-image-actions.tsx` |
+| T4 图库分类 | 已完成 | 角色图库和故事背景图库分别识别新来源类型 | `my-gallery/index.tsx` |
+| T5 验证与记录 | 已完成 | 后端编译、前端 Babel/ESLint、四语言键一致性、差异与编码检查通过 | 验证命令 |
+
+### 验收标准
+- 下载成功时保存图片文件，失败时仅提示下载失败。
+- 同一用户重复保存同一 `eventId` 时不新增素材，并提示已保存。
+- `role_image` 进入角色图库，`story_scene_image` 进入故事背景图库。
+- 实时 SSE 与历史消息中的图片均可执行相同操作。
+
+## Admin Chat 图片代理下载
+
+### 背景
+- 目标：将 Admin Chat 的跨域原图下载改为 TS 后端代理下载，避免 OSS CORS 导致浏览器 `fetch` 失败。
+- 边界：下载不保存图片、不关联角色或故事，不改变现有图片卡片布局与“保存”按钮逻辑。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 后端下载接口 | 已完成 | 新增 `POST /sys/ts-images/download`，校验远程图片并输出附件流 | 后端 Controller/Service/DTO |
+| T2 前端 API 接入 | 已完成 | API 层接收 Blob，Admin Chat 使用接口下载 | `ts-image.ts`、图片操作组件 |
+| T3 验证与文档 | 已完成 | 后端编译、测试源码编译、前端转译/Lint、差异与编码检查 | 验证命令与修改日志 |
+
+### 验收标准
+- 可直接访问但不允许浏览器跨域读取的图片，可通过 Admin Chat 下载。
+- 接口仅代理公网 HTTP/HTTPS 图片，不写入用户素材表。
+- 下载期间禁止重复点击，失败时保留现有四语言提示。
+- 不修改图片卡片的尺寸、间距、颜色和按钮布局。
+
+## Admin Chat 图片 Tool 后 LLM 文本去重
+
+### 背景
+- 目标：修复图片 Tool 完成后，`llm.end` 聚合文本覆盖旧 LLM step，导致同一内容在 Tool 前后重复显示。
+- 边界：不改变后端 SSE 协议，不修改 Admin Chat 页面布局和图片卡片样式。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 Reducer 修复 | 已完成 | Tool 后续 delta 关联最近 LLM 节点，`llm.end` 不覆盖已有流式文本 | `ts-agent-chat-stream.ts` |
+| T2 回归测试 | 已完成 | 覆盖 Tool 失败、重试成功、图片返回及聚合 `llm.end` | `ts-agent-chat-stream.test.ts` |
+| T3 代码级验证 | 已完成 | Jest 23/23、Web Babel、差异及编码检查通过；整文件 ESLint 仅报告既有规则问题 | 验证命令 |
+
+### 验收标准
+- Tool 前后的真实 LLM 文本按顺序各显示一次。
+- `llm.end` 的聚合内容不再重复覆盖已有 delta 文本。
+- 图片 Tool 的失败、成功、图片地址和操作按钮逻辑保持不变。
+
+## Admin Chat 图片 Tool 生命周期组件
+
+### 背景
+- 目标：图片 Tool 从 `tool.start` 开始即展示图片生成组件，不再先显示普通 Tool 调用卡片。
+- 边界：沿用现有 SSE 事件，不新增 `running/done/error` 业务字段，不影响普通 Tool。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 状态归并 | 已完成 | 保留 `tool.start` 声明的图片类型，避免 `tool.error` 覆盖 | `ts-agent-chat-stream.ts` |
+| T2 图片组件 | 已完成 | start 显示加载，end 显示图片操作，error 显示失败 | `admin-chat-image-tool-card.tsx` |
+| T3 验证与记录 | 已完成 | Jest 24/24、Babel、ESLint、四语言键一致性与编码检查通过 | 验证命令 |
+
+### 验收标准
+- `tool.start + contentType=image` 立即显示图片加载组件。
+- `tool.end` 在原组件中显示图片、下载和保存按钮。
+- `tool.error` 在原组件中显示图片生成失败。
+- 普通 Tool 继续使用原有 Tool 卡片。
+
+## Admin Chat 助手事件时间线
+
+### 背景
+- 目标：LLM 与 Tool 事件统一归属助手消息，历史消息按真实执行顺序还原文字和 Tool。
+- 边界：Tool 完整事件结构保持不变；不保存逐字 `llm.delta`；不修改聊天页面布局。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 后端消息归属 | 已完成 | 预创建 streaming 助手消息，事件改为关联助手消息 | Agent Reply、Message Service |
+| T2 LLM 段落事件 | 已完成 | Tool 前切分并保存 LLM 完整段落，节点结束保存尾段 | AgentEventPublisher |
+| T3 前端历史回放 | 已完成 | 同一助手消息内按顺序回放 LLM 与 Tool | admin-chat、stream reducer |
+| T4 验证与记录 | 已完成 | 后端编译、前端 Jest/TS 转译、编码与差异检查 | 验证命令 |
+
+### 验收标准
+- User 消息的 `events` 为空，LLM/Tool 事件归属对应 Assistant 消息。
+- Tool 的 `input/output/error/metrics` 保存结构保持不变。
+- 历史消息按 `LLM 文本 -> Tool -> LLM 文本` 顺序展示。
+- 有完整事件时间线时不重复显示聚合助手正文。

@@ -41,7 +41,7 @@
 | --- | --- | --- | --- | --- |
 | 页面导航 Hub | `/pages` | `src/app/pages/index.tsx` | `StyleSheet.create`（页面内） | 无（用于跳转所有页面） |
 | 聊天页 | `/pages/chat` | `src/app/pages/chat/index.tsx` | `chat/components/*/styles.ts`（6个子样式） | 已接 `tsChatApi`/`tsAgentChatApi` 消息、回复建议与语音接口；输入框、功能入口、提示弹窗和前端兜底支持四语言，用户消息和 AI 返回内容保持原文 |
-| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 Agent 会话历史与 SSE；`async === true` 的 Tool 按 `eventId` 显示通用异步状态标记；`contentType=image` 的图片 Tool 使用扁平媒体字段实时展示并支持历史恢复；结构化错误与固定界面文案支持简中、繁中、英文、日文 |
+| Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 Agent 会话历史与 SSE；历史记录按助手消息内的 LLM/Tool 事件顺序还原；`async === true` 的 Tool 按 `eventId` 显示通用异步状态标记；`contentType=image` 的图片 Tool 从 `tool.start` 起使用独立生命周期组件，支持生成中、失败、完成图片、下载及按 `eventId` 幂等保存到图库；结构化错误与固定界面文案支持简中、繁中、英文、日文 |
 | System 聊天页 | `/pages/system-chat` | `src/app/pages/system-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 复制自原始 `admin-chat` 的简单聊天逻辑，需要显式 `agentSessionId` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
 | 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList`；页签、分类、空状态和前端兜底支持四语言 |
@@ -73,6 +73,8 @@
 | `src/lib/api/ts-role.ts` | `getRoleAuthorPublic(roleId)` | GET | `/sys/ts-roles/author-public` | `roleId` | `displayName`、`avatar`、`verified`、`bio` | 角色详情页 |
 | `src/lib/api/ts-role.ts` | `generateRoleSetting(payload)` | POST | `/sys/ts-roles/one-click-setting` | 角色设定字段、`templateMode` | `backgroundStory`、`greeting` 等 | 创建角色页，`background_optimize` 美化背景，`greeting_optimize` 美化开场白 |
 | `src/lib/api/ts-role.ts` | `optimizeImagePrompt(payload)` | POST | `/sys/ts-roles/optimize-image-prompt` | `promptText` | `visualPrompt`、`negativePrompt`、`renderedPrompt`、`snapshotKey` | 角色形象提示词优化，后端按 `role_image_prompt_optimize::v1` 模板渲染 |
+| `src/lib/api/ts-role-image.ts` | `importGeneratedImage(payload)` | POST | `/sys/ts-user-image-assets/import` | `sourceImageUrl`、`sourceType`、`sourceKey` | 图片素材、`alreadySaved` | 生成选择页、角色保存、Admin Chat 图片保存 |
+| `src/lib/api/ts-image.ts` | `downloadImage(payload)` | POST | `/sys/ts-images/download` | `sourceImageUrl`、可选 `fileName` | 图片 Blob、响应文件名 | Admin Chat 图片下载 |
 | `src/lib/api/ts-draft.ts` | `getDraftList/getDraftDetail/createDraft/updateDraft/deleteDraft` | GET/POST/PUT/DELETE | `/sys/ts-drafts` | `draftType`、`draftName`、`sourceId`、`content` | 草稿分页、详情及完整页面状态 | 草稿箱、创建角色页、创建故事页 |
 | `src/lib/api/ts-chat.ts` | `getSessionList / getSessionDetail / createSession / createAiReply / createTemplateAiReply / createReplySuggestions` | GET/POST | `/sys/ts-chat-sessions` 及子接口 | 会话、角色、故事、用户输入相关参数 | 会话列表、会话详情、AI 回复、候选建议 | 聊天页 / 我的页 |
 | `src/lib/api/ts-agent-chat.ts` | `getSessionList(params)` | GET | `/sys/ts-agent-chat-sessions` | `pageNo`、`pageSize`、`keyword`、`agentCode`、`sessionStatus` | `records`、`total`、`sessionTitle`、`sessionSummary`、`lastMessageAt` 等 | Agent 聊天页/会话列表 |
@@ -109,7 +111,7 @@
 | `role-detail` | `/sys/ts-roles/detail`、`/sys/ts-roles/author-public` | 角色名、封面、作者名、作者头像、认证标识、关于/故事文案 | “连接者/粉丝/对话数”仍为 `--` 占位，不接数量接口 |
 | `create-role` | `/sys/ts-roles/one-click-setting` | `background_optimize` 仅回填角色背景，`greeting_optimize` 仅回填开场白 | 两个美化请求互斥执行，保留现有 UI 布局 |
 | `admin-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 会话标题、摘要、消息列表、用户输入、Agent 回复 | 当前已切换到 Agent 会话链路，不再走旧聊天接口；进入页时先取最近会话，若列表为空则空白进入，首条消息发送时懒创建 session |
-| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、Agent/SubAgent/LLM/Tool 片段、确认选项、异步 Tool 状态、图片 Tool | `contentType=options` 显示动态选项；`contentType=image` 直接读取扁平图片字段；`async === true` 显示通用 Tool 标记且不展示结果；前端不主动决定 SSE 结束 |
+| `admin-chat`（流式） | `/sys/ts-agent-chat-sessions/ai-reply`（`stream=true`） | SSE 事件流、Agent/SubAgent/LLM/Tool 片段、确认选项、异步 Tool 状态、图片 Tool | `contentType=options` 显示动态选项；`contentType=image` 读取扁平图片字段并提供下载/保存；保存时映射 `eventId -> sourceKey`、`resourceType -> sourceType`；`async === true` 显示通用 Tool 标记且不展示结果 |
 | `system-chat` | `/sys/ts-agent-chat-sessions/detail`、`/sys/ts-agent-chat-messages`、`/sys/ts-agent-chat-sessions/ai-reply` | 简单 Agent 聊天、消息列表、用户输入、AI 回复 | 原始 admin-chat 逻辑的独立复制页 |
 | `verification-code-login` | `/sys/phoneLogin` | 手机号+验证码登录，写入 token 后跳转 `/pages/chat` | 验证码发送逻辑目前是前端倒计时模拟 |
 | `create-character` / `generating-select` | `/sys/ai-images/generate`、`/sys/ts-user-image-assets/import` | Zustand 临时草稿保存提示词、风格和参考图；生图只返回临时原图；生成选择页点击“完成”或创建角色页最终保存时，才转存图片资产 | Store 不持久化；未确认的候选图不会写入用户图片素材 |

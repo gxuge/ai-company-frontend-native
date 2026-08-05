@@ -27,6 +27,21 @@
   },
   "greeting": "嗨～灵感工坊开张啦！✨ 你想先创造一个让人心动的角色，还是搭建一段超有戏的故事？把脑海里的小火花告诉我，我们一起让它活起来吧！",
   "inputPlaceholder": "发消息或按住说话...",
+  "imageActions": {
+    "alreadySaved": "已保存到图库啦",
+    "download": "下载",
+    "downloadFailed": "下载失败",
+    "save": "保存",
+    "saveFailed": "保存失败",
+    "saveSuccess": "已保存到图库",
+    "saved": "已保存",
+    "saving": "保存中..."
+  },
+  "imageTool": {
+    "failed": "图片生成失败",
+    "generating": "图片生成中...",
+    "interrupted": "图片生成已停止"
+  },
   "menu": "菜单",
   "newConversation": "新建会话",
   "rename": {
@@ -49,6 +64,7 @@
     "statusDone": "已完成",
     "statusError": "失败",
     "statusIdle": "待开始",
+    "statusInterrupted": "已停止",
     "statusRunning": "生成中",
     "toolCall": "工具调用"
   }

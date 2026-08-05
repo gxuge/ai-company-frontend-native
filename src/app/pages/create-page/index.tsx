@@ -1,6 +1,6 @@
 import Env from 'env';
 import { router, useIsFocused } from 'expo-router';
-import { Bot, Inbox } from 'lucide-react';
+import { Bot, Inbox, LoaderCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -410,7 +410,13 @@ function DraftBoxButton({ count, loading, onPress }: DraftBoxButtonProps) {
           {t('createPage.drafts')}
         </span>
         <span className="flex h-[30px] min-w-[30px] items-center justify-center rounded-full bg-brand-green px-[8px] text-[16px] font-bold text-black">
-          {loading ? '...' : count}
+          {loading
+            ? (
+                <LoaderCircle aria-hidden="true" className="animate-spin" size={16} strokeWidth={2.5} />
+              )
+            : (
+                count
+              )}
         </span>
       </button>
     </div>
@@ -552,7 +558,7 @@ export default function App() {
       setDraftNotice(t('createPage.draftEmpty'));
       return;
     }
-    router.push('/pages/draft');
+    router.push('/pages/draft-list' as any);
   };
 
   return (

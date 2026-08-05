@@ -1,5 +1,6 @@
 import { iterateSseEvents } from '../stream';
 import {
+  createAgentChatHistoryState,
   createAsyncToolHistoryState,
   createImageToolHistoryState,
   createInitialAgentChatStreamState,
@@ -440,6 +441,172 @@ describe('image tool realtime and history', () => {
     });
     expect(JSON.stringify(historyState)).not.toContain('"result"');
   });
+
+  it('keeps image classification when tool.error reports an error content type', () => {
+    let state = applyAgentEvent(createInitialAgentChatStreamState(), 'tool.start', {
+      content: 'Calling role_generate_role_image',
+      contentType: 'image',
+      name: 'role_create_image',
+      status: 2,
+      toolName: 'role_generate_role_image',
+      type: 'tool',
+    });
+    state = applyAgentEvent(state, 'tool.error', {
+      content: 'Image generation failed',
+      contentType: 'error',
+      name: 'role_create_image',
+      status: 0,
+      toolName: 'role_generate_role_image',
+      type: 'tool',
+    });
+
+    expect(state.steps.at(-1)).toMatchObject({
+      contentType: 'image',
+      status: 'error',
+      toolName: 'role_generate_role_image',
+    });
+  });
+});
+
+describe('assistant history timeline', () => {
+  it('restores LLM text and tools in their persisted order', () => {
+    const historyState = createAgentChatHistoryState([
+      {
+        id: 'llm-1',
+        type: 'llm',
+        name: 'deepseek-v4-flash',
+        nodeName: 'role_create_image',
+        content: '我先帮你整理形象设定。',
+        status: 1,
+        data: {
+          input: { promptCode: 'role_image_generate' },
+          output: { content: '我先帮你整理形象设定。' },
+        },
+      },
+      {
+        id: 'tool-1',
+        type: 'tool',
+        name: 'role_generate_role_image',
+        nodeName: 'role_create_image',
+        content: '图片生成失败',
+        status: 0,
+        data: {
+          input: { arguments: {} },
+          output: null,
+          error: { code: 'IMAGE_FAILED', message: '图片生成失败' },
+          metrics: {},
+        },
+      },
+      {
+        id: 'llm-2',
+        type: 'llm',
+        name: 'deepseek-v4-flash',
+        nodeName: 'role_create_image',
+        content: '刚才出了点状况，我再试一次。',
+        status: 1,
+        data: {
+          output: { content: '刚才出了点状况，我再试一次。' },
+        },
+      },
+      {
+        id: 'tool-2',
+        type: 'tool',
+        name: 'role_generate_role_image',
+        nodeName: 'role_create_image',
+        content: '图片生成完成',
+        status: 1,
+        data: {
+          input: { arguments: {} },
+          output: {
+            contentType: 'image',
+            resourceType: 'role_image',
+            imageUrl: 'https://example.com/role.png',
+          },
+          error: null,
+          metrics: {},
+        },
+      },
+    ]);
+
+    expect(historyState?.steps.map(step => [step.kind, step.text, step.status])).toEqual([
+      ['llm', '我先帮你整理形象设定。', 'done'],
+      ['tool', '图片生成失败', 'error'],
+      ['llm', '刚才出了点状况，我再试一次。', 'done'],
+      ['tool', '', 'done'],
+    ]);
+    expect(historyState?.steps[3]).toMatchObject({
+      eventId: 'tool-2',
+      contentType: 'image',
+      imageUrl: 'https://example.com/role.png',
+    });
+    expect(historyState?.finalStatus).toBe('done');
+  });
+});
+
+describe('reduceAgentChatStreamState tool-wrapped LLM text', () => {
+  it('does not duplicate streamed text when llm.end contains the aggregated buffer', () => {
+    let state = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'subagent.start',
+      {
+        content: '开始执行 role_image_task_agent',
+        name: 'role_image_task_agent',
+        status: 2,
+        type: 'subagent',
+      },
+    );
+    state = applyAgentEvent(state, 'llm.start', {
+      content: '开始生成',
+      name: 'role_create_image',
+      status: 2,
+      type: 'llm',
+    });
+    state = reduceAgentChatStreamState(state, 'llm.delta', '先补全角色形象。');
+    state = applyAgentEvent(state, 'tool.start', {
+      eventId: 'image-failed',
+      name: 'role_create_image',
+      toolName: 'role_generate_role_image',
+      status: 2,
+    });
+    state = applyAgentEvent(state, 'tool.error', {
+      eventId: 'image-failed',
+      name: 'role_create_image',
+      toolName: 'role_generate_role_image',
+      status: 0,
+    });
+    state = reduceAgentChatStreamState(state, 'llm.delta', '图片生成失败，我再重试一次。');
+    state = applyAgentEvent(state, 'tool.start', {
+      eventId: 'image-success',
+      name: 'role_create_image',
+      toolName: 'role_generate_role_image',
+      status: 2,
+    });
+    state = applyAgentEvent(state, 'tool.end', {
+      eventId: 'image-success',
+      name: 'role_create_image',
+      toolName: 'role_generate_role_image',
+      status: 1,
+      contentType: 'image',
+      resourceType: 'role_image',
+      imageUrl: 'https://example.com/role.png',
+    });
+    state = applyAgentEvent(state, 'llm.end', {
+      content: '先补全角色形象。图片生成失败，我再重试一次。',
+      name: 'role_create_image',
+      status: 1,
+      type: 'llm',
+    });
+
+    expect(state.steps.filter(step => step.kind === 'llm').map(step => step.text)).toEqual([
+      '先补全角色形象。',
+      '图片生成失败，我再重试一次。',
+    ]);
+    expect(state.steps.find(step => step.eventId === 'image-success')).toMatchObject({
+      status: 'done',
+      contentType: 'image',
+      imageUrl: 'https://example.com/role.png',
+    });
+  });
 });
 
 describe('reduceAgentChatStreamState agent handoff', () => {
@@ -556,5 +723,104 @@ describe('reduceAgentChatStreamState legacy handoff compatibility', () => {
     expect(subagentStarted.finalText).toBe('');
     expect(subagentStarted.pendingMainText).toBe('');
     expect(subagentStarted.steps.find(step => step.kind === 'llm')?.text).toBe('');
+  });
+});
+
+describe('reduceAgentChatStreamState interruption', () => {
+  it('captures run identity from agent.start and preserves partial LLM text', () => {
+    const started = applyAgentEvent(
+      createInitialAgentChatStreamState(),
+      'agent.start',
+      {
+        content: '开始执行',
+        name: 'ts_agent_chat',
+        status: 2,
+        data: {
+          runId: 'run-interrupted-1',
+          sessionId: 101,
+        },
+      },
+    );
+    const llmStarted = applyAgentEvent(started, 'llm.start', {
+      content: '开始生成',
+      name: 'role_create_dialog',
+      status: 2,
+    });
+    const partial = reduceAgentChatStreamState(
+      llmStarted,
+      'llm.delta',
+      '这是已经生成的部分内容。',
+    );
+    const llmStopped = applyAgentEvent(partial, 'llm.end', {
+      content: '这是已经生成的部分内容。',
+      name: 'role_create_dialog',
+      status: 3,
+    });
+    const stopped = applyAgentEvent(llmStopped, 'agent.end', {
+      content: '用户停止',
+      name: 'ts_agent_chat',
+      status: 3,
+    });
+
+    expect(started.runId).toBe('run-interrupted-1');
+    expect(started.sessionId).toBe(101);
+    expect(stopped.active).toBe(false);
+    expect(stopped.finalStatus).toBe('interrupted');
+    expect(stopped.steps.find(step => step.kind === 'llm')?.status).toBe('interrupted');
+    expect(stopped.finalText).toBe('这是已经生成的部分内容。');
+  });
+
+  it('does not mark an already completed tool as interrupted', () => {
+    const started = startMainAgent();
+    const toolStarted = applyAgentEvent(started, 'tool.start', {
+      name: 'completed_tool',
+      toolName: 'completed_tool',
+      status: 2,
+    });
+    const toolCompleted = applyAgentEvent(toolStarted, 'tool.end', {
+      name: 'completed_tool',
+      toolName: 'completed_tool',
+      status: 1,
+      content: '工具已完成',
+    });
+    const stopped = applyAgentEvent(toolCompleted, 'agent.end', {
+      name: 'ts_agent_chat',
+      status: 3,
+      content: '用户停止',
+    });
+
+    expect(stopped.finalStatus).toBe('interrupted');
+    expect(stopped.steps.find(step => step.toolName === 'completed_tool')?.status).toBe('done');
+  });
+
+  it('keeps history interrupted when an async tool completes later', () => {
+    const restored = createAgentChatHistoryState([
+      {
+        id: 'llm-interrupted',
+        type: 'llm',
+        name: 'role_create_dialog',
+        nodeName: 'role_create_dialog',
+        content: '部分生成内容',
+        status: 3,
+      },
+      {
+        id: 'async-tool-completed',
+        type: 'tool',
+        name: 'role_image',
+        nodeName: 'role_image',
+        content: '',
+        status: 1,
+        data: {
+          async: true,
+          output: {
+            contentType: 'image',
+            imageUrl: 'https://example.com/role.png',
+          },
+        },
+      },
+    ]);
+
+    expect(restored?.finalStatus).toBe('interrupted');
+    expect(restored?.steps.find(step => step.eventId === 'async-tool-completed')?.status).toBe('done');
   });
 });

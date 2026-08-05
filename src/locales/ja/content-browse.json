@@ -54,7 +54,9 @@
     "sourceTypes": {
       "reference": "参考画像",
       "generated": "生成画像",
-      "favorite": "お気に入り"
+      "favorite": "お気に入り",
+      "roleImage": "キャラクター画像",
+      "storySceneImage": "ストーリー背景"
     },
     "uncategorized": "未分類",
     "imageFallback": "画像{{id}}",

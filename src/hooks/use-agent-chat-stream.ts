@@ -16,6 +16,7 @@ export type UseAgentChatStreamResult = {
   applyEvent: (messageId: number, eventName: string, dataText: string) => AgentChatStreamState | null;
   markError: (messageId: number, errorText: string) => AgentChatStreamState | null;
   completeTurn: (messageId: number) => AgentChatStreamState | null;
+  interruptTurn: (messageId: number) => AgentChatStreamState | null;
   stopTurn: (messageId?: number) => void;
   isActiveTurn: (messageId: number) => boolean;
 };
@@ -38,6 +39,20 @@ function createErroredState(previous: AgentChatStreamState, errorText: string): 
     agentStatus: 'error',
     finalStatus: 'error',
     error: errorText,
+  };
+}
+
+function createInterruptedState(previous: AgentChatStreamState): AgentChatStreamState {
+  return {
+    ...previous,
+    active: false,
+    agentStatus: 'interrupted',
+    finalStatus: 'interrupted',
+    steps: previous.steps.map(step => (
+      step.status === 'running' && step.asynchronous !== true
+        ? { ...step, status: 'interrupted' }
+        : step
+    )),
   };
 }
 
@@ -103,6 +118,10 @@ export function useAgentChatStream(): UseAgentChatStreamResult {
     applyStateUpdate(messageId, createCompletedState),
   [applyStateUpdate]);
 
+  const interruptTurn = useCallback((messageId: number) =>
+    applyStateUpdate(messageId, createInterruptedState),
+  [applyStateUpdate]);
+
   return {
     state,
     stateRef,
@@ -112,6 +131,7 @@ export function useAgentChatStream(): UseAgentChatStreamResult {
     applyEvent,
     markError,
     completeTurn,
+    interruptTurn,
     stopTurn,
     isActiveTurn,
   };

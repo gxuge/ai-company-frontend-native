@@ -54,7 +54,9 @@
     "sourceTypes": {
       "reference": "Reference",
       "generated": "Generated",
-      "favorite": "Favorite"
+      "favorite": "Favorite",
+      "roleImage": "Character image",
+      "storySceneImage": "Story background"
     },
     "uncategorized": "Uncategorized",
     "imageFallback": "Image {{id}}",

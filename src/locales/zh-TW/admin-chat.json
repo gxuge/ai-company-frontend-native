@@ -27,6 +27,21 @@
   },
   "greeting": "嗨～靈感工坊開張啦！✨ 你想先創造一個讓人心動的角色，還是搭建一段超有戲的故事？把腦海裡的小火花告訴我，我們一起讓它活起來吧！",
   "inputPlaceholder": "傳送訊息或按住說話...",
+  "imageActions": {
+    "alreadySaved": "已儲存到圖庫啦",
+    "download": "下載",
+    "downloadFailed": "下載失敗",
+    "save": "儲存",
+    "saveFailed": "儲存失敗",
+    "saveSuccess": "已儲存到圖庫",
+    "saved": "已儲存",
+    "saving": "儲存中..."
+  },
+  "imageTool": {
+    "failed": "圖片生成失敗",
+    "generating": "圖片生成中...",
+    "interrupted": "圖片生成已停止"
+  },
   "menu": "選單",
   "newConversation": "新增對話",
   "rename": {
@@ -49,6 +64,7 @@
     "statusDone": "已完成",
     "statusError": "失敗",
     "statusIdle": "待開始",
+    "statusInterrupted": "已停止",
     "statusRunning": "生成中",
     "toolCall": "工具呼叫"
   }

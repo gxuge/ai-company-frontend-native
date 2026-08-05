@@ -1,14 +1,14 @@
 import type { TFunction } from 'i18next';
+import type { TsUserImageAsset } from '@/lib/api';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DeviceEventEmitter, Image, Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useSharedValue, useAnimatedStyle, withRepeat, withTiming } from 'react-native-reanimated';
-import { AiHeader } from '@/components/ai-company/ai-header';
+import { ActivityIndicator, DeviceEventEmitter, FlatList, Image, Pressable, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, FadeOut, SlideInDown, SlideOutDown, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { AiEmpty } from '@/components/ai-company/ai-empty';
+import { AiHeader } from '@/components/ai-company/ai-header';
 import { brandGreenRgba } from '@/components/ui/brand';
 import { tsRoleImageApi } from '@/lib/api';
-import type { TsUserImageAsset } from '@/lib/api';
 
 const resolveAsset = (m: any) => m?.default ?? m?.uri ?? m;
 const imgCheckBlack = resolveAsset(require('@/assets/images/my-gallery/check_black.svg'));
@@ -17,7 +17,7 @@ const imgTrashWhite = resolveAsset(require('@/assets/images/my-gallery/trash_whi
 const imgImagePlaceholder = resolveAsset(require('@/assets/images/my-gallery/image_placeholder.svg'));
 const imgFabAddRole = resolveAsset(require('@/assets/images/select-role/fab_add_role.svg'));
 
-const PAGE_SIZE = 60;
+const PAGE_SIZE = 8;
 const ROLE_IMAGE_FILE_NAME_PREFIX = 'role-image-';
 
 type ImageItem = {
@@ -48,18 +48,25 @@ function resolveSourceTypeLabel(sourceType: string | undefined, t: TFunction) {
     reference: 'contentBrowse.gallery.sourceTypes.reference',
     generated: 'contentBrowse.gallery.sourceTypes.generated',
     favorite: 'contentBrowse.gallery.sourceTypes.favorite',
+    role_image: 'contentBrowse.gallery.sourceTypes.roleImage',
+    story_scene_image: 'contentBrowse.gallery.sourceTypes.storySceneImage',
   };
   return translationKeys[key] ? t(translationKeys[key]) : sourceType;
 }
 
 function shouldIncludeRoleGalleryAsset(asset: TsUserImageAsset) {
   const sourceType = typeof asset.sourceType === 'string' ? asset.sourceType.trim().toLowerCase() : '';
-  if (sourceType === 'ai_generate') {
+  if (sourceType === 'ai_generate' || sourceType === 'role_image') {
     return true;
   }
 
   const fileName = typeof asset.fileName === 'string' ? asset.fileName.trim().toLowerCase() : '';
   return fileName.startsWith(ROLE_IMAGE_FILE_NAME_PREFIX);
+}
+
+function shouldIncludeStoryGalleryAsset(asset: TsUserImageAsset) {
+  const sourceType = typeof asset.sourceType === 'string' ? asset.sourceType.trim().toLowerCase() : '';
+  return sourceType === 'story_scene_image';
 }
 
 function mapAssetToImageItem(asset: TsUserImageAsset, index: number, t: TFunction): ImageItem {
@@ -120,7 +127,7 @@ function resolveGalleryPresentation(from: string | undefined, t: TFunction) {
 function ImageCard({ image, index, selected, isManageMode, isSelectedForDelete, onPress }: ImageCardProps) {
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * 60).duration(450)}
+      entering={FadeInDown.delay((index % PAGE_SIZE) * 60).duration(450)}
       style={{ width: '50%', paddingHorizontal: 6, paddingBottom: 14 }}
     >
       <Pressable onPress={onPress}>
@@ -189,8 +196,14 @@ export default function MyGallery() {
   const [isManageMode, setIsManageMode] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const nextPageRef = useRef(1);
+  const pendingAssetsRef = useRef<TsUserImageAsset[]>([]);
+  const loadingRequestRef = useRef(false);
+  const requestVersionRef = useRef(0);
 
   const pulse = useSharedValue(1);
   useEffect(() => {
@@ -207,73 +220,104 @@ export default function MyGallery() {
     };
   });
 
-  useEffect(() => {
-    let alive = true;
+  const loadImages = useCallback(async (reset = false) => {
+    if (loadingRequestRef.current) {
+      return;
+    }
 
-    const loadImages = async () => {
+    loadingRequestRef.current = true;
+    const requestVersion = requestVersionRef.current;
+    const startPage = reset ? 1 : nextPageRef.current;
+    const bufferedAssets = reset ? [] : [...pendingAssetsRef.current];
+    let pageNo = startPage;
+    let backendHasMore = true;
+    let scannedPageCount = 0;
+
+    if (reset) {
       setLoading(true);
-      setLoadError(null);
+    }
+    else {
+      setLoadingMore(true);
+    }
+    setLoadError(null);
 
-      try {
-        const allAssets: TsUserImageAsset[] = [];
-        let pageNo = 1;
-        let hasMore = true;
+    try {
+      const collectedAssets = bufferedAssets;
 
-        while (hasMore) {
-          const pageData = await tsRoleImageApi.getUserImageAssets({
-            pageNo,
-            pageSize: PAGE_SIZE,
+      while (collectedAssets.length < PAGE_SIZE && backendHasMore && scannedPageCount < 200) {
+        const pageData = await tsRoleImageApi.getUserImageAssets({
+          pageNo,
+          pageSize: PAGE_SIZE,
+          ...(isStoryGallery ? { sourceType: 'story_scene_image' } : {}),
+        });
+        const records = (pageData?.records || [])
+          .filter(item => Number.isFinite(Number(item.id)))
+          .filter((item) => {
+            if (isRoleGallery) {
+              return shouldIncludeRoleGalleryAsset(item);
+            }
+            if (isStoryGallery) {
+              return shouldIncludeStoryGalleryAsset(item);
+            }
+            return true;
           });
 
-          const records = pageData?.records || [];
-          allAssets.push(...records);
-
-          if (typeof pageData?.pages === 'number' && pageData.pages > 0) {
-            hasMore = pageNo < pageData.pages;
-          } else {
-            hasMore = records.length >= PAGE_SIZE;
-          }
-
-          pageNo += 1;
-          if (pageNo > 200) {
-            break;
-          }
-        }
-
-        if (!alive) {
-          return;
-        }
-
-        const mapped = allAssets
-          .filter(item => Number.isFinite(Number(item.id)))
-          .filter(item => (isRoleGallery ? shouldIncludeRoleGalleryAsset(item) : true))
-          .map((item, index) => mapAssetToImageItem(item, index, t));
-
-        setImages(mapped);
-      } catch (error) {
-        if (!alive) {
-          return;
-        }
-        setLoadError(extractErrorMessage(error, t('contentBrowse.gallery.loadFailed')));
-      } finally {
-        if (alive) {
-          setLoading(false);
-        }
+        collectedAssets.push(...records);
+        backendHasMore = typeof pageData?.pages === 'number' && pageData.pages > 0
+          ? pageNo < pageData.pages
+          : (pageData?.records || []).length >= PAGE_SIZE;
+        pageNo += 1;
+        scannedPageCount += 1;
       }
-    };
 
-    loadImages().catch((error) => {
-      if (!alive) {
+      if (scannedPageCount >= 200) {
+        backendHasMore = false;
+      }
+
+      if (requestVersion !== requestVersionRef.current) {
         return;
       }
-      setLoading(false);
-      setLoadError(extractErrorMessage(error, t('contentBrowse.gallery.loadFailed')));
-    });
+
+      const nextAssets = collectedAssets.slice(0, PAGE_SIZE);
+      pendingAssetsRef.current = collectedAssets.slice(PAGE_SIZE);
+      nextPageRef.current = pageNo;
+      setHasMore(pendingAssetsRef.current.length > 0 || backendHasMore);
+      setImages((current) => {
+        const existingIds = new Set(reset ? [] : current.map(item => item.id));
+        const mapped = nextAssets
+          .filter(item => !existingIds.has(Number(item.id)))
+          .map((item, index) => mapAssetToImageItem(item, (reset ? 0 : current.length) + index, t));
+        return reset ? mapped : [...current, ...mapped];
+      });
+    }
+    catch (error) {
+      if (requestVersion === requestVersionRef.current) {
+        setLoadError(extractErrorMessage(error, t('contentBrowse.gallery.loadFailed')));
+      }
+    }
+    finally {
+      if (requestVersion === requestVersionRef.current) {
+        loadingRequestRef.current = false;
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    }
+  }, [isRoleGallery, isStoryGallery, t]);
+
+  useEffect(() => {
+    requestVersionRef.current += 1;
+    loadingRequestRef.current = false;
+    nextPageRef.current = 1;
+    pendingAssetsRef.current = [];
+    setImages([]);
+    setHasMore(true);
+    void loadImages(true);
 
     return () => {
-      alive = false;
+      requestVersionRef.current += 1;
+      loadingRequestRef.current = false;
     };
-  }, [i18n.resolvedLanguage, isRoleGallery, t]);
+  }, [i18n.resolvedLanguage, loadImages]);
 
   const selectedImageItem = useMemo(
     () => images.find(item => item.id === selectedImage) || null,
@@ -420,26 +464,45 @@ export default function MyGallery() {
     <View style={{ flex: 1, backgroundColor: '#000000' }}>
       <AiHeader title={galleryPresentation.title} className="px-5 py-4" rightElement={manageButton} />
 
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20, paddingBottom: 128 }}>
-        {loadError ? (
-          <Text style={{ color: '#fca5a5', fontSize: 12, paddingHorizontal: 6, marginBottom: 8 }}>
-            {loadError}
-          </Text>
-        ) : null}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          {images.map((image, index) => (
-            <ImageCard
-              key={image.id}
-              image={image}
-              index={index}
-              selected={selectedImage === image.id}
-              isManageMode={isManageMode}
-              isSelectedForDelete={selectedForDelete.includes(image.id)}
-              onPress={() => handleImageSelect(image.id)}
-            />
-          ))}
-        </View>
-      </ScrollView>
+      <FlatList
+        data={images}
+        numColumns={2}
+        keyExtractor={item => String(item.id)}
+        contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 20, paddingBottom: 128 }}
+        initialNumToRender={PAGE_SIZE}
+        maxToRenderPerBatch={PAGE_SIZE}
+        windowSize={5}
+        onEndReachedThreshold={0.35}
+        onEndReached={() => {
+          if (hasMore && !loading && !loadingMore) {
+            void loadImages();
+          }
+        }}
+        ListHeaderComponent={loadError
+          ? (
+              <Text style={{ color: '#fca5a5', fontSize: 12, paddingHorizontal: 6, marginBottom: 8 }}>
+                {loadError}
+              </Text>
+            )
+          : null}
+        ListFooterComponent={loadingMore
+          ? (
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 20 }}>
+                <ActivityIndicator color={brandGreenRgba(0.9)} size="small" />
+              </View>
+            )
+          : null}
+        renderItem={({ item: image, index }) => (
+          <ImageCard
+            image={image}
+            index={index}
+            selected={selectedImage === image.id}
+            isManageMode={isManageMode}
+            isSelectedForDelete={selectedForDelete.includes(image.id)}
+            onPress={() => handleImageSelect(image.id)}
+          />
+        )}
+      />
 
       {!isManageMode && selectedImage && (
         <Animated.View

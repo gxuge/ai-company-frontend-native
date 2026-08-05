@@ -1,9 +1,10 @@
 import type { FC } from 'react';
 import type { AgentChatStep, AgentChatStepStatus, AgentChatStreamState } from '@/lib/api';
 import { useTranslation } from 'react-i18next';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { isAgentChatConfirmationToolStep } from '@/lib/api';
 import { resolveApiErrorMessage } from '@/lib/i18n';
+import AdminChatImageToolCard from './admin-chat-image-tool-card';
 import AdminChatMarkdownContent from './admin-chat-markdown-content';
 
 export type AdminChatThinkingPanelProps = {
@@ -16,6 +17,7 @@ const statusAccent: Record<AgentChatStepStatus, string> = {
   running: '#f59e0b',
   done: '#22c55e',
   error: '#ef4444',
+  interrupted: '#a3a3a3',
 };
 
 function StepBadge({ text, color }: { text: string; color: string }) {
@@ -44,6 +46,7 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
     running: t('adminChat.thinking.statusRunning'),
     done: t('adminChat.thinking.statusDone'),
     error: t('adminChat.thinking.statusError'),
+    interrupted: t('adminChat.thinking.statusInterrupted'),
   };
   const statusText = step.asynchronous && step.status === 'running'
     ? t('adminChat.thinking.executing')
@@ -86,22 +89,6 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
         <StepBadge text={statusText} color={accent} />
       </View>
 
-      {step.status === 'done' && step.contentType === 'image' && step.imageUrl
-        ? (
-            <Image
-              source={{ uri: step.imageUrl }}
-              resizeMode="cover"
-              style={{
-                width: '100%',
-                aspectRatio: 3 / 4,
-                marginTop: 12,
-                borderRadius: 8,
-                backgroundColor: 'rgba(255,255,255,0.06)',
-              }}
-            />
-          )
-        : null}
-
       {step.status !== 'error' && step.text
         ? (
             <Text
@@ -119,6 +106,13 @@ function ToolStepCard({ step }: { step: AgentChatStep }) {
         : null}
     </View>
   );
+}
+
+function ToolStepRenderer({ step }: { step: AgentChatStep }) {
+  if (step.contentType?.toLowerCase() === 'image') {
+    return <AdminChatImageToolCard step={step} />;
+  }
+  return <ToolStepCard step={step} />;
 }
 
 const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallbackContent }) => {
@@ -150,7 +144,7 @@ const AdminChatThinkingPanel: FC<AdminChatThinkingPanelProps> = ({ state, fallba
     <View>
       {timelineSteps.map((step) => {
         if (step.kind === 'tool') {
-          return <ToolStepCard key={step.id} step={step} />;
+          return <ToolStepRenderer key={step.id} step={step} />;
         }
         if (!step.text.trim()) {
           return null;

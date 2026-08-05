@@ -347,3 +347,45 @@
 - 接口变更：前端响应模型新增结构化消息字段；请求继续通过 `Accept-Language` 发送当前四语言之一，不注册或兼容阿拉伯语
 - UI 影响：不修改页面布局；动态 AI 内容和 Tool 选项保持后端原文
 - 验证：Agent/API 定向 Jest 24/24、Babel 转译、定向 ESLint、JSON 键一致性、`git diff --check` 与编码检查通过；全仓 TypeScript 仍受既有配置和历史类型错误阻塞
+
+## 2026-07-31
+- 任务：创建故事空页面退出误提示修复
+- 变更：默认章节描述改为空表单值，章节卡片继续通过多语言 fallback 展示说明，避免未操作页面被误判为存在有效草稿内容
+- 接口变更：无
+- UI 影响：无布局或文案变化
+- 验证：Babel Web 转译、默认状态断言、`git diff --check` 与编码检查通过；整文件 ESLint 运行 120 秒超时
+
+## 2026-07-31
+- 任务：Admin Chat 生成图片下载与幂等保存
+- 变更：图片底部增加下载/保存操作；导入请求携带 Agent Event ID；图库按角色形象和故事背景分类；新增四语言操作与反馈文案
+- 接口变更：`POST /sys/ts-user-image-assets/import` 新增可选 `sourceKey`，响应新增 `alreadySaved`
+- UI 影响：仅在已完成的图片内容内部底部增加两个操作按钮，不改变聊天消息主体布局
+- 验证：后端 Maven 编译、前端新增组件及关联文件定向 ESLint、Babel Web 转译、四语言 JSON/键一致性、`git diff --check` 与编码检查通过；`my-gallery/index.tsx` 整文件 ESLint 仍包含既有历史规则问题
+
+## 2026-08-04
+- 任务：Admin Chat 图片 Tool 后 LLM 文本去重
+- 变更：Tool 后续 `llm.delta` 继承最近 LLM 节点身份；`llm.end` 仅补齐缺失文本，不再使用聚合内容覆盖已有流式 step
+- 接口变更：无
+- UI 影响：无布局、样式或图片卡片变化
+- 验证：Agent SSE 定向 Jest 23/23、Web Babel、`git diff --check` 与编码检查通过；整文件 ESLint 仅报告既有规则问题
+
+## 2026-08-04
+- 任务：Admin Chat 图片代理下载
+- 变更：下载按钮改为通过 TS 后端获取 Blob，并使用响应附件文件名触发浏览器下载；增加下载中禁用状态
+- 接口变更：新增 `POST /sys/ts-images/download`，请求 `sourceImageUrl/fileName`，响应图片文件流
+- UI 影响：未修改图片卡片或按钮布局，仅复用现有加载图标反馈下载状态
+- 验证：后端模块编译及新增测试源码编译通过；前端定向 ESLint、Babel Web 转译、差异与编码检查通过；根 POM 将 Surefire `skipTests` 固定为 `true`，测试用例未实际执行
+
+## 2026-08-04
+- 任务：Admin Chat 图片 Tool 生命周期展示
+- 变更：图片 Tool 从 `tool.start` 起使用独立图片组件；`tool.end` 原位显示图片和操作按钮；`tool.error` 保留图片类型并原位显示失败
+- 接口变更：无，继续使用现有 `tool.start/tool.end/tool.error` 和 `contentType=image`
+- UI 影响：图片生成阶段不再展示普通 Tool 调用卡片，改为固定比例的图片生成状态区域
+- 验证：Agent SSE 定向 Jest 24/24、新组件与渲染面板 ESLint、Web Babel、四语言键一致性、差异与编码检查通过
+
+## 2026-08-04
+- 任务：Admin Chat 助手消息事件时间线
+- 变更：后端预创建助手消息并绑定 LLM/Tool 事件；Tool 前后切分保存 LLM 正文；前端将同一助手消息的事件还原为连续时间线
+- 接口变更：`/sys/ts-agent-chat-messages` 的 `events[]` 改为归属 Assistant 消息，LLM Event 的 `content` 和 `data.output.content` 保存完整段落
+- UI 影响：不修改布局；历史消息由分散 Tool 气泡改为单个助手气泡内按执行顺序展示
+- 验证：后端模块编译通过；前端 Agent SSE Jest 25/25、TypeScript 转译、`git diff --check` 通过；后端定向测试受既有 `AiragPromptTemplateServiceTest` 编译错误阻塞

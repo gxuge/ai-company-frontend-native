@@ -121,6 +121,11 @@ export type TsAgentChatReplyResult = {
   createdAt?: string;
 };
 
+export type TsAgentChatStopPayload = {
+  sessionId: number;
+  runId: string;
+};
+
 export const tsAgentChatApi = {
   async getSessionList(params: TsAgentChatSessionQuery) {
     return defHttp.get<TsAgentChatSessionPage>({
@@ -190,5 +195,12 @@ export const tsAgentChatApi = {
         signal,
       },
     );
+  },
+
+  async stopAiReply(payload: TsAgentChatStopPayload) {
+    return defHttp.post<string>({
+      url: '/sys/ts-agent-chat-sessions/ai-reply/stop',
+      data: payload,
+    });
   },
 };

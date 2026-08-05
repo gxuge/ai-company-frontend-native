@@ -21,6 +21,7 @@ export type TsUserImageAssetImportPayload = {
   sourceImageUrl: string;
   fileName?: string;
   sourceType?: string;
+  sourceKey?: string;
 };
 
 export type TsRoleGenerateImageByPromptPayload = {
@@ -46,6 +47,7 @@ export type TsUserImageAsset = {
   fileUrl?: string;
   thumbnailUrl?: string;
   sourceType?: string;
+  alreadySaved?: boolean;
   status?: number;
   createdAt?: string;
   updatedAt?: string;

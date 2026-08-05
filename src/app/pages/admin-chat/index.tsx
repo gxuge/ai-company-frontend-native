@@ -2,10 +2,10 @@ import { useEffect, useState, useRef, useCallback, type ReactNode } from "react"
 import { useLocalSearchParams, router } from "expo-router";
 import { View, Text, Pressable, TextInput, useWindowDimensions, Image, ScrollView, Modal } from "react-native";
 import { useTranslation } from "react-i18next";
-import Animated, { interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
+import Animated, { cancelAnimation, interpolate, useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, withDelay } from "react-native-reanimated";
 import Env from "env";
 import type { AgentChatStreamState, TsAgentChatMessage, TsAgentChatSession } from "@/lib/api";
-import { createAsyncToolHistoryState, createImageToolHistoryState, hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from '@/lib/api';
+import { createAgentChatHistoryState, hasVisibleAgentChatToolStep, iterateSseEvents, tsAgentChatApi } from '@/lib/api';
 import { resolveApiErrorMessage } from '@/lib/i18n';
 import AdminChatThinkingPanel from "@/components/pages/admin-chat/admin-chat-thinking-panel";
 import AdminChatMarkdownContent from '@/components/pages/admin-chat/admin-chat-markdown-content';
@@ -110,30 +110,20 @@ function writeLastAgentSessionId(sessionId: number | null) {
 
 function toAgentChatMessages(records: TsAgentChatMessage[] | undefined) {
   const source = Array.isArray(records) ? [...records] : [];
-  return source.flatMap((item, index) => {
-    const mapped: ChatMessage[] = [];
+  return source.map((item, index) => {
     const roleType = typeof item.roleType === "string" ? item.roleType.trim().toLowerCase() : "";
     const content = typeof item.content === "string" && item.content.trim() ? item.content.trim() : " ";
-    mapped.push({
+    const streamState = roleType === "user"
+      ? null
+      : createAgentChatHistoryState(item.events);
+    return {
       id: typeof item.id === "number" && Number.isFinite(item.id) ? item.id : index + 1,
       role: roleType === "user" ? "user" as const : "ai" as const,
       content,
-    });
-    item.events?.forEach((event) => {
-      const streamState = createAsyncToolHistoryState(event) || createImageToolHistoryState(event);
-      if (!streamState) {
-        return;
-      }
-      mapped.push({
-        id: `tool-event-${event.id}`,
-        role: 'ai',
-        content: '',
-        loading: streamState.active,
-        status: streamState.finalStatus,
-        streamState,
-      });
-    });
-    return mapped;
+      loading: streamState?.active,
+      status: streamState?.finalStatus,
+      streamState,
+    };
   });
 }
 
@@ -212,12 +202,12 @@ function AIBubble({
   content,
   streamState,
   onSuggestedPress,
-  showSuggestedOptions,
+  suggestedOptionsDisabled,
 }: {
   content: string;
   streamState?: AgentChatStreamState | null;
   onSuggestedPress?: (text: string, optionValue?: string, interactionId?: string) => void;
-  showSuggestedOptions?: boolean;
+  suggestedOptionsDisabled?: boolean;
 }) {
   const isStreaming = streamState?.active;
   const isError = streamState?.finalStatus === 'error';
@@ -226,7 +216,7 @@ function AIBubble({
   const isWaiting = isStreaming && !hasContent && !hasToolTimeline;
   const shouldShowContent = hasContent && !isError && !hasToolTimeline;
   const hasResponseBody = hasToolTimeline || shouldShowContent || isWaiting;
-  const optionPrompt = showSuggestedOptions ? streamState?.optionPrompt : null;
+  const optionPrompt = streamState?.optionPrompt;
 
   return (
     <View style={{ alignSelf: "flex-start", marginBottom: 30 }}>
@@ -264,6 +254,7 @@ function AIBubble({
                 <SuggestedButton
                   key={`${option.label}-${option.optionValue}`}
                   text={option.label}
+                  disabled={suggestedOptionsDisabled}
                   onPress={() => onSuggestedPress?.(
                     option.label,
                     option.optionValue,
@@ -496,7 +487,15 @@ function WebMenuIcon() {
 
 /* ─── Suggested Button ───────────────────────────────────────────────────── */
 // 左对齐推荐问题按钮，宽度与 AI 气泡对齐（Figma: w=390px in 750px grid）
-function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void }) {
+function SuggestedButton({
+  text,
+  onPress,
+  disabled = false,
+}: {
+  text: string;
+  onPress?: () => void;
+  disabled?: boolean;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const scale = useSharedValue(1);
 
@@ -504,12 +503,25 @@ function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void
     transform: [{ scale: scale.value }],
   }));
 
+  useEffect(() => {
+    if (disabled) {
+      setIsHovered(false);
+      scale.value = withTiming(1, { duration: 120 });
+    }
+  }, [disabled, scale]);
+
   const handleHoverIn = () => {
+    if (disabled) {
+      return;
+    }
     setIsHovered(true);
     scale.value = withSpring(1.02, { damping: 15, stiffness: 300 });
   };
 
   const handleHoverOut = () => {
+    if (disabled) {
+      return;
+    }
     setIsHovered(false);
     scale.value = withSpring(1, { damping: 15, stiffness: 300 });
   };
@@ -525,19 +537,29 @@ function SuggestedButton({ text, onPress }: { text: string; onPress?: () => void
           borderRadius: 15,
           justifyContent: "center",
           overflow: "hidden",
-          backgroundColor: isHovered ? "#5a5a54" : "#4a4a45",  // Figma: #4a4a45
+          backgroundColor: disabled ? "#383531" : isHovered ? "#5a5a54" : "#4a4a45",  // Figma: #4a4a45
+          opacity: disabled ? 0.55 : 1,
         }}
+        disabled={disabled}
         onHoverIn={handleHoverIn}
         onHoverOut={handleHoverOut}
-        onPressIn={() => { scale.value = withSpring(0.97, { damping: 15, stiffness: 400 }); }}
-        onPressOut={() => { scale.value = withSpring(isHovered ? 1.02 : 1, { damping: 15, stiffness: 300 }); }}
+        onPressIn={() => {
+          if (!disabled) {
+            scale.value = withSpring(0.97, { damping: 15, stiffness: 400 });
+          }
+        }}
+        onPressOut={() => {
+          if (!disabled) {
+            scale.value = withSpring(isHovered ? 1.02 : 1, { damping: 15, stiffness: 300 });
+          }
+        }}
         onPress={onPress}
       >
         <Text
           style={{
             fontFamily: "'Alibaba PuHuiTi 3.0', 'Noto Sans SC', sans-serif",
             fontSize: 24.8,
-            color: "white",
+            color: disabled ? "#a39b94" : "white",
           }}
         >
           {text}
@@ -684,6 +706,7 @@ export default function App() {
   const [inputValue, setInputValue] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFeatureExpanded, setIsFeatureExpanded] = useState(false);
   const [sessionTitle, setSessionTitle] = useState(defaultSessionTitle);
@@ -716,10 +739,13 @@ export default function App() {
 
   const agentStream = useAgentChatStream();
   const streamAbortRef = useRef<AbortController | null>(null);
+  const stoppingRef = useRef(false);
+  const stopFallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const creatingSessionRef = useRef(false);
   const submittingInteractionIdRef = useRef<string | null>(null);
   const scale = useViewportScale();
   const plusRotate = useSharedValue(0);
+  const sendLoadingRotate = useSharedValue(0);
   const featureExpandProgress = useSharedValue(0);
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [voiceHovered, setVoiceHovered] = useState(false);
@@ -729,7 +755,7 @@ export default function App() {
   const greetingText = t("adminChat.greeting");
 
   const showExpandedLayout = isInputFocused || inputValue.trim().length > 0;
-  const showSendButton = isInputFocused && inputValue.trim().length > 0;
+  const showSendButton = sending || (isInputFocused && inputValue.trim().length > 0);
 
   // 自动撑高逻辑与竖线修复
   useEffect(() => {
@@ -749,6 +775,21 @@ export default function App() {
     plusRotate.value = withTiming(target * 45, { duration: 220 });
     featureExpandProgress.value = withTiming(target, { duration: 260 });
   }, [featureExpandProgress, isFeatureExpanded, plusRotate]);
+
+  useEffect(() => {
+    if (sending) {
+      sendLoadingRotate.value = 0;
+      sendLoadingRotate.value = withRepeat(
+        withTiming(360, { duration: 900 }),
+        -1,
+        false,
+      );
+      return () => cancelAnimation(sendLoadingRotate);
+    }
+    cancelAnimation(sendLoadingRotate);
+    sendLoadingRotate.value = 0;
+    return undefined;
+  }, [sendLoadingRotate, sending]);
 
   useEffect(() => {
     let alive = true;
@@ -993,9 +1034,62 @@ export default function App() {
         ? "running"
         : nextState.finalStatus === "error"
           ? "error"
-          : "success",
+          : nextState.finalStatus === "interrupted"
+            ? "stopped"
+            : "success",
       loading: nextState.active,
     } as ChatMessage));
+  };
+
+  const clearStopFallbackTimer = () => {
+    if (stopFallbackTimerRef.current) {
+      clearTimeout(stopFallbackTimerRef.current);
+      stopFallbackTimerRef.current = null;
+    }
+  };
+
+  const waitForActiveRun = async () => {
+    const deadline = Date.now() + 3000;
+    while (Date.now() < deadline && sendingRef.current) {
+      const state = agentStream.stateRef.current;
+      const runId = typeof state.runId === "string" ? state.runId.trim() : "";
+      const rawSessionId = state.sessionId ?? currentSessionId;
+      const sessionId = Number(rawSessionId);
+      if (runId && Number.isFinite(sessionId) && sessionId > 0) {
+        return { runId, sessionId };
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    return null;
+  };
+
+  const handleStopGenerating = async () => {
+    if (!sendingRef.current || stoppingRef.current) {
+      return;
+    }
+    stoppingRef.current = true;
+    const activeMessageId = agentStream.activeMessageIdRef.current;
+    try {
+      const activeRun = await waitForActiveRun();
+      if (!activeRun || activeMessageId == null) {
+        stoppingRef.current = false;
+        return;
+      }
+      await tsAgentChatApi.stopAiReply(activeRun);
+      if (!sendingRef.current || agentStream.activeMessageIdRef.current !== activeMessageId) {
+        return;
+      }
+      clearStopFallbackTimer();
+      stopFallbackTimerRef.current = setTimeout(() => {
+        const interruptedState = agentStream.interruptTurn(activeMessageId);
+        if (interruptedState) {
+          syncStreamMessage(activeMessageId, interruptedState);
+        }
+        streamAbortRef.current?.abort();
+      }, 5000);
+    } catch {
+      stoppingRef.current = false;
+    }
   };
 
   const refreshSessionTitleIfNeeded = (sessionId: number, nextTitle: string) => {
@@ -1073,12 +1167,23 @@ export default function App() {
 
   const sendMessage = async (rawText: string, optionValue?: string, interactionId?: string) => {
     const text = rawText.trim();
-    if (!text || sending) {
+    if (!text || sendingRef.current) {
       return;
     }
+    sendingRef.current = true;
+    stoppingRef.current = false;
+    clearStopFallbackTimer();
+    setSending(true);
     let sessionId = currentSessionId;
     if (!sessionId) {
-      sessionId = await createAndActivateSession();
+      try {
+        sessionId = await createAndActivateSession();
+      } finally {
+        if (!sessionId) {
+          sendingRef.current = false;
+          setSending(false);
+        }
+      }
       if (!sessionId) {
         return;
       }
@@ -1097,7 +1202,6 @@ export default function App() {
       streamState: agentStream.stateRef.current,
     });
     setInputValue("");
-    setSending(true);
     streamAbortRef.current?.abort();
     streamAbortRef.current = new AbortController();
     try {
@@ -1131,12 +1235,19 @@ export default function App() {
           || (typeof streamError === "object" && streamError !== null && "name" in streamError && (streamError as { name?: string }).name === "AbortError");
 
         if (aborted) {
+          const interruptedState = agentStream.interruptTurn(aiId);
+          if (interruptedState) {
+            syncStreamMessage(aiId, interruptedState);
+          }
           agentStream.stopTurn(aiId);
-          updateMessageById(aiId, (item) => ({
-            ...item,
-            loading: false,
-            status: "stopped",
-          }));
+          return;
+        }
+
+        if (stoppingRef.current) {
+          const interruptedState = agentStream.interruptTurn(aiId);
+          if (interruptedState) {
+            syncStreamMessage(aiId, interruptedState);
+          }
           return;
         }
 
@@ -1171,7 +1282,9 @@ export default function App() {
         return;
       }
 
-      const completedState = agentStream.completeTurn(aiId);
+      const completedState = stoppingRef.current
+        ? agentStream.interruptTurn(aiId)
+        : agentStream.completeTurn(aiId);
       if (!completedState) {
         return;
       }
@@ -1181,11 +1294,10 @@ export default function App() {
         error instanceof DOMException && error.name === "AbortError"
         || (typeof error === "object" && error !== null && "name" in error && (error as { name?: string }).name === "AbortError");
       if (aborted) {
-        updateMessageById(aiId, (item) => ({
-          ...item,
-          loading: false,
-          status: "stopped",
-        }));
+        const interruptedState = agentStream.interruptTurn(aiId);
+        if (interruptedState) {
+          syncStreamMessage(aiId, interruptedState);
+        }
         return;
       }
 
@@ -1198,6 +1310,9 @@ export default function App() {
         streamState: null,
       }));
     } finally {
+      clearStopFallbackTimer();
+      stoppingRef.current = false;
+      sendingRef.current = false;
       setSending(false);
       streamAbortRef.current = null;
       agentStream.stopTurn(aiId);
@@ -1206,6 +1321,9 @@ export default function App() {
 
   /** 发送消息（用户） */
   const handleSend = () => {
+    if (sendingRef.current) {
+      return;
+    }
     textAreaRef.current?.blur();
     setIsInputFocused(false);
     setIsFeatureExpanded(false);
@@ -1214,23 +1332,14 @@ export default function App() {
 
   /** 点击推荐问题快速发送 */
   const handleSuggestedMessage = (text: string, optionValue?: string, interactionId?: string) => {
+    if (sendingRef.current) {
+      return;
+    }
     if (interactionId) {
       if (submittingInteractionIdRef.current === interactionId) {
         return;
       }
       submittingInteractionIdRef.current = interactionId;
-      setMessages(prev => prev.map((message) => {
-        if (message.streamState?.optionPrompt?.interactionId !== interactionId) {
-          return message;
-        }
-        return {
-          ...message,
-          streamState: {
-            ...message.streamState,
-            optionPrompt: null,
-          },
-        };
-      }));
     }
     void sendMessage(text, optionValue, interactionId).finally(() => {
       if (submittingInteractionIdRef.current === interactionId) {
@@ -1245,6 +1354,10 @@ export default function App() {
 
   const plusIconAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${plusRotate.value}deg` }],
+  }));
+
+  const sendLoadingAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${sendLoadingRotate.value}deg` }],
   }));
 
   const featureCardsAnimatedStyle = useAnimatedStyle(() => ({
@@ -1274,11 +1387,13 @@ export default function App() {
           borderRadius: 12,
           alignItems: "center",
           justifyContent: "center",
-          opacity: showSendButton && sending ? 0.45 : 1,
         }}
-        disabled={showSendButton && sending}
         onPressIn={() => {
           submitPressStartedRef.current = showSendButton;
+          if (sending) {
+            void handleStopGenerating();
+            return;
+          }
           if (showSendButton) {
             handleSend();
           }
@@ -1292,11 +1407,46 @@ export default function App() {
         }}
       >
         {showSendButton ? (
-          <Image
-            source={imgSubmitMessage}
-            style={{ width: 32, height: 32 }}
-            resizeMode="contain"
-          />
+          sending ? (
+            <View
+              accessibilityLabel={t('adminChat.cancel')}
+              style={{
+                width: 32,
+                height: 32,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Animated.View
+                style={[
+                  {
+                    position: "absolute",
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    borderWidth: 3,
+                    borderColor: "rgba(255, 137, 4, 0.28)",
+                    borderTopColor: "#ff8904",
+                  },
+                  sendLoadingAnimatedStyle,
+                ]}
+              />
+              <View
+                style={{
+                  width: 9,
+                  height: 9,
+                  borderRadius: 2,
+                  backgroundColor: "#ff8904",
+                }}
+              />
+            </View>
+          ) : (
+            <Image
+              source={imgSubmitMessage}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+          )
         ) : (
           <Animated.View style={plusIconAnimatedStyle}>
             <Image
@@ -1406,7 +1556,9 @@ export default function App() {
                     content={msg.content}
                     streamState={msg.streamState}
                     onSuggestedPress={handleSuggestedMessage}
-                    showSuggestedOptions={index === messages.length - 1}
+                    suggestedOptionsDisabled={messages
+                      .slice(index + 1)
+                      .some(message => message.role === "user")}
                   />
                 )
               : <UserBubble key={msg.id} content={msg.content} />

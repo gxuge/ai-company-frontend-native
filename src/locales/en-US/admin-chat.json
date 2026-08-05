@@ -27,6 +27,21 @@
   },
   "greeting": "Hi! The imagination workshop is open! ✨ Would you like to create a lovable character or build a story full of surprises? Share that little spark in your mind, and let's bring it to life together!",
   "inputPlaceholder": "Type a message or hold to talk...",
+  "imageActions": {
+    "alreadySaved": "Already saved to your gallery",
+    "download": "Download",
+    "downloadFailed": "Download failed",
+    "save": "Save",
+    "saveFailed": "Save failed",
+    "saveSuccess": "Saved to your gallery",
+    "saved": "Saved",
+    "saving": "Saving..."
+  },
+  "imageTool": {
+    "failed": "Image generation failed",
+    "generating": "Generating image...",
+    "interrupted": "Image generation stopped"
+  },
   "menu": "Menu",
   "newConversation": "New conversation",
   "rename": {
@@ -49,6 +64,7 @@
     "statusDone": "Completed",
     "statusError": "Failed",
     "statusIdle": "Pending",
+    "statusInterrupted": "Stopped",
     "statusRunning": "Generating",
     "toolCall": "Tool call"
   }

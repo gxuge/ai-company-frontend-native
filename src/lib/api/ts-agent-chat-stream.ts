@@ -1,7 +1,7 @@
 import type { TsAgentChatMessageEvent } from './ts-agent-chat';
 import i18n from 'i18next';
 
-export type AgentChatStepStatus = 'idle' | 'running' | 'done' | 'error';
+export type AgentChatStepStatus = 'idle' | 'running' | 'done' | 'error' | 'interrupted';
 export type AgentChatStepKind = 'agent' | 'llm' | 'tool';
 
 export type AgentChatStep = {
@@ -113,6 +113,8 @@ export type AgentChatSsePayload = {
   errorCategory?: string;
   retryable?: boolean;
   errorArgs?: Record<string, unknown>;
+  sessionId?: string | number | null;
+  runId?: string | null;
   data?: unknown;
 };
 
@@ -237,6 +239,7 @@ const readStatus = (value: unknown): AgentChatStepStatus | undefined => {
     if (value === 1) return 'done';
     if (value === 0) return 'error';
     if (value === 2) return 'running';
+    if (value === 3) return 'interrupted';
   }
 
   const normalized = readString(value)?.toLowerCase();
@@ -251,6 +254,9 @@ const readStatus = (value: unknown): AgentChatStepStatus | undefined => {
   }
   if (['error', 'failed', 'fail', 'abort', 'aborted'].includes(normalized)) {
     return 'error';
+  }
+  if (['interrupted', 'stopped', 'user_stop'].includes(normalized)) {
+    return 'interrupted';
   }
   return undefined;
 };
@@ -351,6 +357,10 @@ function getToolMediaFields(payload: AgentChatSsePayload) {
     promptCode: readString(payload.promptCode),
     promptVersion: readString(payload.promptVersion),
   };
+}
+
+function mergeToolContentType(current?: string, incoming?: string) {
+  return current?.toLowerCase() === 'image' ? current : incoming || current;
 }
 
 function getToolStepData(
@@ -546,6 +556,9 @@ const mergeStepStatus = (
   if (nextStatus === 'error') {
     return 'error';
   }
+  if (currentStatus === 'done' && nextStatus === 'interrupted') {
+    return 'done';
+  }
   return nextStatus;
 };
 
@@ -606,6 +619,11 @@ export const reduceAgentChatStreamState = (
       agentName,
       agentType: nextStep.agentType,
       currentAgentScope: 'main',
+      sessionId: readIdentifier(payload.sessionId)
+        ?? readNestedIdentifier(data, ['sessionId']),
+      agentSessionId: readNestedIdentifier(data, ['agentSessionId']),
+      runId: readString(payload.runId)
+        ?? readNestedString(data, ['runId']),
       finalText: '',
       pendingMainText: '',
       finalPayload: null,
@@ -743,13 +761,16 @@ export const reduceAgentChatStreamState = (
           : -1;
 
       if (stepIndex < 0) {
+        const latestLlmStep = [...previous.steps].reverse().find(item => item.kind === 'llm');
+        const stepName = latestLlmStep?.name || 'LLM';
         const nextStep: AgentChatStep = {
-          id: createStepId('llm', 'LLM'),
+          id: createStepId('llm', stepName),
           kind: 'llm',
-          name: 'LLM',
-          title: 'LLM',
+          name: stepName,
+          title: latestLlmStep?.title || stepName,
           status: 'running',
           text: delta,
+          promptCode: latestLlmStep?.promptCode,
         };
         return {
           ...previous,
@@ -825,7 +846,7 @@ export const reduceAgentChatStreamState = (
         ...step,
         title: step.title || buildStepSummary('llm', payload),
         status: mergeStepStatus(step.status, nextStatus),
-        text: content || step.text,
+        text: step.text || content,
         promptCode: step.promptCode || getPromptCode(payload),
         data: data || step.data,
       }));
@@ -884,7 +905,7 @@ export const reduceAgentChatStreamState = (
         eventId: step.eventId || getToolEventId(payload),
         taskId: step.taskId || getToolTaskId(payload),
         asynchronous: step.asynchronous || asynchronous,
-        contentType: mediaFields.contentType || step.contentType,
+        contentType: mergeToolContentType(step.contentType, mediaFields.contentType),
         resourceType: mediaFields.resourceType || step.resourceType,
         imageUrl: mediaFields.imageUrl || step.imageUrl,
         promptCode: mediaFields.promptCode || step.promptCode,
@@ -920,7 +941,7 @@ export const reduceAgentChatStreamState = (
         eventId: step.eventId || getToolEventId(payload),
         taskId: step.taskId || getToolTaskId(payload),
         asynchronous: step.asynchronous || payloadAsynchronous,
-        contentType: mediaFields.contentType || step.contentType,
+        contentType: mergeToolContentType(step.contentType, mediaFields.contentType),
         resourceType: mediaFields.resourceType || step.resourceType,
         imageUrl: mediaFields.imageUrl || step.imageUrl,
         promptCode: mediaFields.promptCode || step.promptCode,
@@ -965,7 +986,7 @@ export const reduceAgentChatStreamState = (
         eventId: step.eventId || getToolEventId(payload),
         taskId: step.taskId || getToolTaskId(payload),
         asynchronous: step.asynchronous || payloadAsynchronous,
-        contentType: mediaFields.contentType || step.contentType,
+        contentType: mergeToolContentType(step.contentType, mediaFields.contentType),
         resourceType: mediaFields.resourceType || step.resourceType,
         imageUrl: mediaFields.imageUrl || step.imageUrl,
         promptCode: mediaFields.promptCode || step.promptCode,
@@ -1094,8 +1115,97 @@ export function createAsyncToolHistoryState(
   return {
     ...completed,
     active: false,
-    agentStatus: event.status === 0 ? 'error' : 'done',
-    finalStatus: event.status === 0 ? 'error' : 'done',
+    agentStatus: readStatus(event.status) || 'done',
+    finalStatus: readStatus(event.status) || 'done',
+  };
+}
+
+function createToolHistoryPayload(event: TsAgentChatMessageEvent) {
+  const output = readRecord(event.data?.output);
+  return {
+    async: event.data?.async === true,
+    eventId: event.id,
+    name: event.nodeName || event.name || 'Tool',
+    toolName: event.name,
+    taskId: readString(event.data?.taskId),
+    status: event.status,
+    content: event.content,
+    data: event.data,
+    contentType: readString(output?.contentType),
+    resourceType: readString(output?.resourceType),
+    imageUrl: readString(output?.imageUrl),
+    promptCode: readString(output?.promptCode),
+    promptVersion: readString(output?.promptVersion),
+  };
+}
+
+/**
+ * 将助手消息下的完整 LLM/Tool 事件还原成与实时 SSE 一致的时间线。
+ */
+export function createAgentChatHistoryState(
+  events: TsAgentChatMessageEvent[] | undefined,
+): AgentChatStreamState | null {
+  const source = Array.isArray(events) ? events : [];
+  const timelineEvents = source.filter((event) => {
+    const type = readString(event.type)?.toLowerCase();
+    return type === 'llm' || type === 'tool';
+  });
+  let state = createInitialAgentChatStreamState();
+  let hasTimelineEvent = false;
+
+  timelineEvents.forEach((event) => {
+    const type = readString(event.type)?.toLowerCase();
+    if (type === 'llm') {
+      hasTimelineEvent = true;
+      const payload = {
+        eventId: event.id,
+        name: event.nodeName || event.name || 'LLM',
+        status: event.status,
+        content: event.content,
+        data: event.data,
+        promptCode: readString(readRecord(event.data?.input)?.promptCode),
+      };
+      state = reduceAgentChatStreamState(state, 'llm.start', JSON.stringify(payload));
+      state = reduceAgentChatStreamState(
+        state,
+        event.status === 0 ? 'llm.error' : 'llm.end',
+        JSON.stringify(payload),
+      );
+      return;
+    }
+
+    if (type !== 'tool') {
+      return;
+    }
+    hasTimelineEvent = true;
+    const payload = createToolHistoryPayload(event);
+    state = reduceAgentChatStreamState(state, 'tool.start', JSON.stringify(payload));
+    if (event.status === 2 || event.status == null) {
+      return;
+    }
+    state = reduceAgentChatStreamState(
+      state,
+      event.status === 0 ? 'tool.error' : 'tool.end',
+      JSON.stringify(payload),
+    );
+  });
+
+  if (!hasTimelineEvent) {
+    return null;
+  }
+  const active = timelineEvents.some(event => event.status === 2 || event.status == null);
+  const interrupted = timelineEvents.some(event => event.status === 3);
+  const lastEvent = timelineEvents[timelineEvents.length - 1];
+  const finalStatus = active
+    ? 'running'
+    : interrupted
+      ? 'interrupted'
+      : readStatus(lastEvent?.status) || 'done';
+  return {
+    ...state,
+    active,
+    agentStatus: finalStatus,
+    finalStatus,
   };
 }
 
@@ -1110,19 +1220,7 @@ export function createImageToolHistoryState(
     return null;
   }
 
-  const payload = {
-    eventId: event.id,
-    name: event.nodeName || event.name || 'Tool',
-    toolName: event.name,
-    status: event.status,
-    content: event.content,
-    data: event.data,
-    contentType: 'image',
-    resourceType: readString(output?.resourceType),
-    imageUrl: readString(output?.imageUrl),
-    promptCode: readString(output?.promptCode),
-    promptVersion: readString(output?.promptVersion),
-  };
+  const payload = createToolHistoryPayload(event);
   const started = reduceAgentChatStreamState(
     createInitialAgentChatStreamState(),
     'tool.start',
@@ -1136,7 +1234,7 @@ export function createImageToolHistoryState(
   return {
     ...completed,
     active: false,
-    agentStatus: event.status === 0 ? 'error' : 'done',
-    finalStatus: event.status === 0 ? 'error' : 'done',
+    agentStatus: readStatus(event.status) || 'done',
+    finalStatus: readStatus(event.status) || 'done',
   };
 }

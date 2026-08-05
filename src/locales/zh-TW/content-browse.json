@@ -54,7 +54,9 @@
     "sourceTypes": {
       "reference": "參考圖",
       "generated": "生成圖",
-      "favorite": "收藏圖"
+      "favorite": "收藏圖",
+      "roleImage": "角色形象",
+      "storySceneImage": "故事背景"
     },
     "uncategorized": "未分類",
     "imageFallback": "圖片{{id}}",
