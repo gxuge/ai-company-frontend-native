@@ -50,6 +50,33 @@
     "emptyTitle": "会話はありません",
     "emptyDescription": "会話履歴がここに表示されます"
   },
+  "chatList": {
+    "title": "メッセージ",
+    "startConversation": "会話を始める",
+    "official": "公式",
+    "tabs": {
+      "chat": "チャット",
+      "notifications": "通知",
+      "comments": "コメント",
+      "system": "システム"
+    },
+    "notificationsEmptyTitle": "通知はありません",
+    "notificationsEmptyDescription": "新しい通知がここに表示されます",
+    "commentsEmptyTitle": "コメントはありません",
+    "commentsEmptyDescription": "新しいコメントがここに表示されます",
+    "systemEmptyTitle": "システムメッセージはありません",
+    "systemEmptyDescription": "システムメッセージがここに表示されます",
+    "retry": "再読み込み",
+    "loadingMore": "会話をさらに読み込んでいます...",
+    "noMore": "これ以上会話はありません",
+    "bottomTabs": {
+      "home": "ホーム",
+      "search": "検索",
+      "create": "作成",
+      "chat": "メッセージ",
+      "profile": "マイページ"
+    }
+  },
   "conversation": {
     "fallbackDescription": "ストーリー紹介はまだありません",
     "fallbackTitle": "ストーリー詳細",

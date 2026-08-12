@@ -1,22 +1,23 @@
-import { useState } from 'react'
+import type { DiscoveryCategory } from '@/components/pages/content-list/discovery-list-shell';
 
-import imgAbyss from '@/assets/images/story-list/d857cd25fd2cd95c30b3e77aaf6b25a75c49267c.png'
-import imgAcademy from '@/assets/images/story-list/212159a5a4eedd903dd835db3cf84edac8a39da2.png'
-import imgStore from '@/assets/images/story-list/9ceebf4cbd412d98dc6340e2ce29a96ef2752fbb.png'
-import imgTrain from '@/assets/images/story-list/1e3fc443fd6e0883bf862cc9b98f7583bfc8df00.png'
-import imgInn from '@/assets/images/story-list/10aebd501d968dc0c93dd10cc7f042c2434035ea.png'
-import imgCity from '@/assets/images/story-list/ae57479fe8abea67f0f163ee2d20ec61b9656d8e.png'
-import imgHero from '@/assets/images/story-list/9ab83bc8ae040315567ef458f6b8ca0c556e08b3.png'
-import imgReadingThumb from '@/assets/images/story-list/5913b6607124859a4b21e36c5163b32eda3229ae.png'
+import { useState } from 'react';
+import imgTrain from '@/assets/images/story-list/1e3fc443fd6e0883bf862cc9b98f7583bfc8df00.png';
+import imgHero from '@/assets/images/story-list/9ab83bc8ae040315567ef458f6b8ca0c556e08b3.png';
+import imgStore from '@/assets/images/story-list/9ceebf4cbd412d98dc6340e2ce29a96ef2752fbb.png';
+import imgInn from '@/assets/images/story-list/10aebd501d968dc0c93dd10cc7f042c2434035ea.png';
+import imgReadingThumb from '@/assets/images/story-list/5913b6607124859a4b21e36c5163b32eda3229ae.png';
+import imgAcademy from '@/assets/images/story-list/212159a5a4eedd903dd835db3cf84edac8a39da2.png';
+import imgCity from '@/assets/images/story-list/ae57479fe8abea67f0f163ee2d20ec61b9656d8e.png';
 
+import imgAbyss from '@/assets/images/story-list/d857cd25fd2cd95c30b3e77aaf6b25a75c49267c.png';
 import {
+
   DiscoveryCategoryRail,
   DiscoveryListHeader,
   DiscoveryListLayout,
   DiscoveryListSearch,
   DiscoverySectionHeader,
-  type DiscoveryCategory,
-} from '@/components/pages/content-list/discovery-list-shell'
+} from '@/components/pages/content-list/discovery-list-shell';
 
 import {
   ArrowRightIcon,
@@ -24,11 +25,13 @@ import {
   BookmarkIcon,
   FlameIcon,
   SparkIcon,
-} from './icons'
+} from './icons';
 
-/** Pointer-capable devices only — keeps hover styles off touch screens, where
- *  `:hover` sticks after a tap. */
-const hoverable = '[@media(hover:hover)]:hover'
+/**
+ * Pointer-capable devices only — keeps hover styles off touch screens, where
+ *  `:hover` sticks after a tap.
+ */
+const hoverable = '[@media(hover:hover)]:hover';
 
 const CATEGORIES: DiscoveryCategory[] = [
   { label: '热门剧情', glyph: '🔥' },
@@ -37,18 +40,18 @@ const CATEGORIES: DiscoveryCategory[] = [
   { label: '冒险探索', glyph: '🧭' },
   { label: '悬疑推理', glyph: '🔍' },
   { label: '未来幻想', glyph: '🪐' },
-]
+];
 
 type Story = {
-  id: string
-  title: string
-  cover: string
-  lines: [string, string]
-  tags: string[]
-  plays: string
-  chapter: string
-  dot: string
-}
+  id: string;
+  title: string;
+  cover: string;
+  lines: [string, string];
+  tags: string[];
+  plays: string;
+  chapter: string;
+  dot: string;
+};
 
 const STORIES: Story[] = [
   {
@@ -111,22 +114,22 @@ const STORIES: Story[] = [
     chapter: '第15章',
     dot: '#8fdc01',
   },
-]
+];
 
 function StoryCard({
   story,
   saved,
   onToggleSave,
 }: {
-  story: Story
-  saved: boolean
-  onToggleSave: () => void
+  story: Story;
+  saved: boolean;
+  onToggleSave: () => void;
 }) {
   return (
     <article
-      className={`group overflow-hidden rounded-[14px] border border-[#161616] bg-surface transition-colors ${hoverable}:border-[#2a2f22]`}
+      className={`group bg-surface overflow-hidden rounded-[14px] border border-[#161616] transition-colors ${hoverable}:border-[#2a2f22]`}
     >
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <div className="relative aspect-16/10 overflow-hidden">
         <img
           src={story.cover}
           alt={story.title}
@@ -134,7 +137,7 @@ function StoryCard({
           decoding="async"
           className={`size-full object-cover object-top transition-transform duration-500 ${hoverable}:scale-[1.04]`}
         />
-        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-surface to-transparent" />
+        <div className="from-surface absolute inset-x-0 bottom-0 h-14 bg-linear-to-t to-transparent" />
         <button
           type="button"
           aria-label={saved ? '取消收藏' : '收藏'}
@@ -142,18 +145,18 @@ function StoryCard({
           onClick={onToggleSave}
           className="absolute top-1 right-1 grid size-11 place-items-center rounded-full transition-transform active:scale-90"
         >
-          <span className="grid size-8 place-items-center rounded-full bg-black/40 backdrop-blur-sm">
+          <span className="grid size-7 place-items-center rounded-full bg-black/40 backdrop-blur-sm">
             <BookmarkIcon
               filled={saved}
               className={`size-[16px] transition-colors duration-150 ${
-                saved ? 'text-[#97ed08]' : 'text-white/75'
+                saved ? 'text-[#f2c14e]' : 'text-white/75'
               }`}
             />
           </span>
         </button>
       </div>
 
-      <div className="px-[10px] pt-[9px] pb-[9px]">
+      <div className="px-[10px] py-[9px]">
         <h3 className="flex items-center gap-[5px] text-[13px] leading-tight font-bold text-[#c4c4c4]">
           {story.title}
           <span
@@ -168,10 +171,10 @@ function StoryCard({
         </p>
 
         <div className="mt-[7px] flex flex-wrap gap-[5px]">
-          {story.tags.map((tag) => (
+          {story.tags.map(tag => (
             <span
               key={tag}
-              className="rounded-[4px] border border-[#0e0e0e] bg-[#171717] px-[6px] py-[2px] text-[7px] leading-[1.5] text-[#787878]"
+              className="rounded-[4px] border border-[#0e0e0e] bg-neutral-900 px-[6px] py-[2px] text-[7px] leading-normal text-[#787878]"
             >
               {tag}
             </span>
@@ -192,14 +195,14 @@ function StoryCard({
         </div>
       </div>
     </article>
-  )
+  );
 }
 
 export default function StoryHome() {
-  const [category, setCategory] = useState('热门剧情')
-  const [nav, setNav] = useState('广场')
-  const [query, setQuery] = useState('')
-  const [saved, setSaved] = useState<Record<string, boolean>>({})
+  const [category, setCategory] = useState('热门剧情');
+  const [nav, setNav] = useState('广场');
+  const [query, setQuery] = useState('');
+  const [saved, setSaved] = useState<Record<string, boolean>>({});
 
   return (
     <DiscoveryListLayout activeNav={nav} onNavChange={setNav}>
@@ -217,14 +220,14 @@ export default function StoryHome() {
 
       {/* Story poster */}
       <section className="mt-[14px] px-[16px]">
-        <div className="relative aspect-[769/244] overflow-hidden rounded-[16px] border border-[#141414]">
+        <div className="relative aspect-769/244 overflow-hidden rounded-[16px] border border-[#141414]">
           <img
             src={imgHero}
             alt="最后的星港"
             fetchPriority="high"
             className="absolute inset-0 size-full object-contain"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-r from-black/88 via-black/50 to-transparent" />
 
           <div className="absolute inset-0 flex flex-col justify-center px-[16px]">
             <span className="flex items-center gap-[5px] text-[9px] text-[#9b9c9e]">
@@ -255,15 +258,14 @@ export default function StoryHome() {
       {/* Hot stories */}
       <section className="mt-[18px] px-[16px]">
         <DiscoverySectionHeader title="热门故事" />
-        <div className="mt-[11px] grid grid-cols-1 gap-[11px] min-[380px]:grid-cols-2">
-          {STORIES.map((story) => (
+        <div className="mt-[11px] grid grid-cols-2 gap-[11px]">
+          {STORIES.map(story => (
             <StoryCard
               key={story.id}
               story={story}
               saved={Boolean(saved[story.id])}
               onToggleSave={() =>
-                setSaved((prev) => ({ ...prev, [story.id]: !prev[story.id] }))
-              }
+                setSaved(prev => ({ ...prev, [story.id]: !prev[story.id] }))}
             />
           ))}
         </div>
@@ -272,7 +274,7 @@ export default function StoryHome() {
       {/* Continue reading */}
       <section className="mt-[18px] px-[16px]">
         <DiscoverySectionHeader title="继续阅读" action="查看全部" />
-        <div className="mt-[11px] rounded-[12px] border border-[#161616] bg-surface p-3">
+        <div className="bg-surface mt-[11px] rounded-[12px] border border-[#161616] p-3">
           <div className="flex items-stretch gap-3">
             <img
               src={imgReadingThumb}
@@ -287,7 +289,7 @@ export default function StoryHome() {
               <div className="flex items-center gap-3">
                 <div className="h-[7px] flex-1 overflow-hidden rounded-full bg-[#151515]">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#5f9c00] to-[#a8f42a] shadow-[0_0_10px_rgba(143,220,1,0.5)]"
+                    className="h-full rounded-full bg-linear-to-r from-[#5f9c00] to-[#a8f42a] shadow-[0_0_10px_rgba(143,220,1,0.5)]"
                     style={{ width: '63%' }}
                   />
                 </div>
@@ -298,12 +300,12 @@ export default function StoryHome() {
 
           <button
             type="button"
-            className="mt-3 w-full rounded-[10px] border border-[#7cbe03] bg-lime py-[8px] text-[12px] text-[#365700] transition-transform active:scale-[0.98]"
+            className="bg-lime mt-3 w-full rounded-[10px] border border-[#7cbe03] py-[8px] text-[12px] text-[#365700] transition-transform active:scale-[0.98]"
           >
             继续阅读
           </button>
         </div>
       </section>
     </DiscoveryListLayout>
-  )
+  );
 }

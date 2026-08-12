@@ -1,0 +1,19 @@
+{
+  "styles": {
+    "modernCity": "Modern City",
+    "schoolCampus": "School Days",
+    "cozyEveryday": "Cozy Everyday",
+    "easternAncient": "Ancient East",
+    "westernMedieval": "Western Medieval",
+    "magicalFantasy": "Magical Fantasy",
+    "futureSciFi": "Future Sci-Fi",
+    "cyberCity": "Cyber City",
+    "steampunkIndustrial": "Steam Industry",
+    "postApocalyptic": "Wasteland",
+    "mysteriousSuspense": "Mystery",
+    "darkHorror": "Dark Horror",
+    "naturalRealm": "Hidden Nature",
+    "fairyTale": "Fairy Tale",
+    "cosmicOtherworld": "Cosmic Realm"
+  }
+}

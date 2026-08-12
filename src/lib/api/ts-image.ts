@@ -24,8 +24,12 @@ export type TsImageResource = {
   sourceImageId?: number;
 };
 
+export type TsImageResourceCollection
+  = | TsImageResource[]
+    | Record<string, TsImageResource>;
+
 type TsImageResourceOwner = {
-  imageResources?: TsImageResource[] | null;
+  imageResources?: TsImageResourceCollection | null;
 };
 
 function normalizeUrl(value?: string | null) {
@@ -36,10 +40,11 @@ function normalizeUrl(value?: string | null) {
 }
 
 export function getTsImageResources(source?: TsImageResourceOwner | TsImageResource[] | null) {
-  const resources = Array.isArray(source)
-    ? source
-    : Array.isArray(source?.imageResources)
-      ? source.imageResources
+  const imageResources = Array.isArray(source) ? source : source?.imageResources;
+  const resources = Array.isArray(imageResources)
+    ? imageResources
+    : imageResources && typeof imageResources === 'object'
+      ? Object.values(imageResources)
       : [];
 
   return resources.filter((item): item is TsImageResource => Boolean(normalizeUrl(item?.url)));

@@ -5,6 +5,7 @@ import contentBrowse from './content-browse.json';
 import createCharacter from './create-character.json';
 import createPage from './create-page.json';
 import createRole from './create-role.json';
+import createScene from './create-scene.json';
 import createStory from './create-story.json';
 import generatingSelect from './generating-select.json';
 import profile from './profile.json';
@@ -19,6 +20,7 @@ export default {
   createCharacter,
   createPage,
   createRole,
+  createScene,
   createStory,
   generatingSelect,
   profile,

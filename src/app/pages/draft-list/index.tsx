@@ -118,9 +118,35 @@ function resolveRoleStatus(draft: TsDraftRecord) {
   return { label: 'AI生成', dot: imgDotGreen };
 }
 
+function resolveDraftKind(draft: TsDraftRecord): DraftKind {
+  const draftType = String(draft.draftType || '').trim().toLowerCase();
+  if (draftType === 'story') {
+    return 'story';
+  }
+
+  const content = draft.content || {};
+  const storyKeys = [
+    'storyTitle',
+    'storyIntro',
+    'storySettingText',
+    'storyBackground',
+    'sceneSettingText',
+    'outlineText',
+    'chapters',
+    'selectedRoles',
+    'userRoleSetting',
+    'sceneImageUrl',
+  ];
+  if (storyKeys.some(key => Object.prototype.hasOwnProperty.call(content, key))) {
+    return 'story';
+  }
+
+  return 'character';
+}
+
 function mapDraftToCard(draft: TsDraftRecord, index: number): DraftCardModel {
   const content = draft.content || {};
-  const kind: DraftKind = draft.draftType === 'story' ? 'story' : 'character';
+  const kind = resolveDraftKind(draft);
   const updatedAt = draft.updatedAt ? new Date(draft.updatedAt).getTime() : 0;
   const createdAt = draft.createdAt ? new Date(draft.createdAt).getTime() : 0;
   const revisions = readNumber(content, [
@@ -386,10 +412,20 @@ export default function DraftListPage() {
               >
                 {tab.icon
                   ? (
-                      <img
-                        alt=""
-                        src={tab.icon}
-                        className="size-[14px] object-contain sm:size-[15px]"
+                      <span
+                        aria-hidden
+                        className="size-[14px] shrink-0 transition-colors sm:size-[15px]"
+                        style={{
+                          backgroundColor: isActive ? '#8fca16' : '#cfcfcf',
+                          maskImage: `url(${tab.icon})`,
+                          maskPosition: 'center',
+                          maskRepeat: 'no-repeat',
+                          maskSize: 'contain',
+                          WebkitMaskImage: `url(${tab.icon})`,
+                          WebkitMaskPosition: 'center',
+                          WebkitMaskRepeat: 'no-repeat',
+                          WebkitMaskSize: 'contain',
+                        }}
                       />
                     )
                   : null}

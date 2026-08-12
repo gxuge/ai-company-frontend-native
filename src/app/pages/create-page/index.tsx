@@ -1,6 +1,6 @@
 import Env from 'env';
 import { router, useIsFocused } from 'expo-router';
-import { Bot, Inbox, LoaderCircle } from 'lucide-react';
+import { Inbox, LoaderCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +12,8 @@ const imgN4Yr = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets
 const imgAddUser = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/add_user.svg'));
 const imgArrowRight = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/arrow_right.svg'));
 const imgBookScript = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/book_script.svg'));
+const imgAiAssistantBubble = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/ai-assistant/assistant-bubble.png'));
+const imgAiAssistantSpirit = ((m: any) => m?.default ?? m?.uri ?? m)(require('../../../assets/images/create-page/ai-assistant/assistant-spirit.png'));
 // The Figma canvas is 682px wide (spacer divs confirm this)
 const DESIGN_WIDTH = 682;
 
@@ -471,9 +473,10 @@ function AiAssistantButton() {
   const agentCode = Env.EXPO_PUBLIC_TS_AGENT_CHAT_AGENT_CODE?.trim() || 'admin_chat';
 
   return (
-    <div className="absolute bottom-[46.15px] right-[46.15px] z-10">
+    <div className="absolute right-[120px] bottom-[24px] z-10 h-[250px] w-[340px]">
       <button
         type="button"
+        aria-label={t('createPage.aiAssistant')}
         onClick={() => router.push({
           pathname: '/pages/admin-chat',
           params: {
@@ -481,15 +484,28 @@ function AiAssistantButton() {
             ...(agentCode ? { agentCode } : {}),
           },
         })}
-        className="flex h-[77px] items-center gap-[12px] rounded-[38.5px] border-[2px] border-solid border-brand-green bg-brand-green/10 px-[24px] backdrop-blur-[10px] active:bg-brand-green/20 transition-colors cursor-pointer shadow-[0_0_15px_rgba(var(--color-brand-green-rgb),0.3)]"
+        className="relative block size-full cursor-pointer border-0 bg-transparent p-0 transition-transform duration-150 active:scale-[0.97]"
       >
-        <Bot size={32} color="var(--color-brand-green)" />
+        <img
+          aria-hidden="true"
+          alt=""
+          className="pointer-events-none absolute top-0 right-0 w-[250px] max-w-none select-none"
+          draggable={false}
+          src={imgAiAssistantBubble}
+        />
         <span
-          className="text-[26px] font-bold text-brand-green tracking-[1px]"
-          style={{ fontFamily: '\'Noto Sans SC\', sans-serif' }}
+          className="pointer-events-none absolute top-[79px] right-[31px] z-10 flex h-[78px] w-[178px] items-center justify-center text-center text-[20px] leading-[29px] font-bold text-[#234d7e]"
+          style={{ fontFamily: '\'Noto Sans SC\', sans-serif', letterSpacing: 0 }}
         >
-          {t('createPage.aiAssistant')}
+          {t('createPage.aiAssistantPrompt')}
         </span>
+        <img
+          aria-hidden="true"
+          alt=""
+          className="pointer-events-none absolute bottom-0 left-0 w-[240px] max-w-none select-none"
+          draggable={false}
+          src={imgAiAssistantSpirit}
+        />
       </button>
     </div>
   );

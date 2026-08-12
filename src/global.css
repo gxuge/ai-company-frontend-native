@@ -6,6 +6,8 @@
 @theme {
   /* Font families */
   --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-cjk: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', sans-serif;
+  --font-inter: 'Inter', sans-serif;
 
   /* Base colors */
   --color-white: #ffffff;

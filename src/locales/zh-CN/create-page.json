@@ -18,5 +18,6 @@
   "draftEmpty": "草稿箱为空~",
   "draftLoadFailed": "草稿数量加载失败，请稍后重试",
   "acknowledge": "知道了",
-  "aiAssistant": "AI 助手"
+  "aiAssistant": "AI 助手",
+  "aiAssistantPrompt": "需要灵感吗？我来帮你一起创作吧～"
 }

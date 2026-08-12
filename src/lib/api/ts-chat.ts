@@ -1,4 +1,4 @@
-import type { TsImageResource } from './ts-image';
+import type { TsImageResourceCollection } from './ts-image';
 import { defHttp } from './def-http';
 
 export type TsChatSession = {
@@ -7,7 +7,7 @@ export type TsChatSession = {
   storyId?: number;
   targetRoleId?: number;
   roleId?: number;
-  imageResources?: TsImageResource[];
+  imageResources?: TsImageResourceCollection;
   sessionType?: string;
   isSystemSession?: boolean;
   sessionTitle?: string;

@@ -1,15 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import defaultBackground from '@/assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png';
+import animeStyleImage from '@/assets/images/create-character/styles/style-anime.png';
+import chineseStyleImage from '@/assets/images/create-character/styles/style-chinese.png';
+import cuteStyleImage from '@/assets/images/create-character/styles/style-cute.png';
+import cyberStyleImage from '@/assets/images/create-character/styles/style-cyber.png';
+import fantasyStyleImage from '@/assets/images/create-character/styles/style-fantasy.png';
+import generalStyleImage from '@/assets/images/create-character/styles/style-general.png';
+import gothicStyleImage from '@/assets/images/create-character/styles/style-gothic.png';
+import mangaStyleImage from '@/assets/images/create-character/styles/style-manga.png';
+import paintedStyleImage from '@/assets/images/create-character/styles/style-painted.png';
+import pixelStyleImage from '@/assets/images/create-character/styles/style-pixel.png';
+import realisticStyleImage from '@/assets/images/create-character/styles/style-realistic.png';
+import semiRealisticStyleImage from '@/assets/images/create-character/styles/style-semi-realistic.png';
+import steampunkStyleImage from '@/assets/images/create-character/styles/style-steampunk.png';
+import surrealStyleImage from '@/assets/images/create-character/styles/style-surreal.png';
+import watercolorStyleImage from '@/assets/images/create-character/styles/style-watercolor.png';
 import { brandGreenRgba } from '@/components/ui/brand';
 import { tsRoleApi, userApi } from '@/lib/api';
-
-const asset = module => module?.default ?? module?.uri ?? module;
-const defaultBackground = asset(require('../../../assets/images/create-character/0c1b78aba3aba496b5e541b155d9d26bd13e2bfd.png'));
-const generalStyleImage = asset(require('../../../assets/images/create-character/aac0f5e5dcf1334496ad3e147104f67493728acd.png'));
-const animeStyleImage = asset(require('../../../assets/images/create-character/244b06b1832e393bae722ce260380771822cb841.png'));
-const realisticStyleImage = asset(require('../../../assets/images/create-character/aa360f949995ff506ca968a83424f2e58b7f88fa.png'));
-const semiRealisticStyleImage = asset(require('../../../assets/images/create-character/81b66f15612058314874d559300372dd8b03a8df.png'));
 
 const SVG_PATHS = {
   addImage: 'M35.0805 5.53086H31.1521V1.81481C31.1521 0.777777 30.3298 0 29.2336 0C28.1373 0 27.315 0.777777 27.315 1.81481V5.53086H23.3866C22.2904 5.53086 21.4681 6.30864 21.4681 7.34568C21.4681 8.38271 22.2904 9.16048 23.3866 9.16048H27.315V12.8765C27.315 13.9136 28.1373 14.6913 29.2336 14.6913C30.3298 14.6913 31.1521 13.9136 31.1521 12.8765V9.16048H35.0805C36.1768 9.16048 36.999 8.38271 36.999 7.34568C36.999 6.30864 36.1768 5.53086 35.0805 5.53086ZM25.3052 12.8765V11.0617H23.3866C22.2904 11.0617 21.3769 10.6296 20.646 9.93825C19.9151 9.24689 19.4583 8.38271 19.4583 7.34568C19.4583 6.65432 19.6409 6.04937 20.0064 5.53086H3.9274C1.73482 5.53086 -0.000976562 7.17282 -0.000976562 9.16048V31.284C-0.000976562 33.3581 1.73482 35 3.9274 35H27.315C29.4164 35 31.1521 33.3581 31.1521 31.284V16.0741C30.6039 16.3333 29.9644 16.5926 29.2336 16.5926C27.041 16.5061 25.3052 14.8642 25.3052 12.8765ZM25.2138 31.284H5.84593C5.0237 31.284 4.56692 30.4197 5.0237 29.8148L8.9521 24.9753C9.31753 24.4567 10.1397 24.5432 10.5052 25.0618L13.6114 29.4691L18.7274 23.074C19.0928 22.5556 19.9151 22.5556 20.2804 23.074L26.0361 29.8148C26.4929 30.4197 26.0361 31.284 25.2138 31.284Z',
@@ -21,17 +30,17 @@ const STYLE_OPTIONS = [
   { image: animeStyleImage, labelKey: 'anime', value: '动漫插画' },
   { image: realisticStyleImage, labelKey: 'realistic', value: '写实摄影' },
   { image: semiRealisticStyleImage, labelKey: 'semiRealistic', value: '半写实风' },
-  { image: generalStyleImage, labelKey: 'chinese', value: '国风古韵' },
-  { image: generalStyleImage, labelKey: 'cyber', value: '赛博科幻' },
-  { image: generalStyleImage, labelKey: 'fantasy', value: '奇幻史诗' },
-  { image: animeStyleImage, labelKey: 'pixel', value: '像素复古' },
-  { image: generalStyleImage, labelKey: 'cute', value: '卡通萌系' },
-  { image: semiRealisticStyleImage, labelKey: 'painted', value: '厚涂原画' },
-  { image: generalStyleImage, labelKey: 'watercolor', value: '水彩绘本' },
-  { image: generalStyleImage, labelKey: 'manga', value: '日系轻漫' },
-  { image: generalStyleImage, labelKey: 'gothic', value: '暗黑哥特' },
-  { image: generalStyleImage, labelKey: 'steampunk', value: '蒸汽朋克' },
-  { image: generalStyleImage, labelKey: 'surreal', value: '梦幻超现实' },
+  { image: chineseStyleImage, labelKey: 'chinese', value: '国风古韵' },
+  { image: cyberStyleImage, labelKey: 'cyber', value: '赛博科幻' },
+  { image: fantasyStyleImage, labelKey: 'fantasy', value: '奇幻史诗' },
+  { image: pixelStyleImage, labelKey: 'pixel', value: '像素复古' },
+  { image: cuteStyleImage, labelKey: 'cute', value: '卡通萌系' },
+  { image: paintedStyleImage, labelKey: 'painted', value: '厚涂原画' },
+  { image: watercolorStyleImage, labelKey: 'watercolor', value: '水彩绘本' },
+  { image: mangaStyleImage, labelKey: 'manga', value: '日系轻漫' },
+  { image: gothicStyleImage, labelKey: 'gothic', value: '暗黑哥特' },
+  { image: steampunkStyleImage, labelKey: 'steampunk', value: '蒸汽朋克' },
+  { image: surrealStyleImage, labelKey: 'surreal', value: '梦幻超现实' },
 ];
 
 function extractErrorMessage(error, fallback) {
@@ -239,7 +248,13 @@ function InputCard({
   );
 }
 
-function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
+function StyleSelector({
+  selectedStyle,
+  onSelectStyle,
+  disabled,
+  styleOptions,
+  styleTranslationKey,
+}) {
   const { t } = useTranslation();
 
   return (
@@ -254,7 +269,7 @@ function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
         className="flex gap-4 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: 'none' }}
       >
-        {STYLE_OPTIONS.map(style => (
+        {styleOptions.map(style => (
           <button
             key={style.value}
             type="button"
@@ -268,13 +283,13 @@ function StyleSelector({ selectedStyle, onSelectStyle, disabled }) {
               selectedStyle === style.value ? 'border-2 border-white' : 'border border-white/10'
             }`}
             >
-              <img src={style.image} alt={t(`createCharacter.styles.${style.labelKey}`)} className="size-full object-cover" />
+              <img src={style.image} alt={t(`${styleTranslationKey}.${style.labelKey}`)} className="size-full object-cover" />
             </span>
             <span className={`text-xs whitespace-nowrap ${
               selectedStyle === style.value ? 'font-bold text-white' : 'font-medium text-white/80'
             }`}
             >
-              {t(`createCharacter.styles.${style.labelKey}`)}
+              {t(`${styleTranslationKey}.${style.labelKey}`)}
             </span>
           </button>
         ))}
@@ -290,13 +305,19 @@ export function CharacterGenerationEditor({
   submitLabel,
   submittingLabel,
   disabled = false,
+  beforeSubmit = null,
+  styleOptions = STYLE_OPTIONS,
+  styleTranslationKey = 'createCharacter.styles',
   onSubmit,
 }) {
   const { t } = useTranslation();
   const [promptText, setPromptText] = useState(() => initialDraft?.promptText || '');
-  const [selectedStyle, setSelectedStyle] = useState(
-    () => initialDraft?.styleName || STYLE_OPTIONS[0]?.value || '',
-  );
+  const [selectedStyle, setSelectedStyle] = useState(() => {
+    const draftStyle = initialDraft?.styleName;
+    return styleOptions.some(option => option.value === draftStyle)
+      ? draftStyle
+      : styleOptions[0]?.value || '';
+  });
   const [referenceImageUrl, setReferenceImageUrl] = useState(
     () => initialDraft?.referenceImageUrl || '',
   );
@@ -428,8 +449,11 @@ export function CharacterGenerationEditor({
           selectedStyle={selectedStyle}
           onSelectStyle={setSelectedStyle}
           disabled={controlsDisabled}
+          styleOptions={styleOptions}
+          styleTranslationKey={styleTranslationKey}
         />
       </div>
+      {beforeSubmit}
       <div className="px-4 pb-8">
         <button
           type="button"

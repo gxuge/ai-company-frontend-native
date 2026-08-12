@@ -50,6 +50,33 @@
     "emptyTitle": "暂无会话",
     "emptyDescription": "这里还没有任何会话记录"
   },
+  "chatList": {
+    "title": "消息",
+    "startConversation": "发起会话",
+    "official": "官方",
+    "tabs": {
+      "chat": "聊天",
+      "notifications": "通知",
+      "comments": "评论",
+      "system": "系统"
+    },
+    "notificationsEmptyTitle": "暂无通知",
+    "notificationsEmptyDescription": "新的通知会显示在这里",
+    "commentsEmptyTitle": "暂无评论",
+    "commentsEmptyDescription": "新的评论会显示在这里",
+    "systemEmptyTitle": "暂无系统消息",
+    "systemEmptyDescription": "系统消息会显示在这里",
+    "retry": "重新加载",
+    "loadingMore": "正在加载更多会话...",
+    "noMore": "没有更多会话了",
+    "bottomTabs": {
+      "home": "首页",
+      "search": "搜索",
+      "create": "创建",
+      "chat": "消息",
+      "profile": "我的"
+    }
+  },
   "conversation": {
     "fallbackDescription": "暂无故事简介",
     "fallbackTitle": "故事详情",

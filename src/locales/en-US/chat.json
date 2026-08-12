@@ -50,6 +50,33 @@
     "emptyTitle": "No conversations",
     "emptyDescription": "Your conversation history will appear here"
   },
+  "chatList": {
+    "title": "Messages",
+    "startConversation": "Start a conversation",
+    "official": "Official",
+    "tabs": {
+      "chat": "Chats",
+      "notifications": "Notices",
+      "comments": "Comments",
+      "system": "System"
+    },
+    "notificationsEmptyTitle": "No notifications",
+    "notificationsEmptyDescription": "New notifications will appear here",
+    "commentsEmptyTitle": "No comments",
+    "commentsEmptyDescription": "New comments will appear here",
+    "systemEmptyTitle": "No system messages",
+    "systemEmptyDescription": "System messages will appear here",
+    "retry": "Reload",
+    "loadingMore": "Loading more conversations...",
+    "noMore": "No more conversations",
+    "bottomTabs": {
+      "home": "Home",
+      "search": "Search",
+      "create": "Create",
+      "chat": "Messages",
+      "profile": "Profile"
+    }
+  },
   "conversation": {
     "fallbackDescription": "No story description yet",
     "fallbackTitle": "Story Details",

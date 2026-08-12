@@ -18,5 +18,6 @@
   "draftEmpty": "下書きはありません。",
   "draftLoadFailed": "下書きの読み込みに失敗しました。もう一度お試しください。",
   "acknowledge": "了解",
-  "aiAssistant": "AI アシスタント"
+  "aiAssistant": "AI アシスタント",
+  "aiAssistantPrompt": "アイデアが必要？一緒に創作しよう！"
 }

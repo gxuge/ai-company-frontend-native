@@ -1,6 +1,6 @@
 # Frontend Architecture Overview
 
-更新时间：2026-07-17
+更新时间：2026-08-06
 项目根目录：`D:\project_demo\ai-company-frontend-native-backup`
 
 ## 1. 项目目录与职责（根目录）
@@ -44,7 +44,8 @@
 | Agent 聊天页 | `/pages/admin-chat` | `src/app/pages/admin-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 已接 Agent 会话历史与 SSE；历史记录按助手消息内的 LLM/Tool 事件顺序还原；`async === true` 的 Tool 按 `eventId` 显示通用异步状态标记；`contentType=image` 的图片 Tool 从 `tool.start` 起使用独立生命周期组件，支持生成中、失败、完成图片、下载及按 `eventId` 幂等保存到图库；结构化错误与固定界面文案支持简中、繁中、英文、日文 |
 | System 聊天页 | `/pages/system-chat` | `src/app/pages/system-chat/index.tsx` | 页面内样式 + `assets/images/admin-chat/*` | 复制自原始 `admin-chat` 的简单聊天逻辑，需要显式 `agentSessionId` |
 | 快捷登录页 | `/pages/quick-login` | `src/app/pages/quick-login/index.tsx` | 页面内样式 | 暂未直接接业务 API |
-| 会话列表页 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 页面内样式 | 已接 `tsChatApi.getSessionList`、`getMessageList`；页签、分类、空状态和前端兜底支持四语言 |
+| 消息列表页 | `/pages/chat-list` | `src/app/pages/chat-list/index.tsx` | Figma 页面内 Tailwind 样式 | 已接 `tsChatApi.getSessionList`、`getMessageList` 和角色详情；首次 10 条、滚动续页；角色名按 ID 缓存；顶部增加点赞/关注/互动提醒/收藏入口，并使用“星海回声”故事活动卡；固定区不随会话列表滚动 |
+| 旧会话列表兼容路由 | `/pages/session-list` | `src/app/pages/session-list/index.tsx` | 无 | 重定向到 `/pages/chat-list`，兼容旧入口 |
 | 会话详情页 | `/pages/conversation-detail` | `src/app/pages/conversation-detail/index.tsx` | 页面内样式 + `components/StoryDetailModal.jsx` | 已接会话、故事、章节和角色接口；固定标签、加载状态及详情弹窗支持四语言，故事与章节正文保持原文 |
 | 浏览图片页 | `/pages/browse-images-list` | `src/app/pages/browse-images-list/index.tsx` | 页面内样式 + `components/*` | 已接故事/角色公开列表接口；页签、分类、搜索、空状态和错误兜底支持四语言 |
 | 我的图库页 | `/pages/my-gallery` | `src/app/pages/my-gallery/index.tsx` | 页面内样式 | 已接 `tsRoleImageApi.getUserImageAssets/deleteUserImageAsset`；通过 `from=create-role/create-story` 复用为角色图片或故事背景图片选择器，固定界面文案支持四语言 |
@@ -53,15 +54,19 @@
 | 形象生成选择页 | `/pages/generating-select` | `src/app/pages/generating-select/index.tsx` | `AiHeader` + `components/figma-character-screen.tsx` + 共享形象编辑器 | 从 Zustand 读取草稿；每批并发生成最多 4 张，累计上限 12 张；点击编辑在当前页上拉共享编辑器，应用后更新草稿、清空旧候选并重新生成首批 4 张 |
 | 验证码登录页 | `/pages/verification-code-login` | `src/app/pages/verification-code-login/index.tsx` | 页面内 style 对象 | 已接 `userApi.phoneLogin` |
 | 选择角色页 | `/pages/select-role` | `src/app/pages/select-role/index.tsx` | 页面内样式 | 已接 `tsRoleApi.getRoleList`；支持故事角色添加和章节开场白候选角色单选模式，固定界面文案支持四语言 |
+| 角色广场页 | `/pages/role-list` | `src/app/pages/role-list/index.tsx` | `components/discover.tsx` + 共享 `discovery-list-shell.tsx` | “角色/故事”顶部切换在角色页使用 Chat List 风格的分段导航，路由继续切换到对应列表页 |
+| 故事详情展示页 | `/pages/story-detail` | `src/app/pages/story-detail/index.tsx` | Figma 页面内 Tailwind 样式 + `assets/images/story-detail/*` | 已按 Figma 导出迁移静态故事详情、作者、角色体系和剧情探索展示；当前未接业务 API |
 | 角色详情页 | `/pages/role-detail` | `src/app/pages/role-detail/index.tsx` | `role-detail/components/role-detail.styles.ts` | 已接 `tsRoleApi.getRoleDetail`、`tsRoleApi.getRoleAuthorPublic`；标签、加载和前端兜底支持四语言，接口内容保持原文 |
 | 创建故事页 | `/pages/create-story` | `src/app/pages/create-story/index.tsx` | 页面内样式 | 已接 `tsStoryApi` 故事与章节接口；章节开场白通过顶部角色列表选择并保存 `openingRoleId`；场景图片复用 `/pages/my-gallery` 选择并保存 `sceneImageUrl` |
 | 草稿箱页 | `/pages/draft` | `src/app/pages/draft/index.tsx` | 页面内样式 + `assets/images/draft/*` | 已接统一 `tsDraftApi`；列表直接使用 `content` 渲染角色/故事卡片，支持删除及携带 `draftId` 返回创建页恢复 |
 | 创建分页页 | `/pages/create-page` | `src/app/pages/create-page/index.tsx` | 页面内样式 + `components/Icons.tsx` | 已接 `tsDraftApi.getDraftList` 获取草稿总数；支持简中、繁中、英文、日文，并为英文/日文应用防溢出字号 |
+| DIY Agent 创作助手 | `/pages/diy-agent` | `src/app/pages/diy-agent/index.tsx` | 页面内 Tailwind 样式 + `assets/images/diy-agent/*` | 内部固定为 Figma `791:419` 的 `405 × 720` 坐标，通过 `容器宽度 / 405` 整体缩放；设备高度只决定是否纵向滚动 |
 | 声音编辑页 | `/pages/sound-edit` | `src/app/pages/sound-edit/index.tsx` | 页面内样式 + `components/edit-sound-text.tsx` | 已接音色接口；界面支持简中、繁中、英文、日文 |
 | 通用设置页 | `/pages/general-setting` | `src/app/pages/general-setting/index.tsx` | 页面内样式 + `components/settings-page.tsx` | 设置菜单和退出确认支持四语言 |
 | 语言设置页 | `/pages/language-setting` | `src/app/pages/language-setting/index.tsx` | 页面内样式 + `components/language-page.tsx` | 仅展示简中、繁中、英文、日文 |
 | 用户设置页 | `/pages/user-setting` | `src/app/pages/user-setting/index.tsx` | 页面内样式 + `components/AccountSettings.tsx` | 用户表单支持四语言 |
 | 我的页 | `/pages/mine` | `src/app/pages/mine/index.tsx` | 页面内样式 | 已接用户信息、故事、角色及会话接口；统计标签、作品页签、空状态和头像预览提示支持四语言 |
+| 收藏列表页 | `/pages/favorite-list` | `src/app/pages/favorite-list/index.tsx` | 纯 Web DOM + Tailwind | Figma `831:440` 还原；内部固定 405px 画布并按容器宽度整体缩放，支持标签定位、搜索筛选和本地取消收藏 |
 
 ## 4. API 封装结构（`src/lib/api`）
 

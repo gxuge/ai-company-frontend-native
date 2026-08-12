@@ -50,6 +50,33 @@
     "emptyTitle": "暫無對話",
     "emptyDescription": "這裡還沒有任何對話記錄"
   },
+  "chatList": {
+    "title": "訊息",
+    "startConversation": "發起對話",
+    "official": "官方",
+    "tabs": {
+      "chat": "聊天",
+      "notifications": "通知",
+      "comments": "評論",
+      "system": "系統"
+    },
+    "notificationsEmptyTitle": "暫無通知",
+    "notificationsEmptyDescription": "新的通知會顯示在這裡",
+    "commentsEmptyTitle": "暫無評論",
+    "commentsEmptyDescription": "新的評論會顯示在這裡",
+    "systemEmptyTitle": "暫無系統訊息",
+    "systemEmptyDescription": "系統訊息會顯示在這裡",
+    "retry": "重新載入",
+    "loadingMore": "正在載入更多對話...",
+    "noMore": "沒有更多對話了",
+    "bottomTabs": {
+      "home": "首頁",
+      "search": "搜尋",
+      "create": "建立",
+      "chat": "訊息",
+      "profile": "我的"
+    }
+  },
   "conversation": {
     "fallbackDescription": "暫無故事簡介",
     "fallbackTitle": "故事詳情",

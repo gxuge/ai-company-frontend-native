@@ -146,21 +146,133 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
   if (Platform.OS === 'web') {
     if (inputType === 'voice') {
       return (
-        <div style={webStyles.container}>
-          <div style={webStyles.leftSection}>
+        <div style={webStyles.inputRow}>
+          <div style={webStyles.avatarPlaceholder} />
+          <div style={webStyles.container}>
+            <div style={webStyles.leftSection}>
+              <button type="button" style={webStyles.micButton} onClick={handleLeftIconPress}>
+                <img src={toAssetUri(imgKeyboardIcon)} style={{ width: 25, height: 25 }} />
+              </button>
+            </div>
+
+            <div onClick={onMicPress} style={webStyles.voiceHoldText}>
+              {t('chat.input.holdToTalk')}
+            </div>
+
+            <div style={webStyles.rightSection}>
+              <button
+                type="button"
+                onMouseDown={event => event.preventDefault()}
+                onClick={handleAddParentheses}
+                style={{
+                  ...webStyles.iconButton,
+                  color: '#ffffff',
+                  fontSize: 14,
+                  fontWeight: 'bold',
+                  fontFamily: 'monospace',
+                  backgroundColor: 'rgba(255,255,255,0.15)',
+                  borderRadius: 16,
+                  width: 28,
+                  height: 32,
+                }}
+              >
+                ()
+              </button>
+              <button type="button" style={webStyles.iconButton} onClick={onLightbulbPress}>
+                <img src={toAssetUri(imgLightbulbIcon)} style={{ width: 21.2, height: 25.5 }} />
+              </button>
+              <button type="button" style={webStyles.iconButton} onClick={onPlusPress ?? handleSubmit}>
+                <img
+                  src={toAssetUri(imgPlusIcon)}
+                  style={{
+                    width: 23.4,
+                    height: 24.2,
+                    transform: `rotate(${featureExpanded ? 45 : 0}deg)`,
+                    transition: 'transform 220ms ease',
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div style={webStyles.inputRow}>
+        {!showExpandedLayout && <div style={webStyles.avatarPlaceholder} />}
+        <div
+          style={{
+            ...webStyles.container,
+            display: 'block',
+            height: webContainerHeight,
+            padding: 0,
+            overflow: 'hidden',
+            borderRadius: showExpandedLayout ? 17 : 999,
+            transition: 'height 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
+        >
+          <div
+            style={{
+              ...webStyles.leftSection,
+              position: 'absolute',
+              left: 20,
+              top: 10,
+              transform: `translateY(${webToolbarTranslateY}px)`,
+              transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          >
             <button type="button" style={webStyles.micButton} onClick={handleLeftIconPress}>
-              <img src={toAssetUri(imgKeyboardIcon)} style={{ width: 25, height: 25 }} />
+              <img src={toAssetUri(imgMicIcon)} style={{ width: 21.3, height: 25 }} />
             </button>
           </div>
 
-          <div onClick={onMicPress} style={webStyles.voiceHoldText}>
-            {t('chat.input.holdToTalk')}
-          </div>
+          <textarea
+            ref={inputRef}
+            value={value || ''}
+            onChange={event => onChangeText?.(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                handleSubmit();
+              }
+            }}
+            onFocus={() => {
+              setIsFocused(true);
+              onFocus?.();
+            }}
+            onBlur={handleInputBlur}
+            disabled={submitting}
+            placeholder={t('chat.input.placeholder')}
+            rows={1}
+            style={{
+              ...webStyles.holdInput,
+              position: 'absolute',
+              left: showExpandedLayout ? 20 : 68,
+              right: showExpandedLayout ? 20 : 152,
+              top: showExpandedLayout ? 10 : 8,
+              width: 'auto',
+              height: webInputHeight,
+              minHeight: 40,
+              maxHeight: 160,
+              boxSizing: 'border-box',
+              transition: 'left 220ms cubic-bezier(0.22, 1, 0.36, 1), right 220ms cubic-bezier(0.22, 1, 0.36, 1), top 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          />
 
-          <div style={webStyles.rightSection}>
+          <div
+            style={{
+              ...webStyles.rightSection,
+              position: 'absolute',
+              right: 20,
+              top: 12,
+              transform: `translateY(${webToolbarTranslateY}px)`,
+              transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+            }}
+          >
             <button
               type="button"
-              onMouseDown={event => event.preventDefault()}
+              onMouseDown={e => e.preventDefault()}
               onClick={handleAddParentheses}
               style={{
                 ...webStyles.iconButton,
@@ -176,231 +288,146 @@ export const ChatInput = React.forwardRef<any, ChatInputProps>(({
             >
               ()
             </button>
-            <button type="button" style={webStyles.iconButton} onClick={onLightbulbPress}>
+            <button
+              type="button"
+              onMouseDown={event => event.preventDefault()}
+              style={webStyles.iconButton}
+              onClick={onLightbulbPress}
+            >
               <img src={toAssetUri(imgLightbulbIcon)} style={{ width: 21.2, height: 25.5 }} />
             </button>
-            <button type="button" style={webStyles.iconButton} onClick={onPlusPress ?? handleSubmit}>
-              <img
-                src={toAssetUri(imgPlusIcon)}
-                style={{
-                  width: 23.4,
-                  height: 24.2,
-                  transform: `rotate(${featureExpanded ? 45 : 0}deg)`,
-                  transition: 'transform 220ms ease',
-                }}
-              />
+            <button
+              type="button"
+              disabled={showSendButton && submitting}
+              onMouseDown={event => event.preventDefault()}
+              onClick={showSendButton ? handleSubmit : onPlusPress}
+              style={{
+                ...webStyles.iconButton,
+                opacity: showSendButton && submitting ? 0.45 : 1,
+              }}
+            >
+              {showSendButton && (
+                <img src={toAssetUri(imgSendIcon)} style={{ width: 24, height: 24 }} />
+              )}
+              {!showSendButton && (
+                <img
+                  src={toAssetUri(imgPlusIcon)}
+                  style={{
+                    width: 23.4,
+                    height: 24.2,
+                    transform: `rotate(${featureExpanded ? 45 : 0}deg)`,
+                    transition: 'transform 220ms ease',
+                  }}
+                />
+              )}
             </button>
           </div>
-        </div>
-      );
-    }
-
-    return (
-      <div
-        style={{
-          ...webStyles.container,
-          display: 'block',
-          height: webContainerHeight,
-          padding: 0,
-          overflow: 'hidden',
-          transition: 'height 220ms cubic-bezier(0.22, 1, 0.36, 1)',
-        }}
-      >
-        <div
-          style={{
-            ...webStyles.leftSection,
-            position: 'absolute',
-            left: 20,
-            top: 10,
-            transform: `translateY(${webToolbarTranslateY}px)`,
-            transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }}
-        >
-          <button type="button" style={webStyles.micButton} onClick={handleLeftIconPress}>
-            <img src={toAssetUri(imgMicIcon)} style={{ width: 21.3, height: 25 }} />
-          </button>
-        </div>
-
-        <textarea
-          ref={inputRef}
-          value={value || ''}
-          onChange={event => onChangeText?.(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              handleSubmit();
-            }
-          }}
-          onFocus={() => {
-            setIsFocused(true);
-            onFocus?.();
-          }}
-          onBlur={handleInputBlur}
-          disabled={submitting}
-          placeholder={t('chat.input.placeholder')}
-          rows={1}
-          style={{
-            ...webStyles.holdInput,
-            position: 'absolute',
-            left: showExpandedLayout ? 20 : 68,
-            right: showExpandedLayout ? 20 : 152,
-            top: showExpandedLayout ? 10 : 8,
-            width: 'auto',
-            height: webInputHeight,
-            minHeight: 40,
-            maxHeight: 160,
-            boxSizing: 'border-box',
-            transition: 'left 220ms cubic-bezier(0.22, 1, 0.36, 1), right 220ms cubic-bezier(0.22, 1, 0.36, 1), top 220ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }}
-        />
-
-        <div
-          style={{
-            ...webStyles.rightSection,
-            position: 'absolute',
-            right: 20,
-            top: 12,
-            transform: `translateY(${webToolbarTranslateY}px)`,
-            transition: 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
-          }}
-        >
-          <button
-            type="button"
-            onMouseDown={e => e.preventDefault()}
-            onClick={handleAddParentheses}
-            style={{
-              ...webStyles.iconButton,
-              color: '#ffffff',
-              fontSize: 14,
-              fontWeight: 'bold',
-              fontFamily: 'monospace',
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              borderRadius: 16,
-              width: 28,
-              height: 32,
-            }}
-          >
-            ()
-          </button>
-          <button
-            type="button"
-            onMouseDown={event => event.preventDefault()}
-            style={webStyles.iconButton}
-            onClick={onLightbulbPress}
-          >
-            <img src={toAssetUri(imgLightbulbIcon)} style={{ width: 21.2, height: 25.5 }} />
-          </button>
-          <button
-            type="button"
-            disabled={showSendButton && submitting}
-            onMouseDown={event => event.preventDefault()}
-            onClick={showSendButton ? handleSubmit : onPlusPress}
-            style={{
-              ...webStyles.iconButton,
-              opacity: showSendButton && submitting ? 0.45 : 1,
-            }}
-          >
-            {showSendButton && (
-              <img src={toAssetUri(imgSendIcon)} style={{ width: 24, height: 24 }} />
-            )}
-            {!showSendButton && (
-              <img
-                src={toAssetUri(imgPlusIcon)}
-                style={{
-                  width: 23.4,
-                  height: 24.2,
-                  transform: `rotate(${featureExpanded ? 45 : 0}deg)`,
-                  transition: 'transform 220ms ease',
-                }}
-              />
-            )}
-          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <View style={[styles.container, showExpandedLayout && styles.containerExpanded]}>
-      <View style={[styles.leftSection, showExpandedLayout && styles.leftSectionExpanded]}>
-        <Pressable style={styles.micButton} onPress={handleLeftIconPress}>
-          {inputType === 'keyboard' ? <MicIcon /> : <KeyboardIcon />}
-        </Pressable>
-      </View>
+    <View style={styles.inputRow}>
+      {!showExpandedLayout && <View style={styles.avatarPlaceholder} />}
+      <View style={[styles.container, showExpandedLayout && styles.containerExpanded]}>
+        <View style={[styles.leftSection, showExpandedLayout && styles.leftSectionExpanded]}>
+          <Pressable style={styles.micButton} onPress={handleLeftIconPress}>
+            {inputType === 'keyboard' ? <MicIcon /> : <KeyboardIcon />}
+          </Pressable>
+        </View>
 
-      {inputType === 'keyboard' && (
-        <TextInput
-          ref={inputRef}
-          value={value}
-          onChangeText={onChangeText}
-          onSubmitEditing={handleSubmit}
-          editable={!submitting}
-          multiline
-          blurOnSubmit
-          placeholder={t('chat.input.placeholder')}
-          placeholderTextColor="rgba(255,255,255,0.55)"
-          style={[
-            styles.holdInput,
-            showExpandedLayout ? styles.holdInputExpanded : styles.holdInputCompact,
-            { height: nativeInputHeight },
-          ]}
-          returnKeyType="send"
-          onContentSizeChange={(event) => {
-            const nextHeight = Math.min(Math.max(event.nativeEvent.contentSize.height, 40), 120);
-            setNativeInputHeight(nextHeight);
-          }}
-          onFocus={() => {
-            setIsFocused(true);
-            onFocus?.();
-          }}
-          onBlur={handleInputBlur}
-        />
-      )}
-      {inputType === 'voice' && (
-        <Pressable onPress={onMicPress} style={styles.voiceHoldText}>
-          <Text style={{ color: '#ffffff', fontSize: 16 }}>
-            {t('chat.input.holdToTalk')}
-          </Text>
-        </Pressable>
-      )}
+        {inputType === 'keyboard' && (
+          <TextInput
+            ref={inputRef}
+            value={value}
+            onChangeText={onChangeText}
+            onSubmitEditing={handleSubmit}
+            editable={!submitting}
+            multiline
+            blurOnSubmit
+            placeholder={t('chat.input.placeholder')}
+            placeholderTextColor="rgba(255,255,255,0.55)"
+            style={[
+              styles.holdInput,
+              showExpandedLayout ? styles.holdInputExpanded : styles.holdInputCompact,
+              { height: nativeInputHeight },
+            ]}
+            returnKeyType="send"
+            onContentSizeChange={(event) => {
+              const nextHeight = Math.min(Math.max(event.nativeEvent.contentSize.height, 40), 120);
+              setNativeInputHeight(nextHeight);
+            }}
+            onFocus={() => {
+              setIsFocused(true);
+              onFocus?.();
+            }}
+            onBlur={handleInputBlur}
+          />
+        )}
+        {inputType === 'voice' && (
+          <Pressable onPress={onMicPress} style={styles.voiceHoldText}>
+            <Text style={{ color: '#ffffff', fontSize: 16 }}>
+              {t('chat.input.holdToTalk')}
+            </Text>
+          </Pressable>
+        )}
 
-      <View style={[styles.rightSection, showExpandedLayout && styles.rightSectionExpanded]}>
-        <Pressable
-          style={[styles.iconButton, { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, width: 28, height: 32 }]}
-          onPress={handleAddParentheses}
-        >
-          <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>()</Text>
-        </Pressable>
-        <Pressable style={styles.iconButton} onPress={onLightbulbPress}>
-          <LightbulbIcon />
-        </Pressable>
-        <Pressable
-          style={[styles.iconButton, showSendButton && submitting && { opacity: 0.45 }]}
-          disabled={showSendButton && submitting}
-          onPress={showSendButton ? handleSubmit : onPlusPress}
-        >
-          {showSendButton && (
-            <SendIcon />
-          )}
-          {!showSendButton && (
-            <Animated.View style={plusIconAnimatedStyle}>
-              <PlusIcon />
-            </Animated.View>
-          )}
-        </Pressable>
+        <View style={[styles.rightSection, showExpandedLayout && styles.rightSectionExpanded]}>
+          <Pressable
+            style={[styles.iconButton, { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 16, width: 28, height: 32 }]}
+            onPress={handleAddParentheses}
+          >
+            <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: 'bold' }}>()</Text>
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={onLightbulbPress}>
+            <LightbulbIcon />
+          </Pressable>
+          <Pressable
+            style={[styles.iconButton, showSendButton && submitting && { opacity: 0.45 }]}
+            disabled={showSendButton && submitting}
+            onPress={showSendButton ? handleSubmit : onPlusPress}
+          >
+            {showSendButton && (
+              <SendIcon />
+            )}
+            {!showSendButton && (
+              <Animated.View style={plusIconAnimatedStyle}>
+                <PlusIcon />
+              </Animated.View>
+            )}
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 });
 
 const webStyles: Record<string, React.CSSProperties> = {
-  container: {
+  inputRow: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    gap: 8,
     marginLeft: 15,
     marginRight: 15,
     marginBottom: 4,
+  },
+  avatarPlaceholder: {
+    width: 56,
+    height: 56,
+    flexShrink: 0,
+    borderRadius: '50%',
+    border: '1px solid rgba(255,255,255,0.08)',
+    backgroundColor: '#1d1d1d',
+    boxSizing: 'border-box',
+  },
+  container: {
+    display: 'flex',
+    flex: 1,
+    minWidth: 0,
     minHeight: 56,
     padding: '8px 20px',
-    borderRadius: 17,
+    borderRadius: 999,
     border: '1px solid rgba(255,255,255,0.08)',
     backgroundColor: '#1d1d1d',
     alignItems: 'center',

@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/filename-case */
 import { useTranslation } from 'react-i18next';
-import svgPaths from '../../../../assets/images/story-detail/svg-m13tfs0op9';
+import svgPaths from '../../../../assets/images/conversation-detail/svg-m13tfs0op9';
 
 function GlowText({ children }) {
   return (

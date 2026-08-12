@@ -1,5 +1,13 @@
 # 修改日志
 
+## 2026-08-12
+- 任务：Favorite List 纯 Web 页面还原
+- 变更：新增 `/pages/favorite-list`，使用 Figma `831:440` 的原始背景、角色、故事、作者、参与者、收藏和操作按钮素材；页面采用 405px 固定画布与 `容器宽度 / 405` 整体缩放，设备高度只决定背景填充和纵向滚动
+- 交互：角色/故事标签可平滑定位分区，搜索框本地筛选收藏内容，书签按钮可移除对应卡片，继续聊天/继续故事跳转现有页面
+- Web 约束：页面仅使用 `div/section/nav/article/button/input/img` 等 Web DOM，不使用 React Native 标签、StyleSheet 或原生手势能力
+- 导航：`/pages` 测试导航新增 Favorite List 入口
+- 验证：30 个 Figma 资源文件校验通过；目标文件 TypeScript、ESLint、Expo Babel、405px 缩放、Web DOM 与编码检查通过；未启动网页服务
+
 ## 2026-07-29
 - 任务：admin-chat 图片 Tool 扁平协议
 - 变更：角色形象与故事场景背景图片统一消费 `contentType/resourceType/imageUrl/promptCode/promptVersion` 顶层字段；实时 SSE 与历史消息都可恢复并展示图片，移除对 `data.result`、`result.data` 的依赖
@@ -389,3 +397,66 @@
 - 接口变更：`/sys/ts-agent-chat-messages` 的 `events[]` 改为归属 Assistant 消息，LLM Event 的 `content` 和 `data.output.content` 保存完整段落
 - UI 影响：不修改布局；历史消息由分散 Tool 气泡改为单个助手气泡内按执行顺序展示
 - 验证：后端模块编译通过；前端 Agent SSE Jest 25/25、TypeScript 转译、`git diff --check` 通过；后端定向测试受既有 `AiragPromptTemplateServiceTest` 编译错误阻塞
+
+## 2026-08-06
+- 任务：Chat List 接管 Session List
+- 变更：Figma Chat List 接入真实会话与最近消息；首次加载 10 条并在滚动接近底部时按 10 条续页；普通/系统会话分栏；底部消息入口改到 `/pages/chat-list`；旧 `/pages/session-list` 重定向兼容
+- 接口变更：无；继续使用 `GET /sys/ts-chat-sessions` 和 `GET /sys/ts-chat-messages`
+- UI 影响：不修改 Chat List 原设计层级、尺寸、间距、颜色和图片资源；仅增加真实数据、加载/错误/空状态和透明底栏点击区域
+- 验证：定向 TypeScript 本次文件 0 错误、Babel Web、逻辑类 ESLint、四语言 JSON/键一致性、分页与路由断言、`git diff --check` 和编码检查通过；全依赖类型检查仍受既有 `src/lib/api/axios.ts` 类型错误阻塞
+
+## 2026-08-06
+- 任务：Chat List 会话头像对接
+- 变更：普通会话优先展示接口 `roleAvatarUrl`；共享图片资源解析同时兼容数组和后端 Map 响应，缺失时继续使用设计稿默认头像
+- 接口变更：无；前端类型与 `TsChatSessionVo.imageResources` 的 Map 结构对齐
+- UI 影响：不修改头像尺寸、列表布局或视觉样式
+- 验证：图片资源定向 Jest 3/3、Babel Web、API 定向 ESLint、`git diff --check` 与编码检查通过；全仓 TypeScript 仍受既有配置和历史类型错误阻塞
+
+## 2026-08-06
+- 任务：Chat List 角色信息与固定公告
+- 变更：会话名称改为按 `targetRoleId` 查询并缓存角色名；头像改为圆形双层边框并增加在线状态点；公告卡片移出滚动容器
+- 接口变更：复用 `GET /sys/ts-roles/detail`，不修改后端
+- UI 影响：列表滚动时页签和公告保持固定，只有会话列表滚动
+- 验证：定向 TypeScript、Babel Web、差异与编码检查通过；未启动网页服务
+
+## 2026-08-06
+- 任务：Role List 顶部分段导航
+- 变更：共享发现页头部增加可选 `segmented` 样式，并仅在 `/pages/role-list` 启用 Chat List 风格的“角色/故事”切换
+- 接口变更：无；继续使用原 `/pages/role-list` 与 `/pages/story-list` 路由
+- UI 影响：保留发现标题、排行榜、搜索、分类和角色内容，只调整顶部切换控件
+- 验证：定向 TypeScript、Babel Web、路由断言、逻辑类 ESLint、`git diff --check` 与编码检查通过；未启动网页服务
+
+## 2026-08-06
+- 任务：Role List 角色收藏按钮
+- 变更：角色状态点从卡片右上角移动到角色名后；右上角增加与 Story List 同尺寸、背景和点击反馈的收藏按钮
+- 接口变更：无；收藏状态暂由页面本地维护
+- UI 影响：收藏图标使用五角星，未收藏为白色描边，收藏后为金色填充
+- 验证：定向 TypeScript、Babel Web、DOM 结构断言、逻辑类 ESLint、`git diff --check` 与编码检查通过；未启动网页服务
+
+## 2026-08-10
+- 任务：Chat List 快捷入口与故事活动卡更新
+- 变更：按 Figma `797:573` 增加点赞、关注、互动提醒、收藏四个快捷入口；按 `797:557` 将旧公告替换为“星海回声”故事活动卡
+- 接口变更：无；四个入口暂不绑定不存在的业务接口或路由
+- UI 影响：11 个 Figma 原始图片资源已保存到 `assets/images/chat-list`；快捷入口和活动卡位于固定区域，会话列表继续独立滚动
+- 验证：资源完整性、定向 TypeScript、Babel Web、结构断言、逻辑类 ESLint、`git diff --check` 与编码检查通过；未启动网页服务
+
+## 2026-08-11
+- 任务：Chat List 快捷图标比例调整
+- 变更：按 Figma 相对页面比例将四个快捷图标从 78px 调整为移动端 62px、宽屏 66px，标签同步缩小为 11px
+- 接口变更：无
+- UI 影响：四等分布局和点击区域保持不变，减少固定区域高度
+- 验证：定向 TypeScript、Babel Web、尺寸断言、`git diff --check` 与编码检查通过；未启动网页服务
+
+## 2026-08-10
+- 任务：Story Detail Figma 页面迁移
+- 变更：新增 `/pages/story-detail`，迁移 Figma `src/App.tsx` 和 29 张 PNG；旧故事详情 SVG 移至 `conversation-detail` 素材目录
+- 接口变更：无；当前页面保持静态设计稿数据
+- UI 影响：新页面保留源 DOM、尺寸、间距、颜色和 Tailwind 类；现有 `StoryDetailModal` 仅更新素材路径
+- 验证：27 个图片 import 全部存在，Babel Web 转译、页面定向 ESLint 0 错误、`git diff --check` 和编码检查通过；保留 3 条 Tailwind 可简写提示
+
+## 2026-08-11
+- 任务：DIY Agent 宽度统一缩放重构
+- 变更：按 Figma `791:419` 建立固定 `405 × 720` 设计舞台；使用 `ResizeObserver` 获取容器宽度，并以 `容器宽度 / 405` 统一缩放整个页面
+- 接口变更：无；继续保留页面本地输入状态
+- UI 影响：删除全部 `390px` 尺寸分支；字体、图片、间距、圆角和位置使用同一缩放系数，设备高度不足时仅产生纵向滚动
+- 验证：24 个图片资源、定向 TypeScript、Babel Web、布局断言、逻辑类 ESLint、`git diff --check` 与编码检查通过；未启动网页服务

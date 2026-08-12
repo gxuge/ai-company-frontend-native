@@ -628,3 +628,62 @@
 - Tool 的 `input/output/error/metrics` 保存结构保持不变。
 - 历史消息按 `LLM 文本 -> Tool -> LLM 文本` 顺序展示。
 - 有完整事件时间线时不重复显示聚合助手正文。
+
+## Chat List 接管 Session List
+
+### 背景
+- 目标：由 `/pages/chat-list` 接管原 `/pages/session-list` 的真实会话数据、会话跳转和底部消息入口。
+- 分页：首次查询 10 条；列表滚动接近底部时继续加载下一页，每页 10 条。
+- 边界：保留 Chat List 设计稿的 DOM 层级、尺寸、间距、颜色和图片资源；不修改后端接口。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 字段与路由映射 | 已完成 | 会话标题、角色头像、最近消息、时间、未读数、系统会话和点击路由已确认 | `session-list/index.tsx`、`ts-chat.ts`、`ts-image.ts` |
+| T2 数据与无限加载 | 已完成 | 将 `getSessionList/getMessageList` 注入 Chat List，每页 10 条并滚动加载 | `chat-list/index.tsx` |
+| T3 入口接管 | 已完成 | 底部消息入口改到 Chat List，旧 Session List 路由保留兼容跳转 | `ai-bottom-tabs.tsx`、`session-list/index.tsx` |
+| T4 国际化与文档 | 已完成 | 增加 Chat List 状态与页签文案，更新架构和修改日志 | `src/locales/*/chat.json`、docs |
+| T5 代码级验证 | 已完成 | 本次文件 TypeScript 0 错误、Babel、逻辑类 ESLint、四语言键、分页路由断言、diff 与编码检查通过 | 验证命令 |
+| T6 Figma 固定区更新 | 已完成 | 增加四个快捷入口并将公告替换为“星海回声”故事活动卡，资源全部本地化 | `chat-list/index.tsx`、`assets/images/chat-list/*` |
+
+### 字段映射
+- `sessionTitle` -> 会话名称；空值使用 `sessionFallback`。
+- `roleAvatarUrl` -> 普通会话角色头像；空值继续从数组或 Map 格式的 `imageResources` 取图，再使用设计稿默认头像。
+- `targetRoleId` -> 通过角色详情接口补充 `roleName`；按角色 ID 缓存，失败时保留会话标题兜底。
+- 最新一条 `contentText` -> 会话摘要；空值使用 `noMessage`。
+- `lastMessageAt/updatedAt/createdAt` -> 列表时间。
+- `unreadCount` -> 未读角标；超过 99 显示 `99+`。
+- `isSystemSession` -> 系统页签、官方标签和 `/pages/system-chat` 路由。
+
+### 风险与回退
+- 当前会话接口不直接返回最新消息正文，继续沿用每个会话追加一次消息查询的逻辑；单页最多产生 11 次请求。
+- 通知和评论没有对应接口，仅显示空状态，不使用静态会话数据冒充真实结果。
+- 点赞、关注、互动提醒和收藏当前仅还原 Figma 入口视觉，未虚构不存在的业务路由或接口。
+- 回退时恢复共享底部导航路径和原 Session List 页面，Chat List 可继续保留为静态展示页。
+
+### 验收标准
+- 首屏只请求 10 个会话，滚动到底后按 10 条继续加载且不重复。
+- 普通会话进入 `/pages/chat`，系统会话进入 `/pages/system-chat`，均携带 `sessionId`。
+- 所有消息入口进入 `/pages/chat-list`，旧 `/pages/session-list` 可兼容跳转。
+- 加载、加载更多、失败和空数据均有页面内反馈。
+- Chat List 原设计布局、尺寸、间距、颜色和图片资源保持不变。
+- 头像使用圆形双层边框与在线状态点；公告卡片固定在列表滚动区域上方。
+- 四个快捷入口位于页签和故事活动卡之间；活动卡继续固定在会话列表滚动区域之外。
+
+## Story Detail Figma 页面迁移
+
+### 背景
+- 目标：将 Figma 导出的 `story-detail` 按原布局和样式迁移为独立 `/pages/story-detail` 页面。
+- 边界：仅迁移静态页面、组件内状态和素材，不接入故事接口，不修改现有会话详情弹窗布局。
+
+| 任务 | 状态 | 说明 | 证据 |
+| --- | --- | --- | --- |
+| T1 依赖分析 | 已完成 | 使用响应式 `src/App.tsx`，依赖 27 张图片，源目录共 29 张 PNG | 源文件与 import 扫描 |
+| T2 页面与素材迁移 | 已完成 | 新增页面并替换旧 `assets/images/story-detail` 内容 | 页面和素材目录 |
+| T3 旧引用保护 | 已完成 | 旧关闭图标迁到 `conversation-detail` 素材目录并更新弹窗 import | `StoryDetailModal.jsx` |
+| T4 路由与验证 | 已完成 | 导航入口、Babel、资源完整性、ESLint、差异和编码检查 | 验证命令 |
+
+### 验收标准
+- `/pages/story-detail` 可由 Expo Router 识别。
+- 27 个页面图片 import 均有对应本地素材。
+- 旧 `StoryDetailModal` 不再依赖 `assets/images/story-detail` 的历史 SVG。
+- 新页面保持源文件 LF、无 BOM，页面结构与 Tailwind 样式不改写。

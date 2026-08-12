@@ -18,5 +18,6 @@
   "draftEmpty": "Your drafts are empty.",
   "draftLoadFailed": "Failed to load drafts. Please try again.",
   "acknowledge": "Got it",
-  "aiAssistant": "AI Assistant"
+  "aiAssistant": "AI Assistant",
+  "aiAssistantPrompt": "Need inspiration? Let's create together!"
 }

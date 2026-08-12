@@ -1,0 +1,19 @@
+{
+  "styles": {
+    "modernCity": "現代都市",
+    "schoolCampus": "青春学園",
+    "cozyEveryday": "心温まる日常",
+    "easternAncient": "東方古代",
+    "westernMedieval": "西洋中世",
+    "magicalFantasy": "魔法ファンタジー",
+    "futureSciFi": "未来SF",
+    "cyberCity": "サイバー都市",
+    "steampunkIndustrial": "蒸気工業",
+    "postApocalyptic": "終末荒野",
+    "mysteriousSuspense": "ミステリー",
+    "darkHorror": "ダークホラー",
+    "naturalRealm": "自然秘境",
+    "fairyTale": "おとぎの世界",
+    "cosmicOtherworld": "星海異境"
+  }
+}

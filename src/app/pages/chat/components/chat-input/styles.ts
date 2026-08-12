@@ -1,18 +1,35 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  container: {
+  inputRow: {
     marginHorizontal: 15,
-    minHeight: 56,
     marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+
+  avatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     backgroundColor: '#1d1d1d',
-    borderRadius: 17,
+  },
+
+  container: {
+    flex: 1,
+    minHeight: 56,
+    backgroundColor: '#1d1d1d',
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
     position: 'relative',
   },
 
   containerExpanded: {
+    borderRadius: 17,
     paddingTop: 10,
     paddingHorizontal: 14,
     paddingBottom: 54,

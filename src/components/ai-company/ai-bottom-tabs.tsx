@@ -19,7 +19,7 @@ const tabs = [
   { id: 'home', label: '首页', path: '/pages/select-role' },
   { id: 'search', label: '搜索', path: '/pages/browse-images-list' },
   { id: 'create', label: '创建', path: '/pages/create-page' },
-  { id: 'chat', label: '消息', path: '/pages/session-list' },
+  { id: 'chat', label: '消息', path: '/pages/chat-list' },
   { id: 'profile', label: '我的', path: '/pages/mine' },
 ];
 
